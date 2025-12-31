@@ -26,6 +26,7 @@
         .btn-print { background: #3498db; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer; }
         .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
         .admin-only { display: none; }
+        .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -42,9 +43,9 @@
     <div id="mainApp" class="container hidden">
         <div class="nav-tabs">
             <button id="btnEntry" class="active" onclick="showSection('entry')">Entry</button>
-            <button id="btnDaily" onclick="showSection('daily')">Daily</button>
+            <button id="btnDaily" onclick="showSection('daily')">Daily View</button>
             <button id="btnCust" onclick="showSection('cust')">Master</button>
-            <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">Admin</button>
+            <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">Admin Accounting</button>
             <button style="background:#e74c3c;" onclick="location.reload()">Logout</button>
         </div>
 
@@ -95,7 +96,9 @@
                 <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px;">Check</button>
                 <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px;">Excel</button>
             </div>
-            <div id="adminStats" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px;"></div>
+            <div id="adminStats" class="pos-summary-grid"></div>
+            <h4>POS Breakdown</h4>
+            <div id="posStats" class="pos-summary-grid"></div>
             <div style="overflow-x:auto;">
                 <table id="adminTable">
                     <thead><tr><th>Date</th><th>Type</th><th>POS</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead>
@@ -137,7 +140,7 @@
         {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
     ];
 
-    let trans = []; let user = "";
+    let trans = []; let currentUser = "";
 
     db.ref('transactions').on('value', snap => {
         const d = snap.val(); trans = d ? Object.values(d) : [];
@@ -148,9 +151,12 @@
         const u = document.getElementById('userId').value.toLowerCase();
         const p = document.getElementById('password').value;
         if(users[u] === p) {
-            user = u; document.getElementById('loginPage').classList.add('hidden');
+            currentUser = u; 
+            document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            if(u.includes('admin') || u === 'manager') {
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            }
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
         } else alert("Invalid Login!");
@@ -159,6 +165,7 @@
     function showSection(s) {
         ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section').classList.add('hidden'));
         document.getElementById(s+'Section').classList.remove('hidden');
+        if(s === 'admin') renderAdmin();
     }
 
     function updateMDR() {
@@ -177,7 +184,7 @@
         const editId = document.getElementById('editId').value;
         const id = editId ? editId : Date.now();
         db.ref('transactions/' + id).update({
-            id: id, user: user, date: editId ? trans.find(x=>x.id==editId).date : new Date().toLocaleDateString('en-CA'), 
+            id: id, user: currentUser, date: editId ? trans.find(x=>x.id==editId).date : new Date().toLocaleDateString('en-CA'), 
             time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(),
             mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value,
             cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value,
@@ -200,7 +207,7 @@
         let s=0, sc=0, h="";
         data.slice().reverse().forEach(x => {
             s += Number(x.amt); sc += Number(x.scVal);
-            const isAdm = (user.includes('admin') || user === 'manager');
+            const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
             h += `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.amt}</td><td>${x.scVal}</td><td>
                 <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
                 ${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button>` : ''}
@@ -230,26 +237,45 @@
         showSection('entry');
     }
 
+    function renderAdmin() {
+        const f = document.getElementById('fDate').value;
+        const t = document.getElementById('tDate').value;
+        let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t) : trans;
+        let ts=0, tsc=0, tp=0, tl=0, tw=0, h="";
+        let pos = {}; posMaster.forEach(p => pos[p.id] = 0);
+
+        data.slice().reverse().forEach(x => {
+            if(x.category !== "REGISTRATION") {
+                let a = Number(x.amt);
+                ts += a; tsc += Number(x.scVal); tp += Number(x.netProfit);
+                if(x.category === "LOAN") tl += a;
+                if(x.category === "WITHDRAW") tw += a;
+                if(pos[x.pos] !== undefined) pos[x.pos] += a;
+                
+                const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
+                h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${x.amt}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>
+                    <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
+                    ${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button>` : ''}
+                    ${isAdm ? `<button class="btn-del" onclick="deleteRow(${x.id})">X</button>` : ''}
+                </td></tr>`;
+            }
+        });
+        document.getElementById('adminStats').innerHTML = `
+            <div class="banner" style="background:#2c3e50;">Tot: ₹${ts}</div>
+            <div class="banner" style="background:#27ae60;">Profit: ₹${tp.toFixed(2)}</div>
+            <div class="banner" style="background:#3498db;">Loan: ₹${tl}</div>
+            <div class="banner" style="background:#e74c3c;">With: ₹${tw}</div>`;
+        
+        let ph = ""; for(let k in pos) if(pos[k] > 0) ph += `<div class="banner" style="background:#95a5a6; color:black; font-size:11px;">${k}: ₹${pos[k]}</div>`;
+        document.getElementById('posStats').innerHTML = ph;
+        document.getElementById('adminTbody').innerHTML = h;
+    }
+
     function printSlip(id) {
         const x = trans.find(t => t.id == id);
         const w = window.open('', '', 'width=300,height=400');
         w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${x.amt}<br>Net: ₹${x.netPay}<hr>Thank You!</div>`);
         w.print(); w.close();
-    }
-
-    function renderAdmin() {
-        const f = document.getElementById('fDate').value;
-        const t = document.getElementById('tDate').value;
-        let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t) : trans;
-        let ts=0, tp=0, h="";
-        data.slice().reverse().forEach(x => {
-            if(x.category !== "REGISTRATION") {
-                ts += Number(x.amt); tp += Number(x.netProfit);
-                h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${x.amt}</td><td>${x.netProfit}</td><td><button onclick="deleteRow(${x.id})">X</button></td></tr>`;
-            }
-        });
-        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;">Tot: ₹${ts}</div><div class="banner" style="background:#27ae60;">Profit: ₹${tp.toFixed(2)}</div>`;
-        document.getElementById('adminTbody').innerHTML = h;
     }
 
     function startVoice() {
@@ -265,7 +291,7 @@
             document.getElementById('cName').value = hits[0].name;
             document.getElementById('recallArea').classList.remove('hidden');
             let opts = ""; let seen = new Set();
-            hits.forEach(h => { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k}</option>`; seen.add(k); } });
+            hits.forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k}</option>`; seen.add(k); } } });
             document.getElementById('recallSelect').innerHTML = '<option value="">-- Choose --</option>' + opts;
         }
     }
