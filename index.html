@@ -52,6 +52,7 @@
         <div class="nav-tabs">
             <button id="btnEntry" class="active" onclick="showSection('entry')">Entry Form</button>
             <button id="btnDaily" onclick="showSection('daily')">Daily View</button>
+            <button id="btnCust" onclick="showSection('cust')">Customer Master</button>
             <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">Admin Accounting</button>
             <button style="background:#e74c3c; color:white;" onclick="location.reload()">Logout</button>
         </div>
@@ -105,6 +106,23 @@
                 <button type="submit" id="saveBtn" class="btn-main" style="background:#27ae60; margin-top:10px;">SAVE DATA</button>
                 <button type="button" id="cancelEdit" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:5px; background:#95a5a6; color:white; border:none; border-radius:8px; cursor:pointer;">CANCEL EDIT</button>
             </form>
+        </div>
+
+        <div id="custSection" class="hidden">
+            <h3 style="color:#2c3e50; border-left:5px solid #3498db; padding-left:10px;">Customer Master Registration</h3>
+            <p style="font-size: 13px; color: #666;">ஸ்வைப் செய்யாமல் கஸ்டமர் விவரங்களை மட்டும் இங்கே சேமிக்கலாம்.</p>
+            <form id="custRegForm" style="background:#f8f9fa; padding:15px; border-radius:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="tel" id="regMobile" placeholder="Mobile Number" required>
+                    <input type="text" id="regName" placeholder="Customer Name" required>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="text" id="regBank" placeholder="Card Bank Name" required>
+                    <input type="text" id="regLast4" placeholder="Card Last 4 Digits" maxlength="4" required>
+                </div>
+                <button type="button" onclick="saveCustomerOnly()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER DETAILS</button>
+            </form>
+            <div id="regSuccess" class="hidden" style="margin-top:10px; padding:10px; background:#d4edda; color:#155724; border-radius:5px; text-align:center;">Saved Successfully!</div>
         </div>
 
         <div id="dailySection" class="hidden">
@@ -161,7 +179,6 @@
 
     const usersDB = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
 
-    // UPDATED SETTLEMENT BANKS AS PER IMAGE
     const defaultInitialPos = [
         {id: "IOB-3897", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
         {id: "CUB-9204", bank: "RGT MAHA 7998", normal: 1.298, corp: 3.528},
@@ -186,6 +203,33 @@
         if(!document.getElementById('adminSection').classList.contains('hidden')) renderAdmin();
     });
 
+    // Save Customer Details Only
+    function saveCustomerOnly() {
+        const name = document.getElementById('regName').value;
+        const mobile = document.getElementById('regMobile').value;
+        const bank = document.getElementById('regBank').value;
+        const last4 = document.getElementById('regLast4').value;
+
+        if(!name || mobile.length < 10 || !bank || !last4) {
+            alert("Please fill all details correctly!"); return;
+        }
+
+        const entryId = "REG_" + Date.now();
+        const entry = {
+            id: entryId, user: currentUser, category: "REGISTRATION",
+            date: new Date().toLocaleDateString('en-CA'), time: new Date().toLocaleTimeString(),
+            name: name, mobile: mobile, cardBank: bank, cardLast4: last4,
+            pos: "N/A", amt: "0.00", scVal: "0.00", mdrVal: "0.00", netProfit: "0.00", netPay: "0.00"
+        };
+
+        db.ref('transactions/' + entryId).set(entry).then(() => {
+            document.getElementById('custRegForm').reset();
+            const msg = document.getElementById('regSuccess');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        });
+    }
+
     function recallCustomer() {
         const mob = document.getElementById('cMobile').value.trim();
         const area = document.getElementById('cardRecallArea');
@@ -198,8 +242,10 @@
             let cards = [];
             let seen = new Set();
             matches.forEach(m => {
-                let key = m.cardBank + "|" + m.cardLast4;
-                if(!seen.has(key)) { cards.push({bank: m.cardBank, last4: m.cardLast4}); seen.add(key); }
+                if(m.cardBank !== "N/A"){
+                   let key = m.cardBank + "|" + m.cardLast4;
+                   if(!seen.has(key)) { cards.push({bank: m.cardBank, last4: m.cardLast4}); seen.add(key); }
+                }
             });
             sel.innerHTML = `<option value="">-- Select Card (${cards.length}) --</option>` + 
                 cards.map(c => `<option value="${c.bank}|${c.last4}">${c.bank} - ${c.last4}</option>`).join('');
@@ -225,12 +271,13 @@
                 document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
             }
             updatePosDropdown(); showSection('entry');
-        } else { alert("Error!"); }
+        } else { alert("Login Failed!"); }
     }
 
     function showSection(s) {
-        ['entry', 'daily', 'admin'].forEach(id => {
-            document.getElementById(id+'Section').classList.add('hidden');
+        ['entry', 'daily', 'cust', 'admin'].forEach(id => {
+            const el = document.getElementById(id+'Section');
+            if(el) el.classList.add('hidden');
             const btn = document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1));
             if(btn) btn.classList.remove('active');
         });
@@ -318,7 +365,7 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        const data = transactions.filter(d => d.date === today);
+        const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION");
         let sT = 0, scT = 0, lT = 0, wT = 0, h = "";
         data.slice().reverse().forEach(d => {
             sT += Number(d.amt); scT += Number(d.scVal);
@@ -355,7 +402,7 @@
 
     function printFullReport() {
         const today = new Date().toLocaleDateString('en-CA');
-        const data = transactions.filter(d => d.date === today);
+        const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION");
         const pw = window.open('', '', 'height=600,width=800');
         let rows = data.map(d => `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td></tr>`).join('');
         pw.document.write(`<html><head><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;font-size:12px;}</style></head><body><h2>Report - ${today}</h2><table><thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Amt</th><th>SC</th><th>Net</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
@@ -365,7 +412,7 @@
     function renderAdmin() {
         const from = document.getElementById('fromDate').value;
         const to = document.getElementById('toDate').value;
-        let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to) : transactions;
+        let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to && d.category !== "REGISTRATION") : transactions.filter(t => t.category !== "REGISTRATION");
         let ts=0, tsc=0, tp=0, tl=0, tw=0;
         let posSummary = {}; posMaster.forEach(p => posSummary[p.id] = 0);
         let h = "";
