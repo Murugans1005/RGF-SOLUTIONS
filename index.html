@@ -110,7 +110,6 @@
 
         <div id="custSection" class="hidden">
             <h3 style="color:#2c3e50; border-left:5px solid #3498db; padding-left:10px;">Customer Master Registration</h3>
-            <p style="font-size: 13px; color: #666;">ஸ்வைப் செய்யாமல் கஸ்டமர் விவரங்களை மட்டும் இங்கே சேமிக்கலாம்.</p>
             <form id="custRegForm" style="background:#f8f9fa; padding:15px; border-radius:10px;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="tel" id="regMobile" placeholder="Mobile Number" required>
@@ -179,12 +178,13 @@
 
     const usersDB = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
 
+    // UPDATED AS PER YOUR LATEST IMAGE image_7612a9.png
     const defaultInitialPos = [
         {id: "IOB-3897", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
-        {id: "CUB-9204", bank: "RGT MAHA 7998", normal: 1.298, corp: 3.528},
-        {id: "CUB-4705", bank: "RGT MAHA 7999", normal: 1.210, corp: 3.528},
-        {id: "UNION-5175", bank: "RGT MAHA 8000", normal: 1.357, corp: 3.528},
-        {id: "UNION-8423", bank: "RGT MAHA 8001", normal: 1.357, corp: 3.528},
+        {id: "CUB-9204", bank: "RGT MAHA 7997", normal: 1.298, corp: 3.528},
+        {id: "CUB-4705", bank: "RGT MAHA 7997", normal: 1.210, corp: 3.528},
+        {id: "UNION-5175", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
+        {id: "UNION-8423", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
         {id: "AXIS-0028", bank: "AXIS-1345", normal: 1.735, corp: 2.655},
         {id: "HDFC-7860", bank: "HDFC-6015", normal: 1.652, corp: 3.528},
         {id: "HDFC-6508", bank: "HDFC-4572", normal: 1.829, corp: 3.528},
@@ -203,31 +203,15 @@
         if(!document.getElementById('adminSection').classList.contains('hidden')) renderAdmin();
     });
 
-    // Save Customer Details Only
     function saveCustomerOnly() {
         const name = document.getElementById('regName').value;
         const mobile = document.getElementById('regMobile').value;
         const bank = document.getElementById('regBank').value;
         const last4 = document.getElementById('regLast4').value;
-
-        if(!name || mobile.length < 10 || !bank || !last4) {
-            alert("Please fill all details correctly!"); return;
-        }
-
+        if(!name || mobile.length < 10 || !bank || !last4) { alert("Check details!"); return; }
         const entryId = "REG_" + Date.now();
-        const entry = {
-            id: entryId, user: currentUser, category: "REGISTRATION",
-            date: new Date().toLocaleDateString('en-CA'), time: new Date().toLocaleTimeString(),
-            name: name, mobile: mobile, cardBank: bank, cardLast4: last4,
-            pos: "N/A", amt: "0.00", scVal: "0.00", mdrVal: "0.00", netProfit: "0.00", netPay: "0.00"
-        };
-
-        db.ref('transactions/' + entryId).set(entry).then(() => {
-            document.getElementById('custRegForm').reset();
-            const msg = document.getElementById('regSuccess');
-            msg.classList.remove('hidden');
-            setTimeout(() => msg.classList.add('hidden'), 3000);
-        });
+        const entry = { id: entryId, user: currentUser, category: "REGISTRATION", date: new Date().toLocaleDateString('en-CA'), time: new Date().toLocaleTimeString(), name: name, mobile: mobile, cardBank: bank, cardLast4: last4, pos: "N/A", amt: "0.00", scVal: "0.00", mdrVal: "0.00", netProfit: "0.00", netPay: "0.00" };
+        db.ref('transactions/' + entryId).set(entry).then(() => { document.getElementById('custRegForm').reset(); const msg = document.getElementById('regSuccess'); msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 3000); });
     }
 
     function recallCustomer() {
@@ -239,194 +223,50 @@
         if(matches.length > 0) {
             document.getElementById('cName').value = matches[0].name;
             area.classList.remove('hidden');
-            let cards = [];
-            let seen = new Set();
-            matches.forEach(m => {
-                if(m.cardBank !== "N/A"){
-                   let key = m.cardBank + "|" + m.cardLast4;
-                   if(!seen.has(key)) { cards.push({bank: m.cardBank, last4: m.cardLast4}); seen.add(key); }
-                }
-            });
-            sel.innerHTML = `<option value="">-- Select Card (${cards.length}) --</option>` + 
-                cards.map(c => `<option value="${c.bank}|${c.last4}">${c.bank} - ${c.last4}</option>`).join('');
+            let cards = []; let seen = new Set();
+            matches.forEach(m => { if(m.cardBank !== "N/A"){ let key = m.cardBank + "|" + m.cardLast4; if(!seen.has(key)) { cards.push({bank: m.cardBank, last4: m.cardLast4}); seen.add(key); } } });
+            sel.innerHTML = `<option value="">-- Select Card (${cards.length}) --</option>` + cards.map(c => `<option value="${c.bank}|${c.last4}">${c.bank} - ${c.last4}</option>`).join('');
         } else { area.classList.add('hidden'); }
     }
 
-    function applySelectedCard() {
-        const val = document.getElementById('cardRecallSelect').value;
-        if(!val) return;
-        const [bank, last4] = val.split('|');
-        document.getElementById('cBankName').value = bank;
-        document.getElementById('cCardLast4').value = last4;
-    }
+    function applySelectedCard() { const val = document.getElementById('cardRecallSelect').value; if(!val) return; const [bank, last4] = val.split('|'); document.getElementById('cBankName').value = bank; document.getElementById('cCardLast4').value = last4; }
 
-    function checkLogin() {
-        const id = document.getElementById('userId').value.trim();
-        const pass = document.getElementById('password').value.trim();
-        if (usersDB[id] && usersDB[id] === pass) {
-            currentUser = id;
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            if(id === 'sabariraj admin' || id === 'manager') {
-                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
-            }
-            updatePosDropdown(); showSection('entry');
-        } else { alert("Login Failed!"); }
-    }
+    function checkLogin() { const id = document.getElementById('userId').value.trim(); const pass = document.getElementById('password').value.trim(); if (usersDB[id] && usersDB[id] === pass) { currentUser = id; document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); if(id === 'sabariraj admin' || id === 'manager') { document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block'); } updatePosDropdown(); showSection('entry'); } else { alert("Login Failed!"); } }
 
-    function showSection(s) {
-        ['entry', 'daily', 'cust', 'admin'].forEach(id => {
-            const el = document.getElementById(id+'Section');
-            if(el) el.classList.add('hidden');
-            const btn = document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1));
-            if(btn) btn.classList.remove('active');
-        });
-        document.getElementById(s+'Section').classList.remove('hidden');
-        const activeBtn = document.getElementById('btn'+s.charAt(0).toUpperCase()+s.slice(1));
-        if(activeBtn) activeBtn.classList.add('active');
-        if(s === 'daily') renderDaily();
-        if(s === 'admin') renderAdmin();
-    }
+    function showSection(s) { ['entry', 'daily', 'cust', 'admin'].forEach(id => { const el = document.getElementById(id+'Section'); if(el) el.classList.add('hidden'); const btn = document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1)); if(btn) btn.classList.remove('active'); }); document.getElementById(s+'Section').classList.remove('hidden'); const activeBtn = document.getElementById('btn'+s.charAt(0).toUpperCase()+s.slice(1)); if(activeBtn) activeBtn.classList.add('active'); if(s === 'daily') renderDaily(); if(s === 'admin') renderAdmin(); }
 
-    function updatePosDropdown() {
-        document.getElementById('posSelect').innerHTML = `<option value="">Select POS</option>` + 
-        posMaster.map(p => `<option value="${p.id}">${p.id}</option>`).join('');
-    }
+    function updatePosDropdown() { document.getElementById('posSelect').innerHTML = `<option value="">Select POS</option>` + posMaster.map(p => `<option value="${p.id}">${p.id}</option>`).join(''); }
 
-    function autoLoadMDR() {
-        const sel = document.getElementById('posSelect').value;
-        const type = document.getElementById('cardType').value;
-        const data = posMaster.find(p => p.id === sel);
-        if(data) {
-            const rate = (type === 'CORPORATE') ? data.corp : data.normal;
-            document.getElementById('sBank').value = data.bank;
-            document.getElementById('mdrShow').innerText = `MDR: ${rate}%`;
-            return rate;
-        } return 0;
-    }
+    function autoLoadMDR() { const sel = document.getElementById('posSelect').value; const type = document.getElementById('cardType').value; const data = posMaster.find(p => p.id === sel); if(data) { const rate = (type === 'CORPORATE') ? data.corp : data.normal; document.getElementById('sBank').value = data.bank; document.getElementById('mdrShow').innerText = `MDR: ${rate}%`; return rate; } return 0; }
 
     setInterval(() => { document.getElementById('dateTime').value = new Date().toLocaleString(); }, 1000);
 
-    function resetForm() {
-        document.getElementById('billingForm').reset();
-        document.getElementById('editId').value = "";
-        document.getElementById('formTitle').innerText = "New Transaction";
-        document.getElementById('saveBtn').innerText = "SAVE DATA";
-        document.getElementById('saveBtn').style.background = "#27ae60";
-        document.getElementById('cancelEdit').classList.add('hidden');
-        document.getElementById('cardRecallArea').classList.add('hidden');
-        autoLoadMDR();
-    }
+    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('formTitle').innerText = "New Transaction"; document.getElementById('saveBtn').innerText = "SAVE DATA"; document.getElementById('saveBtn').style.background = "#27ae60"; document.getElementById('cancelEdit').classList.add('hidden'); document.getElementById('cardRecallArea').classList.add('hidden'); autoLoadMDR(); }
 
     document.getElementById('billingForm').onsubmit = function(e) {
-        e.preventDefault();
-        const editId = document.getElementById('editId').value;
-        const btn = document.getElementById('saveBtn'); btn.disabled = true;
-        const amt = parseFloat(document.getElementById('swipeAmt').value);
-        const mdrP = autoLoadMDR();
-        const scP = parseFloat(document.getElementById('scPer').value);
-        const scVal = (amt * scP) / 100;
-        const mdrVal = (amt * mdrP) / 100;
-        const entryId = editId ? editId : Date.now();
-        const entry = {
-            id: entryId, user: currentUser, category: document.getElementById('extraAction').value,
-            date: editId ? transactions.find(t=>t.id==editId).date : new Date().toLocaleDateString('en-CA'), 
-            time: editId ? transactions.find(t=>t.id==editId).time : new Date().toLocaleTimeString(),
-            name: document.getElementById('cName').value, mobile: document.getElementById('cMobile').value,
-            cardBank: document.getElementById('cBankName').value, cardLast4: document.getElementById('cCardLast4').value,
-            pos: document.getElementById('posSelect').value, amt: amt.toFixed(2), scVal: scVal.toFixed(2),
-            mdrVal: mdrVal.toFixed(2), netProfit: (scVal - mdrVal).toFixed(2), netPay: (amt - scVal).toFixed(2)
-        };
-        db.ref('transactions/' + entryId).set(entry).then(() => {
-            alert(editId ? "Updated!" : "Saved!");
-            resetForm(); btn.disabled = false; showSection('daily');
-        });
+        e.preventDefault(); const editId = document.getElementById('editId').value; const btn = document.getElementById('saveBtn'); btn.disabled = true; const amt = parseFloat(document.getElementById('swipeAmt').value); const mdrP = autoLoadMDR(); const scP = parseFloat(document.getElementById('scPer').value); const scVal = (amt * scP) / 100; const mdrVal = (amt * mdrP) / 100; const entryId = editId ? editId : Date.now();
+        const entry = { id: entryId, user: currentUser, category: document.getElementById('extraAction').value, date: editId ? transactions.find(t=>t.id==editId).date : new Date().toLocaleDateString('en-CA'), time: editId ? transactions.find(t=>t.id==editId).time : new Date().toLocaleTimeString(), name: document.getElementById('cName').value, mobile: document.getElementById('cMobile').value, cardBank: document.getElementById('cBankName').value, cardLast4: document.getElementById('cCardLast4').value, pos: document.getElementById('posSelect').value, amt: amt.toFixed(2), scVal: scVal.toFixed(2), mdrVal: mdrVal.toFixed(2), netProfit: (scVal - mdrVal).toFixed(2), netPay: (amt - scVal).toFixed(2) };
+        db.ref('transactions/' + entryId).set(entry).then(() => { alert(editId ? "Updated!" : "Saved!"); resetForm(); btn.disabled = false; showSection('daily'); });
     };
 
-    function editEntry(id) {
-        const item = transactions.find(t => t.id == id);
-        if(!item) return;
-        document.getElementById('editId').value = item.id;
-        document.getElementById('cMobile').value = item.mobile;
-        document.getElementById('cName').value = item.name;
-        document.getElementById('cBankName').value = item.cardBank;
-        document.getElementById('cCardLast4').value = item.cardLast4;
-        document.getElementById('posSelect').value = item.pos;
-        document.getElementById('extraAction').value = item.category;
-        document.getElementById('swipeAmt').value = item.amt;
-        document.getElementById('formTitle').innerText = "Edit Mode";
-        document.getElementById('saveBtn').innerText = "UPDATE";
-        document.getElementById('saveBtn').style.background = "#e67e22";
-        document.getElementById('cancelEdit').classList.remove('hidden');
-        showSection('entry'); autoLoadMDR();
-    }
+    function editEntry(id) { const item = transactions.find(t => t.id == id); if(!item) return; document.getElementById('editId').value = item.id; document.getElementById('cMobile').value = item.mobile; document.getElementById('cName').value = item.name; document.getElementById('cBankName').value = item.cardBank; document.getElementById('cCardLast4').value = item.cardLast4; document.getElementById('posSelect').value = item.pos; document.getElementById('extraAction').value = item.category; document.getElementById('swipeAmt').value = item.amt; document.getElementById('formTitle').innerText = "Edit Mode"; document.getElementById('saveBtn').innerText = "UPDATE"; document.getElementById('saveBtn').style.background = "#e67e22"; document.getElementById('cancelEdit').classList.remove('hidden'); showSection('entry'); autoLoadMDR(); }
 
     function deleteEntry(id) { if(confirm("Confirm Delete?")) db.ref('transactions/' + id).remove(); }
 
     function renderDaily() {
-        const today = new Date().toLocaleDateString('en-CA');
-        const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION");
-        let sT = 0, scT = 0, lT = 0, wT = 0, h = "";
-        data.slice().reverse().forEach(d => {
-            sT += Number(d.amt); scT += Number(d.scVal);
-            if(d.category === 'LOAN') lT += Number(d.amt);
-            if(d.category === 'WITHDRAW') wT += Number(d.amt);
-            h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td>
-                <td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`;
-        });
-        document.getElementById('dSale').innerText = `Today Swipe: ₹${sT.toLocaleString()}`;
-        document.getElementById('dSC').innerText = `Today SC: ₹${scT.toLocaleString()}`;
-        document.getElementById('dLoan').innerText = `Today Loan: ₹${lT.toLocaleString()}`;
-        document.getElementById('dWith').innerText = `Today With: ₹${wT.toLocaleString()}`;
-        document.getElementById('dailyTbody').innerHTML = h;
+        const today = new Date().toLocaleDateString('en-CA'); const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION"); let sT = 0, scT = 0, lT = 0, wT = 0, h = "";
+        data.slice().reverse().forEach(d => { sT += Number(d.amt); scT += Number(d.scVal); if(d.category === 'LOAN') lT += Number(d.amt); if(d.category === 'WITHDRAW') wT += Number(d.amt); h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td><td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`; });
+        document.getElementById('dSale').innerText = `Today Swipe: ₹${sT.toLocaleString()}`; document.getElementById('dSC').innerText = `Today SC: ₹${scT.toLocaleString()}`; document.getElementById('dLoan').innerText = `Today Loan: ₹${lT.toLocaleString()}`; document.getElementById('dWith').innerText = `Today With: ₹${wT.toLocaleString()}`; document.getElementById('dailyTbody').innerHTML = h;
     }
 
-    function printSingleReceipt(id) {
-        const d = transactions.find(t => t.id == id); if(!d) return;
-        const pw = window.open('', '', 'height=600,width=400');
-        pw.document.write(`<html><head><style>body{font-family:monospace;padding:20px;text-align:center;}.receipt{border:1px dashed #000;padding:10px;}.line{display:flex;justify-content:space-between;margin:5px 0;}</style></head><body>
-            <div class="receipt"><h3>RGF SOLUTIONS</h3><hr>
-                <div class="line"><span>Date:</span><span>${d.date}</span></div>
-                <div class="line"><span>Time:</span><span>${d.time}</span></div><hr>
-                <div class="line"><span>Customer:</span><span>${d.name}</span></div>
-                <div class="line"><span>Mobile:</span><span>${d.mobile}</span></div>
-                <div class="line"><span>Bank:</span><span>${d.cardBank}</span></div>
-                <div class="line"><span>POS:</span><span>${d.pos}</span></div>
-                <div class="line"><span>Type:</span><span>${d.category}</span></div><hr>
-                <div class="line"><b>Total:</b><b>₹${d.amt}</b></div>
-                <div class="line"><span>SC Paid:</span><span>₹${d.scVal}</span></div>
-                <div class="line"><b>Net Pay:</b><b>₹${d.netPay}</b></div><hr><p>Thank You!</p>
-            </div></body></html>`);
-        pw.document.close(); pw.print();
-    }
+    function printSingleReceipt(id) { const d = transactions.find(t => t.id == id); if(!d) return; const pw = window.open('', '', 'height=600,width=400'); pw.document.write(`<html><head><style>body{font-family:monospace;padding:20px;text-align:center;}.receipt{border:1px dashed #000;padding:10px;}.line{display:flex;justify-content:space-between;margin:5px 0;}</style></head><body><div class="receipt"><h3>RGF SOLUTIONS</h3><hr><div class="line"><span>Date:</span><span>${d.date}</span></div><div class="line"><span>Time:</span><span>${d.time}</span></div><hr><div class="line"><span>Customer:</span><span>${d.name}</span></div><div class="line"><span>Mobile:</span><span>${d.mobile}</span></div><div class="line"><span>Bank:</span><span>${d.cardBank}</span></div><div class="line"><span>POS:</span><span>${d.pos}</span></div><div class="line"><span>Type:</span><span>${d.category}</span></div><hr><div class="line"><b>Total:</b><b>₹${d.amt}</b></div><div class="line"><span>SC Paid:</span><span>₹${d.scVal}</span></div><div class="line"><b>Net Pay:</b><b>₹${d.netPay}</b></div><hr><p>Thank You!</p></div></body></html>`); pw.document.close(); pw.print(); }
 
-    function printFullReport() {
-        const today = new Date().toLocaleDateString('en-CA');
-        const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION");
-        const pw = window.open('', '', 'height=600,width=800');
-        let rows = data.map(d => `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td></tr>`).join('');
-        pw.document.write(`<html><head><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;font-size:12px;}</style></head><body><h2>Report - ${today}</h2><table><thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Amt</th><th>SC</th><th>Net</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
-        pw.document.close(); pw.print();
-    }
+    function printFullReport() { const today = new Date().toLocaleDateString('en-CA'); const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION"); const pw = window.open('', '', 'height=600,width=800'); let rows = data.map(d => `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td></tr>`).join(''); pw.document.write(`<html><head><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;font-size:12px;}</style></head><body><h2>Report - ${today}</h2><table><thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Amt</th><th>SC</th><th>Net</th></tr></thead><tbody>${rows}</tbody></table></body></html>`); pw.document.close(); pw.print(); }
 
     function renderAdmin() {
-        const from = document.getElementById('fromDate').value;
-        const to = document.getElementById('toDate').value;
-        let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to && d.category !== "REGISTRATION") : transactions.filter(t => t.category !== "REGISTRATION");
-        let ts=0, tsc=0, tp=0, tl=0, tw=0;
-        let posSummary = {}; posMaster.forEach(p => posSummary[p.id] = 0);
-        let h = "";
-        data.slice().reverse().forEach(d => {
-            ts += Number(d.amt); tsc += Number(d.scVal); tp += Number(d.netProfit);
-            if(d.category === 'LOAN') tl += Number(d.amt); if(d.category === 'WITHDRAW') tw += Number(d.amt);
-            if(posSummary[d.pos] !== undefined) posSummary[d.pos] += Number(d.amt);
-            h += `<tr><td>${d.date}</td><td>${d.user}</td><td><b>${d.category}</b></td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netProfit}</td><td>₹${d.netPay}</td>
-                <td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`;
-        });
-        document.getElementById('adminAnalytics').innerHTML = `<div class="pos-card bg-dark" style="color:white;">Overall Swipe<b>₹${ts.toLocaleString()}</b></div><div class="pos-card bg-orange" style="color:white;">Overall SC<b>₹${tsc.toLocaleString()}</b></div><div class="pos-card bg-green" style="color:white;">Overall Profit<b>₹${tp.toFixed(2)}</b></div><div class="pos-card bg-blue" style="color:white;">Total Loan<b>₹${tl.toLocaleString()}</b></div><div class="pos-card bg-red" style="color:white;">Total Withdraw<b>₹${tw.toLocaleString()}</b></div>`;
-        let phtml = ""; for(let id in posSummary) { if(posSummary[id] > 0) phtml += `<div class="pos-card"><span>${id}</span><br><b>₹${posSummary[id].toLocaleString()}</b></div>`; }
-        document.getElementById('posBreakdown').innerHTML = phtml || "No Business Found";
-        document.getElementById('adminTbody').innerHTML = h;
+        const from = document.getElementById('fromDate').value; const to = document.getElementById('toDate').value; let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to && d.category !== "REGISTRATION") : transactions.filter(t => t.category !== "REGISTRATION"); let ts=0, tsc=0, tp=0, tl=0, tw=0; let posSummary = {}; posMaster.forEach(p => posSummary[p.id] = 0); let h = "";
+        data.slice().reverse().forEach(d => { ts += Number(d.amt); tsc += Number(d.scVal); tp += Number(d.netProfit); if(d.category === 'LOAN') tl += Number(d.amt); if(d.category === 'WITHDRAW') tw += Number(d.amt); if(posSummary[d.pos] !== undefined) posSummary[d.pos] += Number(d.amt); h += `<tr><td>${d.date}</td><td>${d.user}</td><td><b>${d.category}</b></td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netProfit}</td><td>₹${d.netPay}</td><td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`; });
+        document.getElementById('adminAnalytics').innerHTML = `<div class="pos-card bg-dark" style="color:white;">Overall Swipe<b>₹${ts.toLocaleString()}</b></div><div class="pos-card bg-orange" style="color:white;">Overall SC<b>₹${tsc.toLocaleString()}</b></div><div class="pos-card bg-green" style="color:white;">Overall Profit<b>₹${tp.toFixed(2)}</b></div><div class="pos-card bg-blue" style="color:white;">Total Loan<b>₹${tl.toLocaleString()}</b></div><div class="pos-card bg-red" style="color:white;">Total Withdraw<b>₹${tw.toLocaleString()}</b></div>`; let phtml = ""; for(let id in posSummary) { if(posSummary[id] > 0) phtml += `<div class="pos-card"><span>${id}</span><br><b>₹${posSummary[id].toLocaleString()}</b></div>`; } document.getElementById('posBreakdown').innerHTML = phtml || "No Business Found"; document.getElementById('adminTbody').innerHTML = h;
     }
 </script>
 </body>
