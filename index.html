@@ -31,7 +31,9 @@
         th { background: #f8f9fa; white-space: nowrap; color: #2c3e50; }
         .btn-del { background: #ff4757; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
         .btn-edit { background: #f1c40f; color: black; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-print-sm { background: #3498db; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
         .admin-only { display: none; }
+        .btn-print-full { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -58,7 +60,6 @@
             <form id="billingForm">
                 <input type="hidden" id="editId" value="">
                 <input type="text" id="dateTime" style="text-align:center; border:none; font-weight:bold; color:#7f8c8d; background:transparent; width:100%;" readonly>
-                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="text" id="cName" placeholder="Customer Name" required>
                     <input type="tel" id="cMobile" placeholder="Mobile Number" required>
@@ -79,7 +80,6 @@
                     <input type="number" id="scPer" placeholder="SC %" value="2.0" step="0.1">
                 </div>
                 <div id="mdrShow" style="padding:10px; background:#fff9db; font-weight:bold; border-radius:8px; text-align:center; margin-bottom:10px;">MDR: 0.00%</div>
-                
                 <div style="padding:10px; background:#f0f2f5; border-radius:8px; margin-bottom:10px;">
                     <label style="font-size:12px; font-weight:bold;">TRANSACTION TYPE:</label>
                     <select id="extraAction">
@@ -101,6 +101,7 @@
                 <div id="dLoan" class="banner bg-blue">Today Loan: ₹0</div>
                 <div id="dWith" class="banner bg-red">Today With: ₹0</div>
             </div>
+            <button class="btn-print-full" onclick="printFullReport()">🖨️ Print Today's Full Report</button>
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th>Time</th><th>Customer</th><th>Bank</th><th>POS</th><th>Type</th><th>Amount</th><th>SC (₹)</th><th>Net Pay</th><th>Action</th></tr></thead>
@@ -134,7 +135,6 @@
     </div>
 
 <script>
-    // --- STEP 1: Firebase Configuration (நீ கொடுத்த விவரங்களை இங்கே சேர்த்துவிட்டேன்) ---
     const firebaseConfig = {
         apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
         authDomain: "rgf-solutions.firebaseapp.com",
@@ -148,7 +148,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- Login Database ---
     const usersDB = {
         "sabariraj admin": "Guru",
         "manager": "Murugan",
@@ -173,7 +172,6 @@
     let transactions = [];
     let currentUser = "";
 
-    // Firebase Listeners
     db.ref('transactions').on('value', (snapshot) => {
         const data = snapshot.val();
         transactions = data ? Object.values(data) : [];
@@ -192,7 +190,7 @@
                 document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
             }
             updatePosDropdown(); showSection('entry');
-        } else { alert("Login Failed! ID: " + id + " பாஸ்வேர்டு சரிபார்க்கவும்."); }
+        } else { alert("Login Failed!"); }
     }
 
     function showSection(s) {
@@ -241,13 +239,11 @@
         e.preventDefault();
         const editId = document.getElementById('editId').value;
         const btn = document.getElementById('saveBtn'); btn.disabled = true;
-
         const amt = parseFloat(document.getElementById('swipeAmt').value);
         const mdrP = autoLoadMDR();
         const scP = parseFloat(document.getElementById('scPer').value);
         const scVal = (amt * scP) / 100;
         const mdrVal = (amt * mdrP) / 100;
-
         const entryId = editId ? editId : Date.now();
         const entry = {
             id: entryId, user: currentUser, category: document.getElementById('extraAction').value,
@@ -258,9 +254,7 @@
             pos: document.getElementById('posSelect').value, amt: amt.toFixed(2), scVal: scVal.toFixed(2),
             mdrVal: mdrVal.toFixed(2), netProfit: (scVal - mdrVal).toFixed(2), netPay: (amt - scVal).toFixed(2)
         };
-
-        db.ref('transactions/' + entryId).set(entry)
-        .then(() => {
+        db.ref('transactions/' + entryId).set(entry).then(() => {
             alert(editId ? "Updated!" : "Saved!");
             resetForm();
             btn.disabled = false;
@@ -302,13 +296,93 @@
             if(d.category === 'LOAN') lT += Number(d.amt);
             if(d.category === 'WITHDRAW') wT += Number(d.amt);
             h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td>
-                <td><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`;
+                <td>
+                    <button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button>
+                    <button class="btn-edit" onclick="editEntry(${d.id})">✏️</button>
+                    <button class="btn-del" onclick="deleteEntry(${d.id})">X</button>
+                </td></tr>`;
         });
         document.getElementById('dSale').innerText = `Today Swipe: ₹${sT.toLocaleString()}`;
         document.getElementById('dSC').innerText = `Today SC: ₹${scT.toLocaleString()}`;
         document.getElementById('dLoan').innerText = `Today Loan: ₹${lT.toLocaleString()}`;
         document.getElementById('dWith').innerText = `Today With: ₹${wT.toLocaleString()}`;
         document.getElementById('dailyTbody').innerHTML = h;
+    }
+
+    // --- PRINT FUNCTIONS ---
+
+    function printSingleReceipt(id) {
+        const d = transactions.find(t => t.id == id);
+        if(!d) return;
+        const printWindow = window.open('', '', 'height=600,width=400');
+        printWindow.document.write(`
+            <html><head><title>Receipt</title>
+            <style>
+                body { font-family: 'Courier New', monospace; padding: 20px; text-align: center; }
+                .receipt-box { border: 1px dashed #000; padding: 15px; display: inline-block; width: 100%; }
+                h2 { margin: 0; font-size: 18px; }
+                hr { border-top: 1px dashed #000; }
+                .item { display: flex; justify-content: space-between; margin: 5px 0; font-size: 14px; }
+                .bold { font-weight: bold; }
+            </style></head>
+            <body>
+                <div class="receipt-box">
+                    <h2>RGF SOLUTIONS</h2>
+                    <p>Transaction Receipt</p>
+                    <hr>
+                    <div class="item"><span>Date:</span><span>${d.date}</span></div>
+                    <div class="item"><span>Time:</span><span>${d.time}</span></div>
+                    <div class="item"><span>Staff:</span><span>${d.user}</span></div>
+                    <hr>
+                    <div class="item"><span>Customer:</span><span class="bold">${d.name}</span></div>
+                    <div class="item"><span>Bank:</span><span>${d.cardBank}</span></div>
+                    <div class="item"><span>POS ID:</span><span>${d.pos}</span></div>
+                    <div class="item"><span>Type:</span><span>${d.category}</span></div>
+                    <hr>
+                    <div class="item" style="font-size:18px;"><span>Total:</span><span class="bold">₹${d.amt}</span></div>
+                    <div class="item"><span>SC Paid:</span><span>₹${d.scVal}</span></div>
+                    <div class="item"><span>Net Pay:</span><span>₹${d.netPay}</span></div>
+                    <hr>
+                    <p>*** Thank You ***</p>
+                </div>
+            </body></html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    function printFullReport() {
+        const today = new Date().toLocaleDateString('en-CA');
+        const data = transactions.filter(d => d.date === today);
+        const printWindow = window.open('', '', 'height=600,width=800');
+        let tableRows = data.map(d => `
+            <tr>
+                <td>${d.time}</td><td>${d.name}</td><td>${d.pos}</td>
+                <td>${d.category}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td>
+            </tr>`).join('');
+
+        printWindow.document.write(`
+            <html><head><title>Daily Report</title>
+            <style>
+                body { font-family: sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 12px; }
+                th { background: #eee; }
+                .header { text-align: center; margin-bottom: 20px; }
+            </style></head>
+            <body>
+                <div class="header">
+                    <h2>RGF SOLUTIONS - Daily Business Report</h2>
+                    <p>Date: ${today}</p>
+                </div>
+                <table>
+                    <thead><tr><th>Time</th><th>Customer</th><th>POS</th><th>Type</th><th>Amount</th><th>SC</th><th>Net Pay</th></tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </body></html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
     }
 
     function renderAdmin() {
@@ -325,7 +399,7 @@
             if(d.category === 'WITHDRAW') tw += Number(d.amt);
             if(posSummary[d.pos] !== undefined) posSummary[d.pos] += Number(d.amt);
             h += `<tr><td>${d.date}</td><td>${d.user}</td><td><b>${d.category}</b></td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.mdrVal}</td><td style="color:green; font-weight:bold;">₹${d.netProfit}</td><td>₹${d.netPay}</td>
-                <td><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`;
+                <td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`;
         });
         document.getElementById('adminAnalytics').innerHTML = `<div class="pos-card bg-dark" style="color:white;">Overall Swipe<b>₹${ts.toLocaleString()}</b></div><div class="pos-card bg-orange" style="color:white;">Overall SC<b>₹${tsc.toLocaleString()}</b></div><div class="pos-card bg-green" style="color:white;">Overall Profit<b>₹${tp.toFixed(2)}</b></div><div class="pos-card bg-blue" style="color:white;">Total Loan<b>₹${tl.toLocaleString()}</b></div><div class="pos-card bg-red" style="color:white;">Total Withdraw<b>₹${tw.toLocaleString()}</b></div>`;
         let phtml = "";
