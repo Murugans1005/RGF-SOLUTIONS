@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Final Stable</title>
+    <title>RGF Solutions - Ultimate Final Version</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -27,6 +27,8 @@
         .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
         .admin-only { display: none; }
         .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        /* POS Breakdown Dynamic Colors */
+        .pos-card-color { padding: 15px; border-radius: 10px; text-align: center; color: white; font-weight: bold; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -71,7 +73,7 @@
                     <div id="mdrShow" style="padding:12px; background:#fff9db; border-radius:8px; text-align:center; font-weight:bold;">MDR: 0.00%</div>
                 </div>
                 <select id="actionType"><option value="NONE">NORMAL</option><option value="LOAN">LOAN</option><option value="WITHDRAW">WITHDRAW</option></select>
-                <input type="number" id="amt" placeholder="Amount" required>
+                <input type="number" id="amt" placeholder="Amount" step="0.01" required>
                 <button type="submit" id="submitBtn" class="btn-main" style="background:#27ae60;">SAVE TRANSACTION</button>
                 <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:5px; background:#95a5a6; color:white; border:none; border-radius:8px;">CANCEL</button>
             </form>
@@ -79,8 +81,8 @@
 
         <div id="dailySection" class="hidden">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                <div id="dSale" class="banner" style="background:#2ecc71;">Sale: ₹0</div>
-                <div id="dSC" class="banner" style="background:#f39c12;">SC: ₹0</div>
+                <div id="dSale" class="banner" style="background:#2ecc71;">Sale: ₹0.00</div>
+                <div id="dSC" class="banner" style="background:#f39c12;">SC: ₹0.00</div>
             </div>
             <div style="overflow-x:auto;">
                 <table>
@@ -133,11 +135,16 @@
     const db = firebase.database();
     const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
     const posMaster = [
-        {id: "IOB-3897", n: 1.357, c: 3.528}, {id: "CUB-9204", n: 1.298, c: 3.528},
-        {id: "CUB-4705", n: 1.210, c: 3.528}, {id: "UNION-5175", n: 1.357, c: 3.528},
-        {id: "UNION-8423", n: 1.357, c: 3.528}, {id: "AXIS-0028", n: 1.735, c: 2.655},
-        {id: "HDFC-7860", n: 1.652, c: 3.528}, {id: "HDFC-6508", n: 1.829, c: 3.528},
-        {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
+        {id: "IOB-3897", n: 1.357, c: 3.528, color: "#2c3e50"}, 
+        {id: "CUB-9204", n: 1.298, c: 3.528, color: "#8e44ad"},
+        {id: "CUB-4705", n: 1.210, c: 3.528, color: "#2980b9"}, 
+        {id: "UNION-5175", n: 1.357, c: 3.528, color: "#d35400"},
+        {id: "UNION-8423", n: 1.357, c: 3.528, color: "#16a085"}, 
+        {id: "AXIS-0028", n: 1.735, c: 2.655, color: "#c0392b"},
+        {id: "HDFC-7860", n: 1.652, c: 3.528, color: "#27ae60"}, 
+        {id: "HDFC-6508", n: 1.829, c: 3.528, color: "#f39c12"},
+        {id: "FINKEDA", n: 1.350, c: 3.528, color: "#34495e"}, 
+        {id: "MOS", n: 1.700, c: 3.528, color: "#7f8c8d"}
     ];
 
     let trans = []; let currentUser = "";
@@ -208,14 +215,14 @@
         data.slice().reverse().forEach(x => {
             s += Number(x.amt); sc += Number(x.scVal);
             const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
-            h += `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.amt}</td><td>${x.scVal}</td><td>
+            h += `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td>
                 <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
                 ${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button>` : ''}
                 ${isAdm ? `<button class="btn-del" onclick="deleteRow(${x.id})">X</button>` : ''}
             </td></tr>`;
         });
-        document.getElementById('dSale').innerText = "Sale: ₹" + s;
-        document.getElementById('dSC').innerText = "SC: ₹" + sc;
+        document.getElementById('dSale').innerText = "Sale: ₹" + s.toFixed(2);
+        document.getElementById('dSC').innerText = "SC: ₹" + sc.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
     }
 
@@ -253,7 +260,7 @@
                 if(pos[x.pos] !== undefined) pos[x.pos] += a;
                 
                 const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
-                h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${x.amt}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>
+                h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${a.toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>
                     <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
                     ${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button>` : ''}
                     ${isAdm ? `<button class="btn-del" onclick="deleteRow(${x.id})">X</button>` : ''}
@@ -261,12 +268,19 @@
             }
         });
         document.getElementById('adminStats').innerHTML = `
-            <div class="banner" style="background:#2c3e50;">Tot: ₹${ts}</div>
+            <div class="banner" style="background:#2c3e50;">Tot: ₹${ts.toFixed(2)}</div>
             <div class="banner" style="background:#27ae60;">Profit: ₹${tp.toFixed(2)}</div>
-            <div class="banner" style="background:#3498db;">Loan: ₹${tl}</div>
-            <div class="banner" style="background:#e74c3c;">With: ₹${tw}</div>`;
+            <div class="banner" style="background:#3498db;">Loan: ₹${tl.toFixed(2)}</div>
+            <div class="banner" style="background:#e74c3c;">With: ₹${tw.toFixed(2)}</div>`;
         
-        let ph = ""; for(let k in pos) if(pos[k] > 0) ph += `<div class="banner" style="background:#95a5a6; color:black; font-size:11px;">${k}: ₹${pos[k]}</div>`;
+        let ph = ""; 
+        for(let k in pos) {
+            if(pos[k] > 0) {
+                const posObj = posMaster.find(m => m.id === k);
+                const color = posObj ? posObj.color : "#95a5a6";
+                ph += `<div class="pos-card-color" style="background:${color};">${k}<br>₹${pos[k].toFixed(2)}</div>`;
+            }
+        }
         document.getElementById('posStats').innerHTML = ph;
         document.getElementById('adminTbody').innerHTML = h;
     }
@@ -274,7 +288,7 @@
     function printSlip(id) {
         const x = trans.find(t => t.id == id);
         const w = window.open('', '', 'width=300,height=400');
-        w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${x.amt}<br>Net: ₹${x.netPay}<hr>Thank You!</div>`);
+        w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`);
         w.print(); w.close();
     }
 
