@@ -10,39 +10,25 @@
 
     <style>
         :root { --primary: #e67e22; --dark: #2c3e50; --success: #27ae60; --bg: #f0f2f5; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background-color: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
         .container { max-width: 1250px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
-        /* Navigation Tabs */
         .nav-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; flex-wrap: wrap; }
-        .nav-tabs button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; transition: 0.3s; }
+        .nav-tabs button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; }
         .nav-tabs button.active { background: var(--primary); }
-        
-        /* Form Styling */
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-        .btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-excel { background: var(--success); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-left: 10px; }
-        
-        /* Voice Button */
-        .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; margin-left: 5px; }
-        .voice-active { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
-
-        /* Dashboard Cards */
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        .btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-excel { background: var(--success); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .pos-card { background: #e3f2fd; padding: 12px; border-radius: 10px; text-align: center; border-left: 5px solid #1565c0; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
         .banner { color: white; padding: 12px; border-radius: 10px; text-align: center; font-size: 0.95rem; font-weight: bold; }
         .bg-green { background: #2ecc71; } .bg-orange { background: #f39c12; } .bg-blue { background: #3498db; } .bg-red { background: #e74c3c; } .bg-dark { background: #2c3e50; }
-
-        /* Tables */
         .table-wrapper { overflow-x: auto; border: 1px solid #eee; border-radius: 8px; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; }
         th { background: #f8f9fa; color: var(--dark); white-space: nowrap; }
-        
-        .card-suggest { background: #e8f4fd; border: 1px solid #3498db; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; margin-left: 5px; }
         .admin-only { display: none; }
     </style>
 </head>
@@ -69,60 +55,50 @@
         <div id="entrySection">
             <h3 id="formTitle">New Transaction</h3>
             <form id="billingForm">
-                <input type="hidden" id="editId" value="">
-                <input type="text" id="dateTime" style="text-align:center; border:none; font-weight:bold; color:#7f8c8d; background:transparent;" readonly>
-                
+                <input type="text" id="dateTime" style="text-align:center; border:none; font-weight:bold; background:transparent;" readonly>
                 <div style="display:flex; align-items: center;">
                     <input type="tel" id="cMobile" placeholder="Enter Mobile Number" oninput="recallCustomer()" required>
-                    <button type="button" id="voiceBtn" class="voice-btn" onclick="startVoiceSearch()">🎙️</button>
+                    <button type="button" class="voice-btn" onclick="startVoiceSearch()">🎙️</button>
                 </div>
-
                 <div id="cardRecallArea" class="hidden card-suggest">
-                    <label style="font-size:12px; font-weight:bold; color:#2980b9;">MATCHING CARDS FOUND:</label>
-                    <select id="cardRecallSelect" onchange="applySelectedCard()">
-                        <option value="">-- Choose Card --</option>
-                    </select>
+                    <select id="cardRecallSelect" onchange="applySelectedCard()"><option value="">-- Choose Card --</option></select>
                 </div>
-
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="text" id="cName" placeholder="Customer Name" required>
                     <input type="text" id="cBankName" placeholder="Card Bank Name" required>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" id="cCardLast4" placeholder="Card Last 4 Digits" maxlength="4" required>
+                    <input type="text" id="cCardLast4" placeholder="Last 4 Digits" maxlength="4" required>
                     <select id="posSelect" onchange="autoLoadMDR()" required></select>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="text" id="sBank" placeholder="Settlement Bank" readonly>
-                    <select id="cardType" onchange="autoLoadMDR()">
-                        <option value="NORMAL">Normal Card</option>
-                        <option value="CORPORATE">Corporate Card</option>
-                    </select>
+                    <select id="cardType" onchange="autoLoadMDR()"><option value="NORMAL">Normal</option><option value="CORPORATE">Corporate</option></select>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="number" id="scPer" placeholder="SC %" value="2.0" step="0.1">
-                    <div id="mdrShow" style="padding:12px; background:#fff9db; font-weight:bold; border-radius:8px; text-align:center; border: 1px solid #ffe066;">MDR: 0.00%</div>
+                    <input type="number" id="scPer" value="2.0" step="0.1">
+                    <div id="mdrShow" style="padding:12px; background:#fff9db; font-weight:bold; border-radius:8px; text-align:center;">MDR: 0.00%</div>
                 </div>
                 <select id="extraAction">
                     <option value="NONE">NORMAL SWIPE</option>
-                    <option value="LOAN">LOAN (கொடுத்தது)</option>
-                    <option value="WITHDRAW">WITHDRAW (எடுத்தது)</option>
+                    <option value="LOAN">LOAN</option>
+                    <option value="WITHDRAW">WITHDRAW</option>
                 </select>
-                <input type="number" id="swipeAmt" placeholder="Total Amount (₹)" step="0.01" required>
-                <button type="submit" id="saveBtn" class="btn-main" style="background:var(--success); margin-top:10px;">SAVE DATA</button>
+                <input type="number" id="swipeAmt" placeholder="Amount (₹)" required>
+                <button type="submit" id="saveBtn" class="btn-main" style="background:var(--success);">SAVE DATA</button>
             </form>
         </div>
 
         <div id="custSection" class="hidden">
-            <h3>Customer Master Registration</h3>
+            <h3>Customer Master</h3>
             <form id="custRegForm" style="background:#f8f9fa; padding:15px; border-radius:10px;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="tel" id="regMobile" placeholder="Mobile Number" required>
-                    <input type="text" id="regName" placeholder="Customer Name" required>
+                    <input type="tel" id="regMobile" placeholder="Mobile" required>
+                    <input type="text" id="regName" placeholder="Name" required>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" id="regBank" placeholder="Card Bank Name" required>
-                    <input type="text" id="regLast4" placeholder="Card Last 4 Digits" maxlength="4" required>
+                    <input type="text" id="regBank" placeholder="Bank" required>
+                    <input type="text" id="regLast4" placeholder="Last 4" maxlength="4" required>
                 </div>
                 <button type="button" onclick="saveCustomerOnly()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
             </form>
@@ -130,22 +106,19 @@
 
         <div id="dailySection" class="hidden">
             <div class="pos-summary-grid">
-                <div id="dSale" class="banner bg-green">Today Swipe: ₹0</div>
-                <div id="dSC" class="banner bg-orange">Today SC: ₹0</div>
-                <div id="dLoan" class="banner bg-blue">Today Loan: ₹0</div>
-                <div id="dWith" class="banner bg-red">Today With: ₹0</div>
+                <div id="dSale" class="banner bg-green">Today: ₹0</div>
+                <div id="dSC" class="banner bg-orange">SC: ₹0</div>
             </div>
-            <button class="btn-excel" onclick="exportTableToExcel('dailyTable', 'Daily_Report')">📊 Export to Excel</button>
             <div class="table-wrapper">
                 <table id="dailyTable">
-                    <thead><tr><th>Time</th><th>Customer</th><th>Bank</th><th>POS</th><th>Type</th><th>Amount</th><th>SC</th><th>Net Pay</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>Customer</th><th>Bank</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Net</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="adminSection" class="hidden">
-            <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px;">
+            <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #ddd;">
                 <h4>Reports Filter</h4>
                 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                     <input type="date" id="fromDate" style="width:auto;"> 
@@ -157,14 +130,19 @@
                         <option value="07">July</option><option value="08">August</option><option value="09">September</option>
                         <option value="10">October</option><option value="11">November</option><option value="12">December</option>
                     </select>
-                    <button class="btn-main" style="width:auto; padding:10px 30px;" onclick="renderAdmin()">CHECK</button>
-                    <button class="btn-excel" onclick="exportTableToExcel('adminTable', 'Admin_Report')">📊 Export Excel</button>
+                    <button class="btn-main" style="width:auto; padding:10px 30px; background:#3498db;" onclick="renderAdmin()">CHECK</button>
+                    <button class="btn-excel" onclick="exportTableToExcel('adminTable', 'Report')">📊 Export Excel</button>
                 </div>
             </div>
+            
             <div id="adminAnalytics" class="pos-summary-grid"></div>
+            
+            <h4 style="margin-top:20px;">POS Wise Business</h4>
+            <div id="posBreakdown" class="pos-summary-grid"></div>
+
             <div class="table-wrapper">
                 <table id="adminTable">
-                    <thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amount</th><th>SC</th><th>Profit</th><th>Net Pay</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Profit</th><th>Net Pay</th><th>Action</th></tr></thead>
                     <tbody id="adminTbody"></tbody>
                 </table>
             </div>
@@ -172,179 +150,6 @@
     </div>
 
 <script>
-    // Firebase Setup
     const firebaseConfig = {
         apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
-        authDomain: "rgf-solutions.firebaseapp.com",
-        databaseURL: "https://rgf-solutions-default-rtdb.firebaseio.com",
-        projectId: "rgf-solutions",
-        storageBucket: "rgf-solutions.firebasestorage.app",
-        messagingSenderId: "324475817892",
-        appId: "1:324475817892:web:103ecc2311e6b459f4fb31"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const usersDB = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
-    
-    // POS Details - FIXED AS PER YOUR IMAGE
-    const posMaster = [
-        {id: "IOB-3897", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
-        {id: "CUB-9204", bank: "RGT MAHA 7997", normal: 1.298, corp: 3.528},
-        {id: "CUB-4705", bank: "RGT MAHA 7997", normal: 1.210, corp: 3.528},
-        {id: "UNION-5175", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
-        {id: "UNION-8423", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
-        {id: "AXIS-0028", bank: "AXIS-1345", normal: 1.735, corp: 2.655},
-        {id: "HDFC-7860", bank: "HDFC-6015", normal: 1.652, corp: 3.528},
-        {id: "HDFC-6508", bank: "HDFC-4572", normal: 1.829, corp: 3.528},
-        {id: "FINKEDA", bank: "RGT MAHA 7997", normal: 1.350, corp: 3.528},
-        {id: "MOS", bank: "EQUITAS 1", normal: 1.700, corp: 3.528}
-    ];
-
-    let transactions = [];
-    let currentUser = "";
-
-    // REAL-TIME SYNC
-    db.ref('transactions').on('value', (snapshot) => {
-        const data = snapshot.val();
-        transactions = data ? Object.values(data) : [];
-        renderDaily();
-    });
-
-    // LOGIN
-    function checkLogin() {
-        const id = document.getElementById('userId').value.trim();
-        const pass = document.getElementById('password').value.trim();
-        if (usersDB[id] === pass) {
-            currentUser = id;
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            if(id.includes('admin') || id === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
-            updatePosDropdown(); showSection('entry');
-        } else alert("Invalid Login!");
-    }
-
-    // VOICE SEARCH
-    function startVoiceSearch() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
-        const btn = document.getElementById('voiceBtn');
-        recognition.onstart = () => btn.classList.add('voice-active');
-        recognition.onend = () => btn.classList.remove('voice-active');
-        recognition.onresult = (event) => {
-            let res = event.results[0][0].transcript.replace(/\s/g, '');
-            if(!isNaN(res)) { document.getElementById('cMobile').value = res; recallCustomer(); }
-        };
-        recognition.start();
-    }
-
-    // MONTH RANGE SELECTOR
-    function setMonthRange() {
-        const month = document.getElementById('monthFilter').value;
-        if(!month) return;
-        const year = new Date().getFullYear();
-        document.getElementById('fromDate').value = `${year}-${month}-01`;
-        document.getElementById('toDate').value = new Date(year, month, 0).toISOString().split('T')[0];
-        renderAdmin();
-    }
-
-    // CORE FUNCTIONS
-    function showSection(s) {
-        ['entry', 'daily', 'cust', 'admin'].forEach(id => document.getElementById(id+'Section').classList.add('hidden'));
-        document.getElementById(s+'Section').classList.remove('hidden');
-        if(s === 'admin') renderAdmin();
-    }
-
-    function updatePosDropdown() {
-        document.getElementById('posSelect').innerHTML = `<option value="">Select POS</option>` + 
-        posMaster.map(p => `<option value="${p.id}">${p.id}</option>`).join('');
-    }
-
-    function autoLoadMDR() {
-        const sel = document.getElementById('posSelect').value;
-        const type = document.getElementById('cardType').value;
-        const data = posMaster.find(p => p.id === sel);
-        if(data) {
-            const rate = (type === 'CORPORATE') ? data.corp : data.normal;
-            document.getElementById('sBank').value = data.bank;
-            document.getElementById('mdrShow').innerText = `MDR: ${rate}%`;
-            return rate;
-        } return 0;
-    }
-
-    function recallCustomer() {
-        const mob = document.getElementById('cMobile').value.trim();
-        if(mob.length < 10) return;
-        const matches = transactions.filter(t => t.mobile === mob);
-        if(matches.length > 0) {
-            document.getElementById('cName').value = matches[0].name;
-            const area = document.getElementById('cardRecallArea');
-            const sel = document.getElementById('cardRecallSelect');
-            area.classList.remove('hidden');
-            let cards = []; let seen = new Set();
-            matches.forEach(m => { if(m.cardBank !== "N/A"){ let key = m.cardBank + "|" + m.cardLast4; if(!seen.has(key)) { cards.push({bank: m.cardBank, last4: m.cardLast4}); seen.add(key); } } });
-            sel.innerHTML = `<option value="">-- Choose Card --</option>` + cards.map(c => `<option value="${c.bank}|${c.last4}">${c.bank} - ${c.last4}</option>`).join('');
-        }
-    }
-
-    function applySelectedCard() {
-        const val = document.getElementById('cardRecallSelect').value;
-        if(val) { const [b, l] = val.split('|'); document.getElementById('cBankName').value = b; document.getElementById('cCardLast4').value = l; }
-    }
-
-    function saveCustomerOnly() {
-        const entryId = "REG_" + Date.now();
-        const data = { id: entryId, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: document.getElementById('regBank').value, cardLast4: document.getElementById('regLast4').value, date: new Date().toLocaleDateString('en-CA'), user: currentUser };
-        db.ref('transactions/' + entryId).set(data).then(() => { alert("Customer Saved!"); document.getElementById('custRegForm').reset(); });
-    }
-
-    document.getElementById('billingForm').onsubmit = function(e) {
-        e.preventDefault();
-        const amt = parseFloat(document.getElementById('swipeAmt').value);
-        const mdrP = autoLoadMDR();
-        const scP = parseFloat(document.getElementById('scPer').value);
-        const scVal = (amt * scP) / 100;
-        const mdrVal = (amt * mdrP) / 100;
-        const id = Date.now();
-        const entry = { id: id, user: currentUser, category: document.getElementById('extraAction').value, date: new Date().toLocaleDateString('en-CA'), time: new Date().toLocaleTimeString(), name: document.getElementById('cName').value, mobile: document.getElementById('cMobile').value, cardBank: document.getElementById('cBankName').value, cardLast4: document.getElementById('cCardLast4').value, pos: document.getElementById('posSelect').value, amt: amt.toFixed(2), scVal: scVal.toFixed(2), mdrVal: mdrVal.toFixed(2), netProfit: (scVal - mdrVal).toFixed(2), netPay: (amt - scVal).toFixed(2) };
-        db.ref('transactions/' + id).set(entry).then(() => { alert("Saved!"); document.getElementById('billingForm').reset(); showSection('daily'); });
-    };
-
-    function renderDaily() {
-        const today = new Date().toLocaleDateString('en-CA');
-        const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION");
-        let ts=0, tsc=0, tl=0, tw=0, h="";
-        data.slice().reverse().forEach(d => {
-            ts += Number(d.amt); tsc += Number(d.scVal);
-            if(d.category === 'LOAN') tl += Number(d.amt);
-            if(d.category === 'WITHDRAW') tw += Number(d.amt);
-            h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>${d.amt}</td><td>${d.scVal}</td><td>${d.netPay}</td><td><button onclick="db.ref('transactions/${d.id}').remove()">X</button></td></tr>`;
-        });
-        document.getElementById('dSale').innerText = `Today: ₹${ts}`;
-        document.getElementById('dSC').innerText = `SC: ₹${tsc}`;
-        document.getElementById('dailyTbody').innerHTML = h;
-    }
-
-    function renderAdmin() {
-        const from = document.getElementById('fromDate').value;
-        const to = document.getElementById('toDate').value;
-        let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to && d.category !== "REGISTRATION") : transactions.filter(t => t.category !== "REGISTRATION");
-        let ts=0, tsc=0, tp=0, h="";
-        data.slice().reverse().forEach(d => {
-            ts += Number(d.amt); tsc += Number(d.scVal); tp += Number(d.netProfit);
-            h += `<tr><td>${d.date}</td><td>${d.user}</td><td>${d.category}</td><td>${d.pos}</td><td>${d.amt}</td><td>${d.scVal}</td><td>${d.netProfit}</td><td>${d.netPay}</td></tr>`;
-        });
-        document.getElementById('adminAnalytics').innerHTML = `<div class="banner bg-dark">Total: ₹${ts.toLocaleString()}</div><div class="banner bg-orange">SC: ₹${tsc.toLocaleString()}</div><div class="banner bg-green">Profit: ₹${tp.toFixed(2)}</div>`;
-        document.getElementById('adminTbody').innerHTML = h;
-    }
-
-    function exportTableToExcel(tableID, filename = ''){
-        let table = document.getElementById(tableID);
-        let wb = XLSX.utils.table_to_book(table, {sheet: "Sheet1"});
-        XLSX.writeFile(wb, filename + "_" + new Date().toLocaleDateString() + ".xlsx");
-    }
-
-    setInterval(() => document.getElementById('dateTime').value = new Date().toLocaleString(), 1000);
-</script>
-</body>
-</html>
+        authDomain: "
