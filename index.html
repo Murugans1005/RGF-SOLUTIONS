@@ -60,7 +60,7 @@
                     <input type="tel" id="cMobile" placeholder="Enter Mobile Number" oninput="recallCustomer()" required>
                     <button type="button" class="voice-btn" onclick="startVoiceSearch()">🎙️</button>
                 </div>
-                <div id="cardRecallArea" class="hidden card-suggest">
+                <div id="cardRecallArea" class="hidden" style="background: #e8f4fd; border: 1px solid #3498db; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
                     <select id="cardRecallSelect" onchange="applySelectedCard()"><option value="">-- Choose Card --</option></select>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -68,7 +68,7 @@
                     <input type="text" id="cBankName" placeholder="Card Bank Name" required>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" id="cCardLast4" placeholder="Last 4 Digits" maxlength="4" required>
+                    <input type="text" id="cCardLast4" placeholder="Last 4" maxlength="4" required>
                     <select id="posSelect" onchange="autoLoadMDR()" required></select>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -124,22 +124,19 @@
                     <input type="date" id="fromDate" style="width:auto;"> 
                     <input type="date" id="toDate" style="width:auto;">
                     <select id="monthFilter" style="width:auto;" onchange="setMonthRange()">
-                        <option value="">-- Select Month --</option>
-                        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
-                        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
-                        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
-                        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                        <option value="">-- Month --</option>
+                        <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
+                        <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
+                        <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
+                        <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
                     </select>
                     <button class="btn-main" style="width:auto; padding:10px 30px; background:#3498db;" onclick="renderAdmin()">CHECK</button>
-                    <button class="btn-excel" onclick="exportTableToExcel('adminTable', 'Report')">📊 Export Excel</button>
+                    <button class="btn-excel" onclick="exportTableToExcel('adminTable', 'Report')">📊 Excel</button>
                 </div>
             </div>
-            
             <div id="adminAnalytics" class="pos-summary-grid"></div>
-            
-            <h4 style="margin-top:20px;">POS Wise Business</h4>
+            <h4>POS Breakdown</h4>
             <div id="posBreakdown" class="pos-summary-grid"></div>
-
             <div class="table-wrapper">
                 <table id="adminTable">
                     <thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Profit</th><th>Net Pay</th><th>Action</th></tr></thead>
@@ -152,4 +149,180 @@
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
-        authDomain: "
+        authDomain: "rgf-solutions.firebaseapp.com",
+        databaseURL: "https://rgf-solutions-default-rtdb.firebaseio.com",
+        projectId: "rgf-solutions",
+        storageBucket: "rgf-solutions.firebasestorage.app",
+        messagingSenderId: "324475817892",
+        appId: "1:324475817892:web:103ecc2311e6b459f4fb31"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const usersDB = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
+    
+    const posMaster = [
+        {id: "IOB-3897", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
+        {id: "CUB-9204", bank: "RGT MAHA 7997", normal: 1.298, corp: 3.528},
+        {id: "CUB-4705", bank: "RGT MAHA 7997", normal: 1.210, corp: 3.528},
+        {id: "UNION-5175", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
+        {id: "UNION-8423", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
+        {id: "AXIS-0028", bank: "AXIS-1345", normal: 1.735, corp: 2.655},
+        {id: "HDFC-7860", bank: "HDFC-6015", normal: 1.652, corp: 3.528},
+        {id: "HDFC-6508", bank: "HDFC-4572", normal: 1.829, corp: 3.528},
+        {id: "FINKEDA", bank: "RGT MAHA 7997", normal: 1.350, corp: 3.528},
+        {id: "MOS", bank: "EQUITAS 1", normal: 1.700, corp: 3.528}
+    ];
+
+    let transactions = [];
+    let currentUser = "";
+
+    db.ref('transactions').on('value', (snapshot) => {
+        const data = snapshot.val();
+        transactions = data ? Object.values(data) : [];
+        renderDaily();
+        if(!document.getElementById('adminSection').classList.contains('hidden')) renderAdmin();
+    });
+
+    function checkLogin() {
+        const id = document.getElementById('userId').value.trim();
+        const pass = document.getElementById('password').value.trim();
+        if (usersDB[id] === pass) {
+            currentUser = id;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            if(id.includes('admin') || id === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
+            updatePosDropdown(); showSection('entry');
+        } else alert("Invalid!");
+    }
+
+    function showSection(s) {
+        ['entry', 'daily', 'cust', 'admin'].forEach(id => document.getElementById(id+'Section').classList.add('hidden'));
+        document.getElementById(s+'Section').classList.remove('hidden');
+        if(s === 'admin') renderAdmin();
+    }
+
+    function startVoiceSearch() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.onresult = (event) => {
+            let res = event.results[0][0].transcript.replace(/\s/g, '');
+            if(!isNaN(res)) { document.getElementById('cMobile').value = res; recallCustomer(); }
+        };
+        recognition.start();
+    }
+
+    function setMonthRange() {
+        const month = document.getElementById('monthFilter').value;
+        if(!month) return;
+        const year = new Date().getFullYear();
+        document.getElementById('fromDate').value = `${year}-${month}-01`;
+        document.getElementById('toDate').value = new Date(year, month, 0).toISOString().split('T')[0];
+        renderAdmin();
+    }
+
+    function updatePosDropdown() {
+        document.getElementById('posSelect').innerHTML = `<option value="">Select POS</option>` + posMaster.map(p => `<option value="${p.id}">${p.id}</option>`).join('');
+    }
+
+    function autoLoadMDR() {
+        const sel = document.getElementById('posSelect').value;
+        const type = document.getElementById('cardType').value;
+        const data = posMaster.find(p => p.id === sel);
+        if(data) {
+            const rate = (type === 'CORPORATE') ? data.corp : data.normal;
+            document.getElementById('sBank').value = data.bank;
+            document.getElementById('mdrShow').innerText = `MDR: ${rate}%`;
+            return rate;
+        } return 0;
+    }
+
+    function recallCustomer() {
+        const mob = document.getElementById('cMobile').value.trim();
+        if(mob.length < 10) return;
+        const matches = transactions.filter(t => t.mobile === mob);
+        if(matches.length > 0) {
+            document.getElementById('cName').value = matches[0].name;
+            const area = document.getElementById('cardRecallArea');
+            const sel = document.getElementById('cardRecallSelect');
+            area.classList.remove('hidden');
+            let cards = []; let seen = new Set();
+            matches.forEach(m => { if(m.cardBank !== "N/A" && m.cardBank){ let key = m.cardBank + "|" + m.cardLast4; if(!seen.has(key)) { cards.push({bank: m.cardBank, last4: m.cardLast4}); seen.add(key); } } });
+            sel.innerHTML = `<option value="">-- Choose Card --</option>` + cards.map(c => `<option value="${c.bank}|${c.last4}">${c.bank} - ${c.last4}</option>`).join('');
+        }
+    }
+
+    function applySelectedCard() {
+        const val = document.getElementById('cardRecallSelect').value;
+        if(val) { const [b, l] = val.split('|'); document.getElementById('cBankName').value = b; document.getElementById('cCardLast4').value = l; }
+    }
+
+    function saveCustomerOnly() {
+        const id = "REG_" + Date.now();
+        db.ref('transactions/' + id).set({ id: id, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: document.getElementById('regBank').value, cardLast4: document.getElementById('regLast4').value, date: new Date().toLocaleDateString('en-CA'), user: currentUser }).then(() => { alert("Saved!"); document.getElementById('custRegForm').reset(); });
+    }
+
+    document.getElementById('billingForm').onsubmit = function(e) {
+        e.preventDefault();
+        const amt = parseFloat(document.getElementById('swipeAmt').value);
+        const mdrP = autoLoadMDR();
+        const scP = parseFloat(document.getElementById('scPer').value);
+        const scVal = (amt * scP) / 100;
+        const mdrVal = (amt * mdrP) / 100;
+        const id = Date.now();
+        db.ref('transactions/' + id).set({ id: id, user: currentUser, category: document.getElementById('extraAction').value, date: new Date().toLocaleDateString('en-CA'), time: new Date().toLocaleTimeString(), name: document.getElementById('cName').value, mobile: document.getElementById('cMobile').value, cardBank: document.getElementById('cBankName').value, cardLast4: document.getElementById('cCardLast4').value, pos: document.getElementById('posSelect').value, amt: amt.toFixed(2), scVal: scVal.toFixed(2), mdrVal: mdrVal.toFixed(2), netProfit: (scVal - mdrVal).toFixed(2), netPay: (amt - scVal).toFixed(2) }).then(() => { alert("Saved!"); document.getElementById('billingForm').reset(); showSection('daily'); });
+    };
+
+    function renderDaily() {
+        const today = new Date().toLocaleDateString('en-CA');
+        const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION");
+        let ts=0, tsc=0, h="";
+        data.slice().reverse().forEach(d => {
+            ts += Number(d.amt); tsc += Number(d.scVal);
+            h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>${d.amt}</td><td>${d.scVal}</td><td>${d.netPay}</td></tr>`;
+        });
+        document.getElementById('dSale').innerText = `Today: ₹${ts}`;
+        document.getElementById('dSC').innerText = `SC: ₹${tsc}`;
+        document.getElementById('dailyTbody').innerHTML = h;
+    }
+
+    function renderAdmin() {
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to && d.category !== "REGISTRATION") : transactions.filter(t => t.category !== "REGISTRATION");
+        
+        let ts=0, tsc=0, tp=0, tl=0, tw=0;
+        let posSummary = {}; posMaster.forEach(p => posSummary[p.id] = 0);
+        let h = "";
+
+        data.slice().reverse().forEach(d => {
+            let amt = Number(d.amt);
+            ts += amt; tsc += Number(d.scVal); tp += Number(d.netProfit);
+            if(d.category === 'LOAN') tl += amt;
+            if(d.category === 'WITHDRAW') tw += amt;
+            if(posSummary[d.pos] !== undefined) posSummary[d.pos] += amt;
+            
+            h += `<tr><td>${d.date}</td><td>${d.user}</td><td><b>${d.category}</b></td><td>${d.pos}</td><td>₹${amt}</td><td>₹${d.scVal}</td><td>₹${d.netProfit}</td><td>₹${d.netPay}</td><td><button onclick="db.ref('transactions/${d.id}').remove()">X</button></td></tr>`;
+        });
+
+        document.getElementById('adminAnalytics').innerHTML = `
+            <div class="banner bg-dark">Overall: ₹${ts.toLocaleString()}</div>
+            <div class="banner bg-orange">SC: ₹${tsc.toLocaleString()}</div>
+            <div class="banner bg-green">Profit: ₹${tp.toFixed(2)}</div>
+            <div class="banner bg-blue">Loan: ₹${tl.toLocaleString()}</div>
+            <div class="banner bg-red">Withdraw: ₹${tw.toLocaleString()}</div>
+        `;
+
+        let phtml = "";
+        for(let id in posSummary) { if(posSummary[id] > 0) phtml += `<div class="pos-card"><span>${id}</span><br><b>₹${posSummary[id].toLocaleString()}</b></div>`; }
+        document.getElementById('posBreakdown').innerHTML = phtml || "No Business Found";
+        document.getElementById('adminTbody').innerHTML = h;
+    }
+
+    function exportTableToExcel(tableID, filename = ''){
+        let wb = XLSX.utils.table_to_book(document.getElementById(tableID), {sheet: "Sheet1"});
+        XLSX.writeFile(wb, filename + "_" + new Date().toLocaleDateString() + ".xlsx");
+    }
+    setInterval(() => { if(document.getElementById('dateTime')) document.getElementById('dateTime').value = new Date().toLocaleString(); }, 1000);
+</script>
+</body>
+</html>
