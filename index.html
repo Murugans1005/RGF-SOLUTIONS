@@ -1,3 +1,5 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.min.js"></script>
+
 <!DOCTYPE html>
 <html lang="ta">
 <head>
@@ -6,6 +8,7 @@
     <title>Business Master Pro - RGF Solutions</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -17,6 +20,7 @@
         .nav-tabs button.active { background: #e67e22; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
         .btn-main { width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-excel { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; margin-left: 10px; }
         .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .pos-card { background: #e3f2fd; padding: 12px; border-radius: 10px; text-align: center; border-left: 5px solid #1565c0; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
         .banner { color: white; padding: 12px; border-radius: 10px; text-align: center; font-size: 0.95rem; font-weight: bold; }
@@ -131,9 +135,12 @@
                 <div id="dLoan" class="banner bg-blue">Today Loan: ₹0</div>
                 <div id="dWith" class="banner bg-red">Today With: ₹0</div>
             </div>
-            <button class="btn-print-full" onclick="printFullReport()">🖨️ Print Full Report</button>
+            <div style="display: flex;">
+                <button class="btn-print-full" onclick="printFullReport()">🖨️ Print Full Report</button>
+                <button class="btn-excel" onclick="exportTableToExcel('dailyTable', 'Daily_Report')">📊 Export to Excel</button>
+            </div>
             <div class="table-wrapper">
-                <table>
+                <table id="dailyTable">
                     <thead><tr><th>Time</th><th>Customer</th><th>Bank</th><th>POS</th><th>Type</th><th>Amount</th><th>SC (₹)</th><th>Net Pay</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
@@ -147,12 +154,13 @@
                     <input type="date" id="fromDate"> 
                     <input type="date" id="toDate">
                     <button class="btn-main" style="width:auto; padding:0 30px; background:#3498db;" onclick="renderAdmin()">CHECK</button>
+                    <button class="btn-excel" onclick="exportTableToExcel('adminTable', 'Admin_Report')">📊 Export to Excel</button>
                 </div>
             </div>
             <div id="adminAnalytics" class="pos-summary-grid"></div>
             <div id="posBreakdown" class="pos-summary-grid"></div>
             <div class="table-wrapper">
-                <table>
+                <table id="adminTable">
                     <thead>
                         <tr><th>Date</th><th>Staff</th><th>Type</th><th>POS ID</th><th>Amount</th><th>SC</th><th>Profit</th><th>Net Pay</th><th>Action</th></tr>
                     </thead>
@@ -178,7 +186,6 @@
 
     const usersDB = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
 
-    // UPDATED AS PER YOUR LATEST IMAGE image_7612a9.png
     const defaultInitialPos = [
         {id: "IOB-3897", bank: "RGT MAHA 7997", normal: 1.357, corp: 3.528},
         {id: "CUB-9204", bank: "RGT MAHA 7997", normal: 1.298, corp: 3.528},
@@ -196,6 +203,7 @@
     let transactions = [];
     let currentUser = "";
 
+    // Load Data
     db.ref('transactions').on('value', (snapshot) => {
         const data = snapshot.val();
         transactions = data ? Object.values(data) : [];
@@ -203,6 +211,14 @@
         if(!document.getElementById('adminSection').classList.contains('hidden')) renderAdmin();
     });
 
+    // Excel Export Function
+    function exportTableToExcel(tableID, filename = ''){
+        let tableSelect = document.getElementById(tableID);
+        let wb = XLSX.utils.table_to_book(tableSelect, {sheet: "Sheet1"});
+        XLSX.writeFile(wb, filename + "_" + new Date().toLocaleDateString() + ".xlsx");
+    }
+
+    // Previous functions (save, edit, delete, recall, etc.)
     function saveCustomerOnly() {
         const name = document.getElementById('regName').value;
         const mobile = document.getElementById('regMobile').value;
@@ -255,7 +271,7 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'); const data = transactions.filter(d => d.date === today && d.category !== "REGISTRATION"); let sT = 0, scT = 0, lT = 0, wT = 0, h = "";
-        data.slice().reverse().forEach(d => { sT += Number(d.amt); scT += Number(d.scVal); if(d.category === 'LOAN') lT += Number(d.amt); if(d.category === 'WITHDRAW') wT += Number(d.amt); h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netPay}</td><td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`; });
+        data.slice().reverse().forEach(d => { sT += Number(d.amt); scT += Number(d.scVal); if(d.category === 'LOAN') lT += Number(d.amt); if(d.category === 'WITHDRAW') wT += Number(d.amt); h += `<tr><td>${d.time}</td><td>${d.name}</td><td>${d.cardBank}</td><td>${d.pos}</td><td>${d.category}</td><td>${d.amt}</td><td>${d.scVal}</td><td>${d.netPay}</td><td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`; });
         document.getElementById('dSale').innerText = `Today Swipe: ₹${sT.toLocaleString()}`; document.getElementById('dSC').innerText = `Today SC: ₹${scT.toLocaleString()}`; document.getElementById('dLoan').innerText = `Today Loan: ₹${lT.toLocaleString()}`; document.getElementById('dWith').innerText = `Today With: ₹${wT.toLocaleString()}`; document.getElementById('dailyTbody').innerHTML = h;
     }
 
@@ -265,7 +281,7 @@
 
     function renderAdmin() {
         const from = document.getElementById('fromDate').value; const to = document.getElementById('toDate').value; let data = (from && to) ? transactions.filter(d => d.date >= from && d.date <= to && d.category !== "REGISTRATION") : transactions.filter(t => t.category !== "REGISTRATION"); let ts=0, tsc=0, tp=0, tl=0, tw=0; let posSummary = {}; posMaster.forEach(p => posSummary[p.id] = 0); let h = "";
-        data.slice().reverse().forEach(d => { ts += Number(d.amt); tsc += Number(d.scVal); tp += Number(d.netProfit); if(d.category === 'LOAN') tl += Number(d.amt); if(d.category === 'WITHDRAW') tw += Number(d.amt); if(posSummary[d.pos] !== undefined) posSummary[d.pos] += Number(d.amt); h += `<tr><td>${d.date}</td><td>${d.user}</td><td><b>${d.category}</b></td><td>${d.pos}</td><td>₹${d.amt}</td><td>₹${d.scVal}</td><td>₹${d.netProfit}</td><td>₹${d.netPay}</td><td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`; });
+        data.slice().reverse().forEach(d => { ts += Number(d.amt); tsc += Number(d.scVal); tp += Number(d.netProfit); if(d.category === 'LOAN') tl += Number(d.amt); if(d.category === 'WITHDRAW') tw += Number(d.amt); if(posSummary[d.pos] !== undefined) posSummary[d.pos] += Number(d.amt); h += `<tr><td>${d.date}</td><td>${d.user}</td><td><b>${d.category}</b></td><td>${d.pos}</td><td>${d.amt}</td><td>${d.scVal}</td><td>${d.netProfit}</td><td>${d.netPay}</td><td><button class="btn-print-sm" onclick="printSingleReceipt(${d.id})">🖨️</button><button class="btn-edit" onclick="editEntry(${d.id})">✏️</button><button class="btn-del" onclick="deleteEntry(${d.id})">X</button></td></tr>`; });
         document.getElementById('adminAnalytics').innerHTML = `<div class="pos-card bg-dark" style="color:white;">Overall Swipe<b>₹${ts.toLocaleString()}</b></div><div class="pos-card bg-orange" style="color:white;">Overall SC<b>₹${tsc.toLocaleString()}</b></div><div class="pos-card bg-green" style="color:white;">Overall Profit<b>₹${tp.toFixed(2)}</b></div><div class="pos-card bg-blue" style="color:white;">Total Loan<b>₹${tl.toLocaleString()}</b></div><div class="pos-card bg-red" style="color:white;">Total Withdraw<b>₹${tw.toLocaleString()}</b></div>`; let phtml = ""; for(let id in posSummary) { if(posSummary[id] > 0) phtml += `<div class="pos-card"><span>${id}</span><br><b>₹${posSummary[id].toLocaleString()}</b></div>`; } document.getElementById('posBreakdown').innerHTML = phtml || "No Business Found"; document.getElementById('adminTbody').innerHTML = h;
     }
 </script>
