@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Ultimate Final Version</title>
+    <title>RGF Solutions - Professional</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -27,7 +27,6 @@
         .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
         .admin-only { display: none; }
         .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        /* POS Breakdown Dynamic Colors */
         .pos-card-color { padding: 15px; border-radius: 10px; text-align: center; color: white; font-weight: bold; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
@@ -94,9 +93,20 @@
 
         <div id="adminSection" class="hidden">
             <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:15px;">
-                <input type="date" id="fDate" style="width:130px;"> <input type="date" id="tDate" style="width:130px;">
-                <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px;">Check</button>
-                <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px;">Excel</button>
+                <h4 style="margin:0 0 10px 0;">Reports Filter</h4>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                    <input type="date" id="fDate" style="width:130px;"> 
+                    <input type="date" id="tDate" style="width:130px;">
+                    <select id="monthFilter" style="width:130px;" onchange="setMonthRange()">
+                        <option value="">-- Month --</option>
+                        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
+                        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
+                        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
+                        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                    </select>
+                    <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">CHECK</button>
+                    <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold;">📊 EXCEL</button>
+                </div>
             </div>
             <div id="adminStats" class="pos-summary-grid"></div>
             <h4>POS Breakdown</h4>
@@ -134,15 +144,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
+    
+    // POS Details with unique colors
     const posMaster = [
-        {id: "IOB-3897", n: 1.357, c: 3.528, color: "#2c3e50"}, 
-        {id: "CUB-9204", n: 1.298, c: 3.528, color: "#8e44ad"},
-        {id: "CUB-4705", n: 1.210, c: 3.528, color: "#2980b9"}, 
-        {id: "UNION-5175", n: 1.357, c: 3.528, color: "#d35400"},
-        {id: "UNION-8423", n: 1.357, c: 3.528, color: "#16a085"}, 
+        {id: "IOB-3897", n: 1.357, c: 3.528, color: "#1abc9c"}, 
+        {id: "CUB-9204", n: 1.298, c: 3.528, color: "#9b59b6"},
+        {id: "CUB-4705", n: 1.210, c: 3.528, color: "#3498db"}, 
+        {id: "UNION-5175", n: 1.357, c: 3.528, color: "#e67e22"},
+        {id: "UNION-8423", n: 1.357, c: 3.528, color: "#27ae60"}, 
         {id: "AXIS-0028", n: 1.735, c: 2.655, color: "#c0392b"},
-        {id: "HDFC-7860", n: 1.652, c: 3.528, color: "#27ae60"}, 
-        {id: "HDFC-6508", n: 1.829, c: 3.528, color: "#f39c12"},
+        {id: "HDFC-7860", n: 1.652, c: 3.528, color: "#2980b9"}, 
+        {id: "HDFC-6508", n: 1.829, c: 3.528, color: "#f1c40f"},
         {id: "FINKEDA", n: 1.350, c: 3.528, color: "#34495e"}, 
         {id: "MOS", n: 1.700, c: 3.528, color: "#7f8c8d"}
     ];
@@ -167,6 +179,15 @@
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
         } else alert("Invalid Login!");
+    }
+
+    function setMonthRange() {
+        const month = document.getElementById('monthFilter').value;
+        if(!month) return;
+        const year = new Date().getFullYear();
+        document.getElementById('fDate').value = `${year}-${month}-01`;
+        document.getElementById('tDate').value = new Date(year, month, 0).toISOString().split('T')[0];
+        renderAdmin();
     }
 
     function showSection(s) {
