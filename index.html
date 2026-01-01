@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - The Perfect Pro</title>
+    <title>RGF Solutions - Fixed Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -14,7 +14,7 @@
         .hidden { display: none !important; }
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .nav-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; }
-        .nav-tabs button { padding: 12px 20px; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; cursor: pointer; }
+        .nav-tabs button { padding: 12px 18px; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; cursor: pointer; }
         .nav-tabs button.active { background: var(--dark); }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; }
         .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
@@ -91,7 +91,7 @@
             </div>
             <div style="overflow-x:auto;">
                 <table id="dailyTable">
-                    <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS ID</th><th>POS Bank</th><th>Settle Bank</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS ID</th><th>Settle Bank</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
@@ -105,18 +105,18 @@
                     <button onclick="renderAdmin()" style="padding:10px; background:var(--dark); color:white; border:none; border-radius:5px;">GENERATE</button>
                 </div>
                 <div id="adminStats" class="grid-6"></div>
-                <h4>POS Wise Sales Summary</h4>
+                <h4>POS Breakdown</h4>
                 <div id="posStats" class="grid-6"></div>
-                <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>POS Bank</th><th>Settle Bank</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
+                <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>POS Bank</th><th>Settle</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
             </div>
-            </div>
+        </div>
 
         <div id="custSection" class="hidden">
              <h3>Customer Master</h3>
-             <form id="custRegForm" style="max-width:400px; padding:20px; border:1px solid #ddd; border-radius:10px;">
+             <form id="custRegForm" style="max-width:400px;">
                 <input type="tel" id="regMobile" placeholder="Mobile Number" required>
                 <input type="text" id="regName" placeholder="Name" required>
-                <input type="text" id="regBank" placeholder="Card Bank" required>
+                <input type="text" id="regBank" placeholder="Bank" required>
                 <input type="text" id="regLast4" maxlength="4" placeholder="Last 4" required>
                 <button type="button" onclick="saveCustomer()" class="btn-main">SAVE MASTER</button>
              </form>
@@ -137,21 +137,21 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // FIXED 10 POS ID AND SETTLE BANK DETAILS
     const defaultPOS = [
-        {id: "IOB-3897", bank: "IOB", settle: "IOB-MAIN", n: 1.357, c: 3.528, color: "#1abc9c"},
-        {id: "CUB-9204", bank: "CUB", settle: "CUB-OFFICE", n: 1.298, c: 3.528, color: "#9b59b6"},
-        {id: "CUB-4705", bank: "CUB", settle: "CUB-PERSONAL", n: 1.210, c: 3.528, color: "#3498db"},
-        {id: "UNION-5175", bank: "UNION", settle: "UBI-SAVINGS", n: 1.357, c: 3.528, color: "#e67e22"},
-        {id: "UNION-8423", bank: "UNION", settle: "UBI-CURRENT", n: 1.357, c: 3.528, color: "#27ae60"},
-        {id: "AXIS-0028", bank: "AXIS", settle: "AXIS-BIZ", n: 1.735, c: 2.655, color: "#c0392b"},
-        {id: "HDFC-7860", bank: "HDFC", settle: "HDFC-SAVINGS", n: 1.652, c: 3.528, color: "#2980b9"},
-        {id: "HDFC-6508", bank: "HDFC", settle: "HDFC-BIZ", n: 1.829, c: 3.528, color: "#f1c40f"},
-        {id: "FINKEDA", bank: "FINKEDA", settle: "WALLET-01", n: 1.350, c: 3.528, color: "#34495e"},
-        {id: "MOS", bank: "MOS", settle: "WALLET-02", n: 1.700, c: 3.528, color: "#7f8c8d"}
+        {id: "IOB-3897", bank: "IOB", settle: "IOB-MAIN", n: 1.357, c: 3.528},
+        {id: "CUB-9204", bank: "CUB", settle: "CUB-OFFICE", n: 1.298, c: 3.528},
+        {id: "CUB-4705", bank: "CUB", settle: "CUB-PERSONAL", n: 1.210, c: 3.528},
+        {id: "UNION-5175", bank: "UNION", settle: "UBI-SAVINGS", n: 1.357, c: 3.528},
+        {id: "UNION-8423", bank: "UNION", settle: "UBI-CURRENT", n: 1.357, c: 3.528},
+        {id: "AXIS-0028", bank: "AXIS", settle: "AXIS-BIZ", n: 1.735, c: 2.655},
+        {id: "HDFC-7860", bank: "HDFC", settle: "HDFC-SAVINGS", n: 1.652, c: 3.528},
+        {id: "HDFC-6508", bank: "HDFC", settle: "HDFC-BIZ", n: 1.829, c: 3.528},
+        {id: "FINKEDA", bank: "FINKEDA", settle: "WALLET-01", n: 1.350, c: 3.528},
+        {id: "MOS", bank: "MOS", settle: "WALLET-02", n: 1.700, c: 3.528}
     ];
 
-    let trans = []; let activeUser = ""; let custData = []; let staffList = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
+    let trans = []; let activeUser = ""; let custData = [];
+    const staffList = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
 
     db.ref('transactions').on('value', snap => { trans = snap.val() ? Object.values(snap.val()) : []; renderDaily(); renderAdmin(); });
     db.ref('customers').on('value', snap => { custData = snap.val() ? Object.values(snap.val()) : []; renderCustomerList(); });
@@ -160,18 +160,24 @@
         const u = document.getElementById('userId').value.toLowerCase().trim();
         const p = document.getElementById('password').value.trim();
         if(staffList[u] === p) {
-            activeUser = u; document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
-            if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            activeUser = u; 
+            document.getElementById('loginPage').classList.add('hidden'); 
+            document.getElementById('mainApp').classList.remove('hidden');
+            if(u === "sabariraj admin" || u === "manager") {
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            }
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + defaultPOS.map(x=>`<option value="${x.id}">${x.id} (${x.bank})</option>`).join('');
             showSection('entry');
-        } else alert("Error!");
+        } else alert("Invalid Login!");
     }
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
         const mPre = today.substring(0, 7);
         let dL=0, dW=0, dLsc=0, dWsc=0, dLp=0, dWp=0, mL=0, mW=0, h="";
-        const canMod = (activeUser.includes('admin') || activeUser === 'manager');
+        
+        // RE-FIXED SECURITY CHECK
+        const canShowActions = (activeUser === "sabariraj admin" || activeUser === "manager");
 
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
@@ -179,9 +185,9 @@
             if(x.date && x.date.startsWith(mPre)) { if(x.category==='LOAN') mL+=a; if(x.category==='WITHDRAW') mW+=a; }
             if(x.date === today) {
                 if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; } else { dW+=a; dWsc+=s; dWp+=p; }
-                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.posBank || '-'}</td><td>${x.settleBank || '-'}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td>
+                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.settleBank || '-'}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td>
                     <button class="btn-action" style="background:#3498db" onclick="printSlip(${x.id})">🖨️</button>
-                    ${canMod ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>` : ''}
+                    ${canShowActions ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>` : ''}
                 </td></tr>` + h;
             }
         });
@@ -196,17 +202,17 @@
         const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
         let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
         let ts=0, tsc=0, tp=0, h=""; let ps = {};
-        const canMod = (activeUser.includes('admin') || activeUser === 'manager');
+        const canShowActions = (activeUser === "sabariraj admin" || activeUser === "manager");
 
         data.slice().reverse().forEach(x => {
             ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
             let pid = x.pos; ps[pid] = (ps[pid] || 0) + Number(x.amt);
             h += `<tr><td>${x.date}</td><td>${x.user}</td><td>${x.category}</td><td>${x.posBank || ''}</td><td>${x.settleBank || ''}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>
                 <button class="btn-action" style="background:#3498db" onclick="printSlip(${x.id})">🖨️</button>
-                ${canMod ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>` : ''}
+                ${canShowActions ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>` : ''}
             </td></tr>`;
         });
-        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:var(--dark);"><span>Period Amt</span><span>₹${ts.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Period SC</span><span>₹${tsc.toFixed(2)}</span></div><div class="banner" style="background:var(--profit-green);"><span>Period Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
+        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:var(--dark);"><span>Total Amt</span><span>₹${ts.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Total SC</span><span>₹${tsc.toFixed(2)}</span></div><div class="banner" style="background:var(--profit-green);"><span>Total Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
         let ph = ""; for(let k in ps) { ph += `<div class="banner" style="background:#7f8c8d"><span>${k}</span><span>₹${ps[k].toFixed(2)}</span></div>`; }
         document.getElementById('posStats').innerHTML = ph;
         document.getElementById('adminTbody').innerHTML = h;
@@ -231,14 +237,13 @@
         const rate = (document.getElementById('cType').value === 'CORPORATE') ? pObj.c : pObj.n;
         const sc = (a*2)/100, mdr = (a*rate)/100, eid = document.getElementById('editId').value, id = eid || Date.now();
         let fDate = document.getElementById('entryDate').value || new Date().toLocaleDateString('en-CA');
-        
         db.ref('transactions/' + id).update({
             id: id, user: eid ? trans.find(t=>t.id==eid).user : activeUser, date: fDate, time: eid ? trans.find(t=>t.id==eid).time : new Date().toLocaleTimeString(),
             mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value,
             cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value,
             pos: pObj.id, posBank: pObj.bank, settleBank: pObj.settle, category: document.getElementById('actionType').value,
             amt: a, scVal: sc, mdrVal: mdr, netProfit: sc - mdr, netPay: a - sc
-        }).then(() => { resetForm(); showSection('daily'); });
+        }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
     function updateMDR() {
