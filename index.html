@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Staff Profit View</title>
+    <title>RGF Solutions - Business Tracker</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -18,7 +18,7 @@
         .nav-tabs button.active { background: var(--primary); }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; }
         .btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .banner { color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 13px; }
+        .banner { color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 8px; text-align: left; }
         .btn-edit { background: #f1c40f; color: black; border: none; padding: 5px; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -26,7 +26,7 @@
         .btn-print { background: #3498db; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer; }
         .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
         .admin-only { display: none; }
-        .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 20px; }
+        .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 20px; }
         .pos-card-color { padding: 15px; border-radius: 10px; text-align: center; color: white; font-weight: bold; }
     </style>
 </head>
@@ -55,7 +55,7 @@
             <form id="billingForm">
                 <input type="hidden" id="editId">
                 <div id="dateEditArea" class="hidden">
-                    <label style="font-size:12px; font-weight:bold; color: #c0392b;">Edit Transaction Date:</label>
+                    <label style="font-size:12px; font-weight:bold; color:red;">Change Date (Admin/Manager):</label>
                     <input type="date" id="entryDate">
                 </div>
                 <div style="display:flex; align-items:center;">
@@ -84,11 +84,11 @@
 
         <div id="dailySection" class="hidden">
             <div class="pos-summary-grid">
-                <div id="dSale" class="banner" style="background:#2ecc71;">Sale: ₹0.00</div>
-                <div id="dSC" class="banner" style="background:#f39c12;">Total SC: ₹0.00</div>
-                <div id="dLoanProfit" class="banner" style="background:#3498db;">Loan Profit: ₹0.00</div>
-                <div id="dWithProfit" class="banner" style="background:#8e44ad;">With Profit: ₹0.00</div>
-                <div id="dTotalProfit" class="banner" style="background:#27ae60;">Day Profit: ₹0.00</div>
+                <div id="dLoan" class="banner" style="background:#3498db;">Today Loan: ₹0.00</div>
+                <div id="dWith" class="banner" style="background:#e74c3c;">Today With: ₹0.00</div>
+                <div id="dProfit" class="banner" style="background:#27ae60;">Day Profit: ₹0.00</div>
+                <div id="mLoan" class="banner" style="background:#2c3e50;">Month Loan: ₹0.00</div>
+                <div id="mWith" class="banner" style="background:#2c3e50;">Month With: ₹0.00</div>
             </div>
             <div style="overflow-x:auto;">
                 <table>
@@ -223,24 +223,42 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        const data = trans.filter(x => x.date === today && x.category !== "REGISTRATION");
-        let ts=0, tsc=0, lp=0, wp=0, tp=0, h="";
-        data.slice().reverse().forEach(x => {
-            let a = Number(x.amt); let s = Number(x.scVal); let p = Number(x.netProfit);
-            ts += a; tsc += s; tp += p;
-            if(x.category === 'LOAN') lp += p;
-            else if(x.category === 'WITHDRAW') wp += p;
-            const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
-            h += `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>
-                <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
-                ${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">X</button>` : ''}
-            </td></tr>`;
+        const currentMonth = today.substring(0, 7); // YYYY-MM format
+        
+        let dLoan=0, dWith=0, dProf=0;
+        let mLoan=0, mWith=0;
+        let h="";
+
+        trans.forEach(x => {
+            if(x.category === "REGISTRATION") return;
+            let a = Number(x.amt);
+            let p = Number(x.netProfit);
+            
+            // Monthly Accumulation
+            if(x.date.startsWith(currentMonth)) {
+                if(x.category === 'LOAN') mLoan += a;
+                if(x.category === 'WITHDRAW') mWith += a;
+            }
+
+            // Daily Filter & Render
+            if(x.date === today) {
+                dProf += p;
+                if(x.category === 'LOAN') dLoan += a;
+                if(x.category === 'WITHDRAW') dWith += a;
+
+                const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
+                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td>
+                    <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
+                    ${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">X</button>` : ''}
+                </td></tr>` + h;
+            }
         });
-        document.getElementById('dSale').innerText = "Sale: ₹" + ts.toFixed(2);
-        document.getElementById('dSC').innerText = "Total SC: ₹" + tsc.toFixed(2);
-        document.getElementById('dLoanProfit').innerText = "Loan Profit: ₹" + lp.toFixed(2);
-        document.getElementById('dWithProfit').innerText = "With Profit: ₹" + wp.toFixed(2);
-        document.getElementById('dTotalProfit').innerText = "Day Profit: ₹" + tp.toFixed(2);
+        
+        document.getElementById('dLoan').innerText = "Today Loan: ₹" + dLoan.toFixed(2);
+        document.getElementById('dWith').innerText = "Today With: ₹" + dWith.toFixed(2);
+        document.getElementById('dProfit').innerText = "Day Profit: ₹" + dProf.toFixed(2);
+        document.getElementById('mLoan').innerText = "Month Loan: ₹" + mLoan.toFixed(2);
+        document.getElementById('mWith').innerText = "Month With: ₹" + mWith.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
     }
 
