@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Final Stable</title>
+    <title>RGF SOLUTIONS - FINAL PRO</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -23,7 +23,6 @@
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
         .btn-action { padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; color: white; font-weight: bold; margin: 2px; }
         .grid-6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .admin-only { display: none; }
         .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .t-btn { padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: center; background: white; }
         .t-btn.loan-active { background: var(--loan-blue); color: white; border-color: var(--loan-blue); }
@@ -43,10 +42,9 @@
 
     <div id="mainApp" class="container hidden">
         <div class="nav-tabs">
-            <button id="btnEntry" class="active" onclick="showSection('entry')">ENTRY</button>
+            <button id="btnEntry" class="active" onclick="showSection('entry')">NEW ENTRY</button>
             <button id="btnDaily" onclick="showSection('daily')">DASHBOARD</button>
             <button id="btnCust" onclick="showSection('cust')">MASTER</button>
-            <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">ADMIN</button>
             <button style="background:#7f8c8d;" onclick="location.reload()">LOGOUT</button>
         </div>
 
@@ -62,7 +60,7 @@
                     <label style="font-weight:bold; color:red;">Entry Date:</label>
                     <input type="date" id="entryDate">
                 </div>
-                <input type="tel" id="cMobile" placeholder="Mobile" oninput="recallCustomer()" required>
+                <input type="tel" id="cMobile" placeholder="Mobile Number" oninput="recallCustomer()" required>
                 <input type="text" id="cName" placeholder="Name" required>
                 <input type="text" id="cBank" placeholder="Card Bank" required>
                 <input type="text" id="cLast4" placeholder="Last 4" maxlength="4" required>
@@ -70,37 +68,27 @@
                 <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal</option><option value="CORPORATE">Corporate</option></select>
                 <div id="mdrShow" style="padding:10px; background:#fff9db; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:10px;">MDR: 0.00%</div>
                 <input type="number" id="amt" placeholder="Amount (₹)" step="0.01" required>
-                <button type="submit" id="submitBtn" class="btn-main" style="background:var(--profit-green);">SAVE</button>
+                <button type="submit" id="submitBtn" class="btn-main" style="background:var(--profit-green);">SAVE DATA</button>
             </form>
         </div>
 
         <div id="dailySection" class="hidden">
             <div class="grid-6">
-                <div class="banner" style="background:var(--loan-blue);">LOAN<br><span id="dLtot">₹0.00</span></div>
-                <div class="banner" style="background:var(--with-red);">WITH<br><span id="dWtot">₹0.00</span></div>
-                <div class="banner" style="background:var(--profit-green);">PROFIT<br><span id="dLpr">₹0.00</span></div>
-                <div class="banner" style="background:var(--dark);">M-LOAN<br><span id="mLVal">₹0.00</span></div>
-                <div class="banner" style="background:var(--dark);">M-WITH<br><span id="mWVal">₹0.00</span></div>
+                <div class="banner" style="background:var(--loan-blue);">LOAN: <span id="dLtot">₹0.00</span></div>
+                <div class="banner" style="background:var(--with-red);">WITH: <span id="dWtot">₹0.00</span></div>
+                <div class="banner" style="background:var(--profit-green);">PROFIT: <span id="dLpr">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;">
-                <table>
+                <table id="dailyTable">
                     <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS ID</th><th>POS Bank</th><th>Settle Bank</th><th>Amt</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
         </div>
 
-        <div id="adminSection" class="hidden">
-             <h3>Accounting Reports</h3>
-             <div id="adminStats" class="grid-6"></div>
-             <h4>Machine Breakdown</h4>
-             <div id="posStats" class="grid-6"></div>
-             <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>Type</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
-        </div>
-
         <div id="custSection" class="hidden">
-             <h3>Customer Master</h3>
-             <div style="overflow-x:auto;"><table id="customerTable"><thead><tr><th>Mobile</th><th>Name</th><th>Bank</th></tr></thead><tbody id="custListBody"></tbody></table></div>
+             <h3>Customer Master List</h3>
+             <div style="overflow-x:auto;"><table id="customerTable"><thead><tr><th>Mobile</th><th>Name</th><th>Card Bank</th></tr></thead><tbody id="custListBody"></tbody></table></div>
         </div>
     </div>
 
@@ -117,6 +105,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // FIXED 10 POS ID AND SETTLE BANKS
     const defaultPOS = [
         {id: "IOB-3897", bank: "IOB", settle: "IOB-MAIN", n: 1.357, c: 3.528},
         {id: "CUB-9204", bank: "CUB", settle: "CUB-OFFICE", n: 1.298, c: 3.528},
@@ -133,56 +122,39 @@
     let trans = []; let activeUser = ""; let custData = [];
     const staffList = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
 
-    db.ref('transactions').on('value', snap => { trans = snap.val() ? Object.values(snap.val()) : []; renderDaily(); renderAdmin(); });
+    db.ref('transactions').on('value', snap => { trans = snap.val() ? Object.values(snap.val()) : []; renderDaily(); });
     db.ref('customers').on('value', snap => { custData = snap.val() ? Object.values(snap.val()) : []; renderCustomerList(); });
 
     function checkLogin() {
         const u = document.getElementById('userId').value.toLowerCase().trim();
         const p = document.getElementById('password').value.trim();
         if(staffList[u] === p) {
-            activeUser = u; 
-            document.getElementById('loginPage').classList.add('hidden'); 
-            document.getElementById('mainApp').classList.remove('hidden');
-            if(u === "sabariraj admin" || u === "manager") document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            activeUser = u; document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + defaultPOS.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
-        } else alert("Invalid!");
+        } else alert("Login Failed!");
     }
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        let dL=0, dW=0, mL=0, mW=0, h="";
-        const canEdit = (activeUser === "sabariraj admin" || activeUser === "manager");
-
+        let dL=0, dW=0, dP=0, h="";
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             if(x.date === today) {
                 if(x.category==='LOAN') dL+=Number(x.amt); else dW+=Number(x.amt);
+                dP+=Number(x.netProfit);
+                // DIRECTLY ADDING EDIT/DELETE BUTTONS WITHOUT ANY CONDITION
                 h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.posBank || '-'}</td><td>${x.settleBank || '-'}</td><td>${x.amt}</td><td>
-                    <button class="btn-action" style="background:#3498db" onclick="printSlip(${x.id})">🖨️</button>
-                    ${canEdit ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>` : ''}
+                    <button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow('${x.id}')">✏️</button>
+                    <button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>
+                    <button class="btn-action" style="background:#3498db" onclick="window.print()">🖨️</button>
                 </td></tr>` + h;
             }
         });
         document.getElementById('dLtot').innerText = "₹" + dL.toFixed(2);
         document.getElementById('dWtot').innerText = "₹" + dW.toFixed(2);
+        document.getElementById('dLpr').innerText = "₹" + dP.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
-    }
-
-    function renderAdmin() {
-        let ts=0, tp=0, h=""; let ps = {};
-        const canEdit = (activeUser === "sabariraj admin" || activeUser === "manager");
-        trans.slice().reverse().forEach(x => {
-            if(x.category === "REGISTRATION") return;
-            ts += Number(x.amt); tp += Number(x.netProfit);
-            ps[x.pos] = (ps[x.pos] || 0) + Number(x.amt);
-            h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.amt}</td><td>${x.netProfit}</td><td>
-                ${canEdit ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>` : ''}
-            </td></tr>`;
-        });
-        document.getElementById('adminTbody').innerHTML = h;
-        let ph = ""; for(let k in ps) ph += `<div class="banner" style="background:#7f8c8d">${k}<br>₹${ps[k].toFixed(2)}</div>`;
-        document.getElementById('posStats').innerHTML = ph;
     }
 
     function editRow(id) {
@@ -190,33 +162,35 @@
         document.getElementById('editId').value = x.id;
         document.getElementById('cMobile').value = x.mobile; document.getElementById('cName').value = x.name;
         document.getElementById('cBank').value = x.cardBank; document.getElementById('cLast4').value = x.cardLast4;
-        document.getElementById('posSelect').value = x.pos;
+        document.getElementById('posSelect').value = x.pos; setType(x.category); document.getElementById('amt').value = x.amt;
         document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date;
         showSection('entry');
     }
+
+    function deleteItem(id) { if(confirm("Are you sure?")) db.ref('transactions/'+id).remove(); }
 
     document.getElementById('billingForm').onsubmit = e => {
         e.preventDefault();
         const a = parseFloat(document.getElementById('amt').value);
         const pObj = defaultPOS.find(x => x.id === document.getElementById('posSelect').value);
         const rate = (document.getElementById('cType').value === 'CORPORATE') ? pObj.c : pObj.n;
-        const sc = (a*2)/100, mdr = (a*rate)/100, id = document.getElementById('editId').value || Date.now();
+        const sc = (a*2)/100, mdr = (a*rate)/100;
+        const id = document.getElementById('editId').value || Date.now();
         db.ref('transactions/' + id).update({
             id: id, user: activeUser, mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value,
             cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value,
             pos: pObj.id, posBank: pObj.bank, settleBank: pObj.settle, amt: a, scVal: sc, netProfit: sc - mdr,
             date: document.getElementById('entryDate').value || new Date().toLocaleDateString('en-CA'),
             time: new Date().toLocaleTimeString(), category: document.getElementById('actionType').value
-        }).then(() => { alert("Saved!"); location.reload(); });
+        }).then(() => { alert("Success!"); resetForm(); showSection('daily'); });
     };
 
+    function showSection(s) { ['entry','daily','cust'].forEach(x => document.getElementById(x+'Section').classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); }
     function setType(t) { document.getElementById('actionType').value = t; document.getElementById('toggleLoan').className = 't-btn ' + (t==='LOAN'?'loan-active':''); document.getElementById('toggleWith').className = 't-btn ' + (t==='WITHDRAW'?'with-active':''); }
     function updateMDR() { const p = defaultPOS.find(x => x.id === document.getElementById('posSelect').value); const rate = p ? (document.getElementById('cType').value === 'CORPORATE' ? p.c : p.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + rate + "%"; }
-    function showSection(s) { ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section').classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); }
-    function deleteItem(id) { if(confirm("Sure?")) db.ref('transactions/'+id).remove(); }
     function recallCustomer() { const c = custData.find(x => x.mobile === document.getElementById('cMobile').value); if(c) { document.getElementById('cName').value = c.name; document.getElementById('cBank').value = c.cardBank; } }
+    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); }
     function renderCustomerList() { document.getElementById('custListBody').innerHTML = custData.map(c => `<tr><td>${c.mobile}</td><td>${c.name}</td><td>${c.cardBank}</td></tr>`).join(''); }
-    function printSlip(id) { window.print(); }
 </script>
 </body>
 </html>
