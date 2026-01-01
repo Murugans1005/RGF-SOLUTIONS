@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Final Ultimate Version</title>
+    <title>RGF Solutions - Total Accounting Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -12,29 +12,27 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background-color: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
-        .container { max-width: 1250px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .nav-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .nav-tabs button { padding: 12px; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; cursor: pointer; }
         .nav-tabs button.active { background: var(--primary); }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; }
         .btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .banner { color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 11px; display: flex; flex-direction: column; justify-content: center; min-height: 75px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .banner { color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 11px; display: flex; flex-direction: column; justify-content: center; min-height: 80px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 8px; text-align: left; }
-        .btn-edit { background: #f1c40f; color: black; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-edit { background: #f1c40f; color: black; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
         .btn-del { background: #e74c3c; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
-        .btn-print { background: #3498db; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
         .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
         .admin-only { display: none; }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; margin-bottom: 20px; }
-        .pos-card-color { padding: 15px; border-radius: 10px; text-align: center; color: white; font-weight: bold; font-size: 11px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div id="loginPage" style="text-align:center; padding-top: 50px;">
         <div style="background:white; display:inline-block; padding:30px; border-radius:15px; width:300px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-            <h2>RGF SOLUTIONS LOGIN</h2>
+            <h2>RGF LOGIN</h2>
             <input type="text" id="userId" placeholder="User ID">
             <input type="password" id="password" placeholder="Password">
             <button class="btn-main" onclick="checkLogin()">GO</button>
@@ -51,20 +49,14 @@
         </div>
 
         <div id="entrySection">
-            <h3 id="formTitle">New Swipe Entry</h3>
+            <h3 id="formTitle">New Transaction</h3>
             <form id="billingForm">
                 <input type="hidden" id="editId">
                 <div id="dateEditArea" class="hidden" style="background:#fff2f2; padding:10px; border-radius:8px; border:1px solid #ffcccc; margin-bottom:10px;">
-                    <label style="font-size:11px; font-weight:bold; color:#c0392b;">Edit Transaction Date:</label>
+                    <label style="font-size:11px; font-weight:bold; color:#c0392b;">Edit Date:</label>
                     <input type="date" id="entryDate">
                 </div>
-                <div style="display:flex; align-items:center;">
-                    <input type="tel" id="cMobile" placeholder="Mobile Number" oninput="recallCustomer()" required>
-                    <button type="button" class="voice-btn" onclick="startVoice()">🎙️</button>
-                </div>
-                <div id="recallArea" class="hidden" style="background:#e8f4fd; padding:10px; border-radius:8px; margin-bottom:10px;">
-                    <select id="recallSelect" onchange="applyCard()"><option value="">-- Choose Previous Card --</option></select>
-                </div>
+                <input type="tel" id="cMobile" placeholder="Mobile Number" oninput="recallCustomer()" required>
                 <input type="text" id="cName" placeholder="Customer Name" required>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="text" id="cBank" placeholder="Bank Name" required>
@@ -73,7 +65,7 @@
                 <select id="posSelect" onchange="updateMDR()" required></select>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal Card</option><option value="CORPORATE">Corporate Card</option></select>
-                    <div id="mdrShow" style="padding:12px; background:#fff9db; border-radius:8px; text-align:center; font-weight:bold;">MDR: 0.00%</div>
+                    <div id="mdrShow" style="padding:12px; background:#fff9db; border-radius:8px; text-align:center; font-weight:bold; font-size: 12px;">MDR: 0.00%</div>
                 </div>
                 <select id="actionType">
                     <option value="NONE">NORMAL SWIPE</option>
@@ -81,8 +73,8 @@
                     <option value="WITHDRAW">WITHDRAW</option>
                 </select>
                 <input type="number" id="amt" placeholder="Amount (₹)" step="0.01" required>
-                <button type="submit" id="submitBtn" class="btn-main" style="background:#27ae60;">SAVE TRANSACTION</button>
-                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:5px; background:#95a5a6; color:white; border:none; border-radius:8px;">CANCEL EDIT</button>
+                <button type="submit" id="submitBtn" class="btn-main" style="background:#27ae60;">SAVE DATA</button>
+                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:5px; background:#95a5a6; color:white; border:none; border-radius:8px;">CANCEL</button>
             </form>
         </div>
 
@@ -91,8 +83,8 @@
                 <div class="banner" style="background:#3498db;"><span id="dLtot">Today Loan: ₹0.00</span><span id="dLsc" style="font-size:9px;">SC: ₹0.00</span><span id="dLpr" style="font-size:9px;">Profit: ₹0.00</span></div>
                 <div class="banner" style="background:#e74c3c;"><span id="dWtot">Today With: ₹0.00</span><span id="dWsc" style="font-size:9px;">SC: ₹0.00</span><span id="dWpr" style="font-size:9px;">Profit: ₹0.00</span></div>
                 <div class="banner" style="background:#27ae60;"><span>Day Net Profit</span><span id="dDayVal" style="font-size:14px;">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month Loan Total</span><span id="mLVal" style="font-size:14px;">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month With Total</span><span id="mWVal" style="font-size:14px;">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLVal" style="font-size:14px;">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWVal" style="font-size:14px;">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;">
                 <table id="dailyTable">
@@ -105,18 +97,10 @@
         <div id="adminSection" class="hidden">
             <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:15px;">
                 <input type="date" id="fDate" style="width:130px;"> <input type="date" id="tDate" style="width:130px;">
-                <select id="monthFilter" style="width:130px;" onchange="setMonthRange()">
-                    <option value="">-- Select Month --</option>
-                    <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
-                    <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
-                    <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
-                    <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
-                </select>
-                <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">CHECK DATA</button>
+                <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">CHECK</button>
                 <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold;">📊 EXCEL</button>
             </div>
             <div id="adminStats" class="summary-grid"></div>
-            <h4>POS Breakdown</h4>
             <div id="posStats" class="summary-grid"></div>
             <div style="overflow-x:auto;">
                 <table id="adminTable">
@@ -129,10 +113,10 @@
         <div id="custSection" class="hidden">
             <h3>Master Registration</h3>
             <form id="custRegForm">
-                <input type="tel" id="regMobile" placeholder="Mobile Number" required>
-                <input type="text" id="regName" placeholder="Customer Name" required>
-                <input type="text" id="regBank" placeholder="Bank Name" required>
-                <input type="text" id="regLast4" maxlength="4" placeholder="Last 4 Digits" required>
+                <input type="tel" id="regMobile" placeholder="Mobile" required>
+                <input type="text" id="regName" placeholder="Name" required>
+                <input type="text" id="regBank" placeholder="Bank" required>
+                <input type="text" id="regLast4" maxlength="4" placeholder="Last 4" required>
                 <button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
             </form>
         </div>
@@ -159,26 +143,24 @@
         {id: "FINKEDA", n: 1.350, c: 3.528, color: "#34495e"}, {id: "MOS", n: 1.700, c: 3.528, color: "#7f8c8d"}
     ];
 
-    let trans = []; 
-    let currentSessionUser = ""; 
+    let trans = []; let myRole = ""; 
 
     db.ref('transactions').on('value', snap => {
         const d = snap.val(); trans = d ? Object.values(d) : [];
-        renderDaily(); 
-        renderAdmin(); 
+        renderDaily(); renderAdmin();
     });
 
     function checkLogin() {
         const u = document.getElementById('userId').value.toLowerCase().trim();
         const p = document.getElementById('password').value.trim();
         if(users[u] === p) {
-            currentSessionUser = u; 
+            myRole = u; 
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
-        } else alert("Invalid Login Credentials!");
+        } else alert("Invalid!");
     }
 
     function showSection(s) {
@@ -186,7 +168,6 @@
         document.getElementById(s+'Section').classList.remove('hidden');
         document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
         document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('active');
-        if(s === 'admin' || s === 'daily') { renderDaily(); renderAdmin(); }
     }
 
     function renderDaily() {
@@ -197,31 +178,25 @@
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             let a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
-            if(x.date.startsWith(monthPre)) { 
-                if(x.category==='LOAN') mL+=a; 
-                if(x.category==='WITHDRAW') mW+=a; 
-            }
+            if(x.date.startsWith(monthPre)) { if(x.category==='LOAN') mL+=a; if(x.category==='WITHDRAW') mW+=a; }
             if(x.date === today) {
                 dTp += p;
                 if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; }
                 if(x.category==='WITHDRAW') { dW+=a; dWsc+=s; dWp+=p; }
-                const isAuth = (currentSessionUser.includes('admin') || currentSessionUser === 'manager');
-                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td>
-                    <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
-                    ${isAuth ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}
-                </td></tr>` + h;
+                const isM = (myRole.includes('admin') || myRole === 'manager');
+                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button> ${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}</td></tr>` + h;
             }
         });
-        document.getElementById('dLtot').innerText = "Today Loan: ₹" + dL.toFixed(2);
+        document.getElementById('dLtot').innerText = "Loan: ₹" + dL.toFixed(2);
         document.getElementById('dLsc').innerText = "SC: ₹" + dLsc.toFixed(2);
         document.getElementById('dLpr').innerText = "Profit: ₹" + dLp.toFixed(2);
-        document.getElementById('dWtot').innerText = "Today With: ₹" + dW.toFixed(2);
+        document.getElementById('dWtot').innerText = "With: ₹" + dW.toFixed(2);
         document.getElementById('dWsc').innerText = "SC: ₹" + dWsc.toFixed(2);
         document.getElementById('dWpr').innerText = "Profit: ₹" + dWp.toFixed(2);
         document.getElementById('dDayVal').innerText = "₹" + dTp.toFixed(2);
         document.getElementById('mLVal').innerText = "₹" + mL.toFixed(2);
         document.getElementById('mWVal').innerText = "₹" + mW.toFixed(2);
-        document.getElementById('dailyTbody').innerHTML = h || "<tr><td colspan='8' style='text-align:center;'>No Transactions Today</td></tr>";
+        document.getElementById('dailyTbody').innerHTML = h;
     }
 
     function renderAdmin() {
@@ -231,16 +206,13 @@
         data.slice().reverse().forEach(x => {
             ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
             if(posC[x.pos] !== undefined) posC[x.pos] += Number(x.amt);
-            const isAuth = (currentSessionUser.includes('admin') || currentSessionUser === 'manager');
-            h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>${isAuth ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}</td></tr>`;
+            const isM = (myRole.includes('admin') || myRole === 'manager');
+            h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}</td></tr>`;
         });
-        document.getElementById('adminStats').innerHTML = `
-            <div class="banner" style="background:#2c3e50;"><span>Total Amt</span><span>₹${ts.toFixed(2)}</span></div>
-            <div class="banner" style="background:#f39c12;"><span>Total SC</span><span>₹${tsc.toFixed(2)}</span></div>
-            <div class="banner" style="background:#27ae60;"><span>Total Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
+        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;"><span>Total Amt</span><span>₹${ts.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Total SC</span><span>₹${tsc.toFixed(2)}</span></div><div class="banner" style="background:#27ae60;"><span>Total Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
         let ph = ""; for(let k in posC) if(posC[k] > 0) { const c = posMaster.find(m => m.id === k).color; ph += `<div class="pos-card-color" style="background:${c};">${k}<br>₹${posC[k].toFixed(2)}</div>`; }
-        document.getElementById('posStats').innerHTML = ph || "No POS Data Found";
-        document.getElementById('adminTbody').innerHTML = h || "<tr><td colspan='7' style='text-align:center;'>No Data Found</td></tr>";
+        document.getElementById('posStats').innerHTML = ph;
+        document.getElementById('adminTbody').innerHTML = h;
     }
 
     function editRow(id) {
@@ -250,33 +222,27 @@
         document.getElementById('cBank').value = x.cardBank; document.getElementById('cLast4').value = x.cardLast4;
         document.getElementById('posSelect').value = x.pos; document.getElementById('actionType').value = x.category;
         document.getElementById('amt').value = x.amt;
-        if(currentSessionUser.includes('admin') || currentSessionUser === 'manager') { 
-            document.getElementById('dateEditArea').classList.remove('hidden'); 
-            document.getElementById('entryDate').value = x.date; 
-        }
-        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden'); 
-        showSection('entry');
+        if(myRole.includes('admin') || myRole === 'manager') { document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date; }
+        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden'); showSection('entry');
     }
 
     document.getElementById('billingForm').onsubmit = e => {
         e.preventDefault();
         const a = parseFloat(document.getElementById('amt').value), mdrP = updateMDR(), sc = (a * 2.0) / 100, mdr = (a * mdrP) / 100, editId = document.getElementById('editId').value, id = editId ? editId : Date.now();
         let fDate = new Date().toLocaleDateString('en-CA');
-        if(editId && (currentSessionUser.includes('admin') || currentSessionUser === 'manager')) fDate = document.getElementById('entryDate').value;
+        if(editId && (myRole.includes('admin') || myRole === 'manager')) fDate = document.getElementById('entryDate').value;
         else if(editId) fDate = trans.find(x=>x.id==editId).date;
-        db.ref('transactions/' + id).update({ id: id, user: currentSessionUser, date: fDate, time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value, category: document.getElementById('actionType').value, amt: a, scVal: sc, mdrVal: mdr, netProfit: sc - mdr, netPay: a - sc }).then(() => { alert("Saved Successfully!"); resetForm(); showSection('daily'); });
+        db.ref('transactions/' + id).update({ id: id, user: myRole, date: fDate, time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value, category: document.getElementById('actionType').value, amt: a, scVal: sc, mdrVal: mdr, netProfit: sc - mdr, netPay: a - sc }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
-    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE TRANSACTION"; document.getElementById('cancelBtn').classList.add('hidden'); }
-    function deleteRow(id) { if(confirm("Are you sure you want to delete?")) db.ref('transactions/' + id).remove(); }
+    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
+    function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
     function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('', '', 'width=300,height=400'); w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`); w.print(); w.close(); }
-    function startVoice() { const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); rec.onresult = e => { document.getElementById('cMobile').value = e.results[0][0].transcript.replace(/\s/g,''); recallCustomer(); }; rec.start(); }
-    function recallCustomer() { const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[0].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = ""; let seen = new Set(); hits.forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">-- Choose Card --</option>' + opts; } }
-    function applyCard() { const v = document.getElementById('recallSelect').value; if(v) { const [b,l] = v.split('|'); document.getElementById('cBank').value = b; document.getElementById('cLast4').value = l; } }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
+    function recallCustomer() { const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[0].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = ""; let seen = new Set(); hits.forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">-- Recall Card --</option>' + opts; } }
+    function applyCard() { const v = document.getElementById('recallSelect').value; if(v) { const [b,l] = v.split('|'); document.getElementById('cBank').value = b; document.getElementById('cLast4').value = l; } }
     function saveCustomer() { const id = "REG_" + Date.now(); db.ref('transactions/' + id).set({ id: id, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: document.getElementById('regBank').value, cardLast4: document.getElementById('regLast4').value, date: new Date().toLocaleDateString('en-CA') }).then(() => alert("Master Saved!")); }
-    function setMonthRange() { const m = document.getElementById('monthFilter').value; if(!m) return; const y = new Date().getFullYear(); document.getElementById('fDate').value = `${y}-${m}-01`; document.getElementById('tDate').value = new Date(y, m, 0).toISOString().split('T')[0]; renderAdmin(); }
-    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Business_Report.xlsx"); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Report.xlsx"); }
 </script>
 </body>
 </html>
