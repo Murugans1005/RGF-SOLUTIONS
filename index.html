@@ -27,7 +27,6 @@
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 20px; }
         .pos-stat-card { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: center; border-left: 5px solid var(--primary); }
         .pos-stat-card h4 { margin: 0 0 5px 0; color: var(--dark); font-size: 11px; }
-        .pos-stat-card div { font-size: 10px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -85,7 +84,24 @@
         </div>
 
         <div id="dailySection" class="hidden">
-            <div id="dailyHeaderSummary" class="summary-grid"></div>
+            <div class="summary-grid">
+                <div class="banner" style="background:#3498db;">
+                    <span id="dLtot">Today Loan: ₹0.00</span>
+                    <span id="dLsc" style="font-size:9px;">Today SC: ₹0.00</span>
+                    <span id="dLpr" style="font-size:9px;">Today Profit: ₹0.00</span>
+                    <span id="mLtot" style="font-size:9px; border-top:1px solid #fff; margin-top:3px;">Month Loan: ₹0.00</span>
+                </div>
+                <div class="banner" style="background:#e74c3c;">
+                    <span id="dWtot">Today With: ₹0.00</span>
+                    <span id="dWsc" style="font-size:9px;">Today SC: ₹0.00</span>
+                    <span id="dWpr" style="font-size:9px;">Today Profit: ₹0.00</span>
+                    <span id="mWtot" style="font-size:9px; border-top:1px solid #fff; margin-top:3px;">Month With: ₹0.00</span>
+                </div>
+                <div class="banner" style="background:#27ae60;">
+                    <span>Today Net Profit</span>
+                    <span id="dDayVal" style="font-size:14px;">₹0.00</span>
+                </div>
+            </div>
             <div style="overflow-x:auto;">
                 <table id="dailyTable">
                     <thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead>
@@ -102,7 +118,6 @@
             </div>
             <h4 style="margin: 10px 0;">All POS Performance (Today vs Month)</h4>
             <div id="posDetailedStats" class="summary-grid"></div>
-            <h4 style="margin: 10px 0;">Overall Stats</h4>
             <div id="adminStats" class="summary-grid"></div>
             <div style="overflow-x:auto;">
                 <table id="adminTable">
@@ -176,32 +191,32 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        let h = ""; 
+        const monthPre = today.substring(0, 7);
         const isM = (myRole.includes('admin') || myRole === 'manager');
-        let tL=0, tW=0, tP=0;
+        let dL=0, dW=0, dLsc=0, dWsc=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
 
-        trans.filter(x => x.category !== "REGISTRATION" && x.date === today).forEach(x => {
-            const amt = Number(x.amt); const sc = Number(x.scVal);
-            const cashOut = (x.category === 'WITHDRAW') ? (amt - sc).toFixed(2) : '-';
-            if(x.category==='LOAN') tL+=amt; if(x.category==='WITHDRAW') tW+=amt; tP+=Number(x.netProfit);
+        trans.filter(x => x.category !== "REGISTRATION").forEach(x => {
+            const a = Number(x.amt); const s = Number(x.scVal); const p = Number(x.netProfit);
+            if(x.date && x.date.startsWith(monthPre)) { if(x.category==='LOAN') mL+=a; if(x.category==='WITHDRAW') mW+=a; }
+            
+            if(x.date === today) {
+                dTp += p;
+                if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; }
+                if(x.category==='WITHDRAW') { dW+=a; dWsc+=s; dWp+=p; }
+                const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
 
-            h = `<tr>
-                <td>${x.time}</td>
-                <td style="color:#e67e22; font-weight:bold;">${x.user || 'Unknown'}</td>
-                <td>${x.name}</td>
-                <td>${x.pos}</td>
-                <td><b>${x.category}</b></td>
-                <td>${amt.toFixed(2)}</td>
-                <td>${sc.toFixed(2)}</td>
-                <td style="background:#fff9db; font-weight:bold;">${cashOut}</td>
-                <td>${Number(x.netProfit).toFixed(2)}</td>
-                <td>
-                    <button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button> 
-                    ${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}
-                </td>
-            </tr>` + h;
+                h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user || ''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button> ${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}</td></tr>` + h;
+            }
         });
-        document.getElementById('dailyHeaderSummary').innerHTML = `<div class="banner" style="background:#3498db;"><span>Today Loan</span><span>₹${tL.toFixed(2)}</span></div><div class="banner" style="background:#e74c3c;"><span>Today With</span><span>₹${tW.toFixed(2)}</span></div><div class="banner" style="background:#27ae60;"><span>Today Profit</span><span>₹${tP.toFixed(2)}</span></div>`;
+        document.getElementById('dLtot').innerText = "Today Loan: ₹" + dL.toFixed(2);
+        document.getElementById('dLsc').innerText = "Today SC: ₹" + dLsc.toFixed(2);
+        document.getElementById('dLpr').innerText = "Today Profit: ₹" + dLp.toFixed(2);
+        document.getElementById('mLtot').innerText = "Month Loan: ₹" + mL.toFixed(2);
+        document.getElementById('dWtot').innerText = "Today With: ₹" + dW.toFixed(2);
+        document.getElementById('dWsc').innerText = "Today SC: ₹" + dWsc.toFixed(2);
+        document.getElementById('dWpr').innerText = "Today Profit: ₹" + dWp.toFixed(2);
+        document.getElementById('mWtot').innerText = "Month With: ₹" + mW.toFixed(2);
+        document.getElementById('dDayVal').innerText = "₹" + dTp.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
     }
 
@@ -222,19 +237,14 @@
 
         let totalAmt = 0, totalSC = 0, totalProfit = 0, h = "";
         let filtered = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
-        
         filtered.slice().reverse().forEach(x => {
-            const amt = Number(x.amt); const sc = Number(x.scVal); const p = Number(x.netProfit);
-            totalAmt += amt; totalSC += sc; totalProfit += p;
-            const cashOut = (x.category === 'WITHDRAW') ? (amt - sc).toFixed(2) : '-';
-            h += `<tr><td>${x.date}</td><td style="color:#e67e22; font-weight:bold;">${x.user || 'Unknown'}</td><td>${x.category}</td><td>${x.pos}</td><td>${amt.toFixed(2)}</td><td>${sc.toFixed(2)}</td><td style="background:#fff9db;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : '-'}</td></tr>`;
+            const a = Number(x.amt); const s = Number(x.scVal); const p = Number(x.netProfit);
+            totalAmt += a; totalSC += s; totalProfit += p;
+            const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
+            h += `<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user || ''}</td><td>${x.category}</td><td>${x.pos}</td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : '-'}</td></tr>`;
         });
 
-        let ph = "";
-        posMaster.forEach(p => {
-            ph += `<div class="pos-stat-card"><h4>${p.id}</h4><div>Today: <b>₹${posData[p.id].t.toFixed(2)}</b></div><div>Month: <b>₹${posData[p.id].m.toFixed(2)}</b></div></div>`;
-        });
-
+        let ph = ""; posMaster.forEach(p => { ph += `<div class="pos-stat-card"><h4>${p.id}</h4><div>Today: <b>₹${posData[p.id].t.toFixed(2)}</b></div><div>Month: <b>₹${posData[p.id].m.toFixed(2)}</b></div></div>`; });
         document.getElementById('posDetailedStats').innerHTML = ph;
         document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;"><span>Filter Total</span><span>₹${totalAmt.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Filter SC</span><span>₹${totalSC.toFixed(2)}</span></div><div class="banner" style="background:#27ae60;"><span>Filter Profit</span><span>₹${totalProfit.toFixed(2)}</span></div>`;
         document.getElementById('adminTbody').innerHTML = h;
@@ -265,18 +275,10 @@
         let fDate = new Date().toLocaleDateString('en-CA');
         let fTime = editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString();
         if(editId && (myRole.includes('admin') || myRole === 'manager')) fDate = document.getElementById('entryDate').value;
-        
-        db.ref('transactions/' + id).update({ 
-            id: id, user: myRole, date: fDate, time: fTime, mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value, category: document.getElementById('actionType').value, amt: a, scVal: scVal, mdrVal: mdrVal, netProfit: scVal - mdrVal, netPay: a - scVal 
-        }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
+        db.ref('transactions/' + id).update({ id: id, user: myRole, date: fDate, time: fTime, mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value, category: document.getElementById('actionType').value, amt: a, scVal: scVal, mdrVal: mdrVal, netProfit: scVal - mdrVal, netPay: a - scVal }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
-    function resetForm() { 
-        document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; 
-        document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE DATA"; 
-        document.getElementById('cancelBtn').classList.add('hidden'); document.getElementById('scPercent').value = "2.00";
-    }
-
+    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); document.getElementById('scPercent').value = "2.00"; }
     function deleteRow(id) { if(confirm("Confirm Delete?")) db.ref('transactions/' + id).remove(); }
     function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('', '', 'width=300,height=400'); w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`); w.print(); w.close(); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
