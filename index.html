@@ -26,8 +26,8 @@
         .admin-only { display: none; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 20px; }
         .pos-stat-card { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: center; border-left: 5px solid var(--primary); }
-        .pos-stat-card h4 { margin: 0 0 5px 0; color: var(--dark); font-size: 12px; }
-        .pos-stat-card div { font-size: 11px; margin-bottom: 3px; }
+        .pos-stat-card h4 { margin: 0 0 5px 0; color: var(--dark); font-size: 11px; }
+        .pos-stat-card div { font-size: 10px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -101,10 +101,10 @@
                 <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold;">📊 EXCEL</button>
             </div>
             
-            <h4 style="margin: 10px 0;">POS Performance (Today vs Month)</h4>
+            <h4 style="margin: 10px 0;">All POS Performance (Today vs Month)</h4>
             <div id="posDetailedStats" class="summary-grid"></div>
             
-            <h4 style="margin: 10px 0;">Overall Stats</h4>
+            <h4 style="margin: 10px 0;">Filtered Results Summary</h4>
             <div id="adminStats" class="summary-grid"></div>
 
             <div style="overflow-x:auto;">
@@ -152,8 +152,10 @@
     let trans = []; let myRole = ""; 
 
     db.ref('transactions').on('value', snap => {
-        const d = snap.val(); trans = d ? Object.values(d) : [];
-        renderDaily(); renderAdmin();
+        const d = snap.val(); 
+        trans = d ? Object.values(d) : [];
+        renderDaily(); 
+        renderAdmin();
     });
 
     function checkLogin() {
@@ -163,7 +165,9 @@
             myRole = u; 
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            if(u.includes('admin') || u === 'manager') {
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            }
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
         } else alert("Invalid User!");
@@ -178,7 +182,8 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        let h = ""; const isM = (myRole.includes('admin') || myRole === 'manager');
+        let h = ""; 
+        const isM = (myRole.includes('admin') || myRole === 'manager');
         let tL=0, tW=0, tP=0;
 
         trans.filter(x => x.category !== "REGISTRATION" && x.date === today).forEach(x => {
@@ -198,33 +203,37 @@
         const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
         const isM = (myRole.includes('admin') || myRole === 'manager');
         
-        // Stats Calculation
-        let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
-        let totalAmt = 0, totalSC = 0, totalProfit = 0;
+        // POS Stats - Initialize ALL machines to 0
+        let posData = {}; 
+        posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
 
         trans.filter(x => x.category !== "REGISTRATION").forEach(x => {
             const a = Number(x.amt);
-            if(x.date === today) posData[x.pos].t += a;
-            if(x.date.startsWith(monthPre)) posData[x.pos].m += a;
+            if(posData[x.pos]) {
+                if(x.date === today) posData[x.pos].t += a;
+                if(x.date.startsWith(monthPre)) posData[x.pos].m += a;
+            }
         });
 
-        // Detailed Table Data
+        // Filtered Table Logic
+        let totalAmt = 0, totalSC = 0, totalProfit = 0;
         let filtered = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
         let h = "";
+        
         filtered.slice().reverse().forEach(x => {
             const amt = Number(x.amt); const sc = Number(x.scVal); const p = Number(x.netProfit);
             totalAmt += amt; totalSC += sc; totalProfit += p;
             const cashOut = (x.category === 'WITHDRAW') ? (amt - sc).toFixed(2) : '-';
+            
             h += `<tr><td>${x.date}</td><td style="color:#e67e22; font-weight:bold;">${x.user || 'Unknown'}</td><td>${x.category}</td><td>${x.pos}</td><td>${amt.toFixed(2)}</td><td>${sc.toFixed(2)}</td><td style="background:#fff9db;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : '-'}</td></tr>`;
         });
 
-        // POS Stat Cards
+        // Generate All POS Cards
         let ph = "";
-        for(let id in posData) {
-            if(posData[id].m > 0) {
-                ph += `<div class="pos-stat-card"><h4>${id}</h4><div>Today: <b>₹${posData[id].t.toFixed(2)}</b></div><div>Month: <b>₹${posData[id].m.toFixed(2)}</b></div></div>`;
-            }
-        }
+        posMaster.forEach(p => {
+            ph += `<div class="pos-stat-card"><h4>${p.id}</h4><div>Today: <b>₹${posData[p.id].t.toFixed(2)}</b></div><div>Month: <b>₹${posData[p.id].m.toFixed(2)}</b></div></div>`;
+        });
+
         document.getElementById('posDetailedStats').innerHTML = ph;
         document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;"><span>Filter Total</span><span>₹${totalAmt.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Filter SC</span><span>₹${totalSC.toFixed(2)}</span></div><div class="banner" style="background:#27ae60;"><span>Filter Profit</span><span>₹${totalProfit.toFixed(2)}</span></div>`;
         document.getElementById('adminTbody').innerHTML = h;
@@ -234,14 +243,23 @@
         const x = trans.find(t => t.id == id);
         if(!x) return;
         document.getElementById('editId').value = x.id;
-        document.getElementById('cMobile').value = x.mobile; document.getElementById('cName').value = x.name;
-        document.getElementById('cBank').value = x.cardBank; document.getElementById('cLast4').value = x.cardLast4;
-        document.getElementById('posSelect').value = x.pos; document.getElementById('actionType').value = x.category;
+        document.getElementById('cMobile').value = x.mobile; 
+        document.getElementById('cName').value = x.name;
+        document.getElementById('cBank').value = x.cardBank; 
+        document.getElementById('cLast4').value = x.cardLast4;
+        document.getElementById('posSelect').value = x.pos; 
+        document.getElementById('actionType').value = x.category;
         document.getElementById('amt').value = x.amt;
         const scPct = (Number(x.scVal) / Number(x.amt)) * 100;
         document.getElementById('scPercent').value = scPct.toFixed(2);
-        if(myRole.includes('admin') || myRole === 'manager') { document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date; }
-        document.getElementById('submitBtn').innerText = "UPDATE DATA"; document.getElementById('cancelBtn').classList.remove('hidden'); showSection('entry');
+        
+        if(myRole.includes('admin') || myRole === 'manager') { 
+            document.getElementById('dateEditArea').classList.remove('hidden'); 
+            document.getElementById('entryDate').value = x.date; 
+        }
+        document.getElementById('submitBtn').innerText = "UPDATE DATA"; 
+        document.getElementById('cancelBtn').classList.remove('hidden'); 
+        showSection('entry');
     }
 
     document.getElementById('billingForm').onsubmit = e => {
