@@ -156,9 +156,12 @@
             myRole = u; 
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            if(u.includes('admin') || u === 'manager') {
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+            }
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
+            renderDaily(); renderAdmin();
         } else alert("Invalid Login!");
     }
 
@@ -171,12 +174,12 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        let h = ""; const isM = (myRole.includes('admin') || myRole === 'manager');
+        let h = ""; 
+        const isM = (myRole.includes('admin') || myRole === 'manager');
         
         trans.filter(x => x.category !== "REGISTRATION" && x.date === today).forEach(x => {
             const amt = Number(x.amt);
             const sc = Number(x.scVal);
-            // Withdraw-க்கு மட்டும் லெஸ் பண்ணி காட்டும், Loan-க்கு முழு அமௌன்ட் காட்டும்
             const cashOut = (x.category === 'WITHDRAW') ? (amt - sc).toFixed(2) : '-';
             
             h = `<tr>
@@ -239,9 +242,7 @@
         if(editId && (myRole.includes('admin') || myRole === 'manager')) fDate = document.getElementById('entryDate').value;
         
         db.ref('transactions/' + id).update({ 
-            id: id, 
-            user: myRole, // இங்கே ஸ்டாஃப் பெயர் சேமிக்கப்படுகிறது
-            date: fDate, time: fTime, 
+            id: id, user: myRole, date: fDate, time: fTime, 
             mobile: document.getElementById('cMobile').value, 
             name: document.getElementById('cName').value, 
             cardBank: document.getElementById('cBank').value, 
@@ -254,15 +255,25 @@
 
     function editRow(id) {
         const x = trans.find(t => t.id == id);
+        if(!x) return;
         document.getElementById('editId').value = x.id;
-        document.getElementById('cMobile').value = x.mobile; document.getElementById('cName').value = x.name;
-        document.getElementById('cBank').value = x.cardBank; document.getElementById('cLast4').value = x.cardLast4;
-        document.getElementById('posSelect').value = x.pos; document.getElementById('actionType').value = x.category;
+        document.getElementById('cMobile').value = x.mobile; 
+        document.getElementById('cName').value = x.name;
+        document.getElementById('cBank').value = x.cardBank; 
+        document.getElementById('cLast4').value = x.cardLast4;
+        document.getElementById('posSelect').value = x.pos; 
+        document.getElementById('actionType').value = x.category;
         document.getElementById('amt').value = x.amt;
         const scPct = (Number(x.scVal) / Number(x.amt)) * 100;
         document.getElementById('scPercent').value = scPct.toFixed(2);
-        if(myRole.includes('admin') || myRole === 'manager') { document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date; }
-        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden'); showSection('entry');
+        
+        if(myRole.includes('admin') || myRole === 'manager') { 
+            document.getElementById('dateEditArea').classList.remove('hidden'); 
+            document.getElementById('entryDate').value = x.date; 
+        }
+        document.getElementById('submitBtn').innerText = "UPDATE"; 
+        document.getElementById('cancelBtn').classList.remove('hidden'); 
+        showSection('entry');
     }
 
     function resetForm() { 
@@ -271,7 +282,7 @@
         document.getElementById('cancelBtn').classList.add('hidden'); document.getElementById('scPercent').value = "2.00";
     }
 
-    function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
+    function deleteRow(id) { if(confirm("Are you sure to delete this record?")) db.ref('transactions/' + id).remove(); }
     function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('', '', 'width=300,height=400'); w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`); w.print(); w.close(); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
     function recallCustomer() { const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[hits.length-1].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = ""; let seen = new Set(); hits.reverse().forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k.replace('|',' - ')}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">-- Recall Card --</option>' + opts; } }
