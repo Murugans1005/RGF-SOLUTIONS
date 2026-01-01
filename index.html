@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Ultimate Stable</title>
+    <title>RGF Solutions - Perfect Final Version</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -54,6 +54,10 @@
             <h3 id="formTitle">New Swipe</h3>
             <form id="billingForm">
                 <input type="hidden" id="editId">
+                <div id="dateEditArea" class="hidden">
+                    <label style="font-size:12px; font-weight:bold;">Transaction Date (Admin/Manager Only):</label>
+                    <input type="date" id="entryDate">
+                </div>
                 <div style="display:flex; align-items:center;">
                     <input type="tel" id="cMobile" placeholder="Mobile" oninput="recallCustomer()" required>
                     <button type="button" class="voice-btn" onclick="startVoice()">🎙️</button>
@@ -97,8 +101,7 @@
 
         <div id="adminSection" class="hidden">
             <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:15px;">
-                <input type="date" id="fDate" style="width:130px;"> 
-                <input type="date" id="tDate" style="width:130px;">
+                <input type="date" id="fDate" style="width:130px;"> <input type="date" id="tDate" style="width:130px;">
                 <select id="monthFilter" style="width:130px;" onchange="setMonthRange()">
                     <option value="">-- Month --</option>
                     <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
@@ -106,8 +109,8 @@
                     <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
                     <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
                 </select>
-                <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px;">CHECK</button>
-                <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px;">EXCEL</button>
+                <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">CHECK</button>
+                <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold;">📊 EXCEL</button>
             </div>
             <div id="adminStats" class="pos-summary-grid"></div>
             <h4>POS Breakdown</h4>
@@ -179,14 +182,6 @@
         if(s === 'admin') renderAdmin();
     }
 
-    function setMonthRange() {
-        const m = document.getElementById('monthFilter').value; if(!m) return;
-        const y = new Date().getFullYear();
-        document.getElementById('fDate').value = `${y}-${m}-01`;
-        document.getElementById('tDate').value = new Date(y, m, 0).toISOString().split('T')[0];
-        renderAdmin();
-    }
-
     function updateMDR() {
         const p = document.getElementById('posSelect').value;
         const t = document.getElementById('cType').value;
@@ -202,8 +197,16 @@
         const sc = (a * 2.0) / 100; const mdr = (a * updateMDR()) / 100;
         const editId = document.getElementById('editId').value;
         const id = editId ? editId : Date.now();
+        
+        let finalDate = new Date().toLocaleDateString('en-CA');
+        if(editId && (currentUser.includes('admin') || currentUser === 'manager')) {
+            finalDate = document.getElementById('entryDate').value;
+        } else if (editId) {
+            finalDate = trans.find(x=>x.id==editId).date;
+        }
+
         db.ref('transactions/' + id).update({
-            id: id, user: currentUser, date: editId ? trans.find(x=>x.id==editId).date : new Date().toLocaleDateString('en-CA'), 
+            id: id, user: currentUser, date: finalDate, 
             time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(),
             mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value,
             cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value,
@@ -215,6 +218,7 @@
     function resetForm() {
         document.getElementById('billingForm').reset();
         document.getElementById('editId').value = "";
+        document.getElementById('dateEditArea').classList.add('hidden');
         document.getElementById('submitBtn').innerText = "SAVE TRANSACTION";
         document.getElementById('cancelBtn').classList.add('hidden');
     }
@@ -244,6 +248,7 @@
     }
 
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
+
     function editRow(id) {
         const x = trans.find(t => t.id == id);
         document.getElementById('editId').value = x.id;
@@ -254,7 +259,11 @@
         document.getElementById('posSelect').value = x.pos;
         document.getElementById('actionType').value = x.category;
         document.getElementById('amt').value = x.amt;
-        document.getElementById('submitBtn').innerText = "UPDATE";
+        if(currentUser.includes('admin') || currentUser === 'manager') {
+            document.getElementById('dateEditArea').classList.remove('hidden');
+            document.getElementById('entryDate').value = x.date;
+        }
+        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION";
         document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
@@ -263,9 +272,9 @@
         const f = document.getElementById('fDate').value;
         const t = document.getElementById('tDate').value;
         let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
-        let ts=0, tp=0, tl=0, tw=0, h=""; let pos = {}; posMaster.forEach(p => pos[p.id] = 0);
+        let ts=0, tsc=0, tp=0, tl=0, tw=0, h=""; let pos = {}; posMaster.forEach(p => pos[p.id] = 0);
         data.slice().reverse().forEach(x => {
-            ts += Number(x.amt); tp += Number(x.netProfit);
+            ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
             if(x.category === 'LOAN') tl += Number(x.amt);
             if(x.category === 'WITHDRAW') tw += Number(x.amt);
             if(pos[x.pos] !== undefined) pos[x.pos] += Number(x.amt);
@@ -283,28 +292,11 @@
         w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`);
         w.print(); w.close();
     }
-    function startVoice() {
-        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        rec.onresult = e => { document.getElementById('cMobile').value = e.results[0][0].transcript.replace(/\s/g,''); recallCustomer(); };
-        rec.start();
-    }
-    function recallCustomer() {
-        const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m);
-        if(hits.length > 0) {
-            document.getElementById('cName').value = hits[0].name;
-            document.getElementById('recallArea').classList.remove('hidden');
-            let opts = ""; let seen = new Set();
-            hits.forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k}</option>`; seen.add(k); } } });
-            document.getElementById('recallSelect').innerHTML = '<option value="">-- Choose --</option>' + opts;
-        }
-    }
-    function applyCard() {
-        const v = document.getElementById('recallSelect').value; if(v) { const [b,l] = v.split('|'); document.getElementById('cBank').value = b; document.getElementById('cLast4').value = l; }
-    }
-    function saveCustomer() {
-        const id = "REG_" + Date.now();
-        db.ref('transactions/' + id).set({ id: id, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: document.getElementById('regBank').value, cardLast4: document.getElementById('regLast4').value, date: new Date().toLocaleDateString('en-CA') }).then(() => alert("Saved!"));
-    }
+    function startVoice() { const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); rec.onresult = e => { document.getElementById('cMobile').value = e.results[0][0].transcript.replace(/\s/g,''); recallCustomer(); }; rec.start(); }
+    function recallCustomer() { const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[0].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = ""; let seen = new Set(); hits.forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">-- Choose --</option>' + opts; } }
+    function applyCard() { const v = document.getElementById('recallSelect').value; if(v) { const [b,l] = v.split('|'); document.getElementById('cBank').value = b; document.getElementById('cLast4').value = l; } }
+    function saveCustomer() { const id = "REG_" + Date.now(); db.ref('transactions/' + id).set({ id: id, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: document.getElementById('regBank').value, cardLast4: document.getElementById('regLast4').value, date: new Date().toLocaleDateString('en-CA') }).then(() => alert("Saved!")); }
+    function setMonthRange() { const m = document.getElementById('monthFilter').value; if(!m) return; const y = new Date().getFullYear(); document.getElementById('fDate').value = `${y}-${m}-01`; document.getElementById('tDate').value = new Date(y, m, 0).toISOString().split('T')[0]; renderAdmin(); }
     function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Report.xlsx"); }
 </script>
 </body>
