@@ -12,7 +12,7 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background-color: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
-        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .nav-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .nav-tabs button { padding: 12px; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; cursor: pointer; }
         .nav-tabs button.active { background: var(--primary); }
@@ -25,7 +25,6 @@
         .btn-del { background: #e74c3c; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
         .admin-only { display: none; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 20px; }
-        .pos-card-color { padding: 10px; color: white; border-radius: 8px; text-align: center; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -85,16 +84,10 @@
         </div>
 
         <div id="dailySection" class="hidden">
-            <div class="summary-grid">
-                <div class="banner" style="background:#3498db;"><span id="dLtot">Today Loan: ₹0.00</span><span id="dLsc" style="font-size:9px;">SC: ₹0.00</span><span id="dLpr" style="font-size:9px;">Profit: ₹0.00</span></div>
-                <div class="banner" style="background:#e74c3c;"><span id="dWtot">Today With: ₹0.00</span><span id="dWsc" style="font-size:9px;">SC: ₹0.00</span><span id="dWpr" style="font-size:9px;">Profit: ₹0.00</span></div>
-                <div class="banner" style="background:#27ae60;"><span>Day Net Profit</span><span id="dDayVal" style="font-size:14px;">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLVal" style="font-size:14px;">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWVal" style="font-size:14px;">₹0.00</span></div>
-            </div>
+            <div class="summary-grid" id="dailySummary"></div>
             <div style="overflow-x:auto;">
                 <table id="dailyTable">
-                    <thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
@@ -107,10 +100,9 @@
                 <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold;">📊 EXCEL</button>
             </div>
             <div id="adminStats" class="summary-grid"></div>
-            <div id="posStats" class="summary-grid"></div>
             <div style="overflow-x:auto;">
                 <table id="adminTable">
-                    <thead><tr><th>Date</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead>
                     <tbody id="adminTbody"></tbody>
                 </table>
             </div>
@@ -143,11 +135,11 @@
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
     const posMaster = [
-        {id: "IOB-3897", n: 1.357, c: 3.528, color: "#1abc9c"}, {id: "CUB-9204", n: 1.298, c: 3.528, color: "#9b59b6"},
-        {id: "CUB-4705", n: 1.210, c: 3.528, color: "#3498db"}, {id: "UNION-5175", n: 1.357, c: 3.528, color: "#e67e22"},
-        {id: "UNION-8423", n: 1.357, c: 3.528, color: "#27ae60"}, {id: "AXIS-0028", n: 1.735, c: 2.655, color: "#c0392b"},
-        {id: "HDFC-7860", n: 1.652, c: 3.528, color: "#2980b9"}, {id: "HDFC-6508", n: 1.829, c: 3.528, color: "#f1c40f"},
-        {id: "FINKEDA", n: 1.350, c: 3.528, color: "#34495e"}, {id: "MOS", n: 1.700, c: 3.528, color: "#7f8c8d"}
+        {id: "IOB-3897", n: 1.357, c: 3.528}, {id: "CUB-9204", n: 1.298, c: 3.528},
+        {id: "CUB-4705", n: 1.210, c: 3.528}, {id: "UNION-5175", n: 1.357, c: 3.528},
+        {id: "UNION-8423", n: 1.357, c: 3.528}, {id: "AXIS-0028", n: 1.735, c: 2.655},
+        {id: "HDFC-7860", n: 1.652, c: 3.528}, {id: "HDFC-6508", n: 1.829, c: 3.528},
+        {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
     ];
 
     let trans = []; let myRole = ""; 
@@ -167,46 +159,42 @@
             if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
             document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
-            renderDaily();
-        } else alert("Invalid User!");
+        } else alert("Invalid Login!");
     }
 
     function showSection(s) {
-        ['entry','daily','cust','admin'].forEach(x => {
-            const el = document.getElementById(x+'Section');
-            if(el) el.classList.add('hidden');
-        });
+        ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section')?.classList.add('hidden'));
         document.getElementById(s+'Section').classList.remove('hidden');
         document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
-        const btn = document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1));
-        if(btn) btn.classList.add('active');
+        document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('active');
     }
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
-        const monthPre = today.substring(0, 7);
-        let dL=0, dW=0, dLsc=0, dWsc=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
-        const isM = (myRole.includes('admin') || myRole === 'manager');
-
-        trans.filter(x => x.category !== "REGISTRATION").forEach(x => {
-            let a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
-            if(x.date && x.date.startsWith(monthPre)) { if(x.category==='LOAN') mL+=a; if(x.category==='WITHDRAW') mW+=a; }
-            if(x.date === today) {
-                dTp += p;
-                if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; }
-                if(x.category==='WITHDRAW') { dW+=a; dWsc+=s; dWp+=p; }
-                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button> ${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}</td></tr>` + h;
-            }
+        let h = ""; const isM = (myRole.includes('admin') || myRole === 'manager');
+        
+        trans.filter(x => x.category !== "REGISTRATION" && x.date === today).forEach(x => {
+            const amt = Number(x.amt);
+            const sc = Number(x.scVal);
+            // Withdraw-க்கு மட்டும் லெஸ் பண்ணி காட்டும், Loan-க்கு முழு அமௌன்ட் காட்டும்
+            const cashOut = (x.category === 'WITHDRAW') ? (amt - sc).toFixed(2) : '-';
+            
+            h = `<tr>
+                <td>${x.time}</td>
+                <td style="color:#e67e22; font-weight:bold;">${x.user || 'Unknown'}</td>
+                <td>${x.name}</td>
+                <td>${x.pos}</td>
+                <td><b>${x.category}</b></td>
+                <td>${amt.toFixed(2)}</td>
+                <td>${sc.toFixed(2)}</td>
+                <td style="background:#fff9db; font-weight:bold;">${cashOut}</td>
+                <td>${Number(x.netProfit).toFixed(2)}</td>
+                <td>
+                    <button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button> 
+                    ${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}
+                </td>
+            </tr>` + h;
         });
-        document.getElementById('dLtot').innerText = "Loan: ₹" + dL.toFixed(2);
-        document.getElementById('dLsc').innerText = "SC: ₹" + dLsc.toFixed(2);
-        document.getElementById('dLpr').innerText = "Profit: ₹" + dLp.toFixed(2);
-        document.getElementById('dWtot').innerText = "With: ₹" + dW.toFixed(2);
-        document.getElementById('dWsc').innerText = "SC: ₹" + dWsc.toFixed(2);
-        document.getElementById('dWpr').innerText = "Profit: ₹" + dWp.toFixed(2);
-        document.getElementById('dDayVal').innerText = "₹" + dTp.toFixed(2);
-        document.getElementById('mLVal').innerText = "₹" + mL.toFixed(2);
-        document.getElementById('mWVal').innerText = "₹" + mW.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
     }
 
@@ -214,53 +202,35 @@
         const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
         const isM = (myRole.includes('admin') || myRole === 'manager');
         let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
-        let ts=0, tsc=0, tp=0, h=""; let posC = {}; posMaster.forEach(p => posC[p.id] = 0);
+        let h = "";
+        
         data.slice().reverse().forEach(x => {
-            ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
-            if(posC[x.pos] !== undefined) posC[x.pos] += Number(x.amt);
-            h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : '-'}</td></tr>`;
-        });
-        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;"><span>Total Amt</span><span>₹${ts.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Total SC</span><span>₹${tsc.toFixed(2)}</span></div><div class="banner" style="background:#27ae60;"><span>Total Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
-        let ph = ""; for(let k in posC) if(posC[k] > 0) { const c = posMaster.find(m => m.id === k).color; ph += `<div class="pos-card-color" style="background:${c};">${k}<br>₹${posC[k].toFixed(2)}</div>`; }
-        document.getElementById('posStats').innerHTML = ph;
-        document.getElementById('adminTbody').innerHTML = h;
-    }
+            const amt = Number(x.amt);
+            const sc = Number(x.scVal);
+            const cashOut = (x.category === 'WITHDRAW') ? (amt - sc).toFixed(2) : '-';
 
-    function editRow(id) {
-        const x = trans.find(t => t.id == id);
-        if(!x) return;
-        document.getElementById('editId').value = x.id;
-        document.getElementById('cMobile').value = x.mobile; 
-        document.getElementById('cName').value = x.name;
-        document.getElementById('cBank').value = x.cardBank; 
-        document.getElementById('cLast4').value = x.cardLast4;
-        document.getElementById('posSelect').value = x.pos; 
-        document.getElementById('actionType').value = x.category;
-        document.getElementById('amt').value = x.amt; 
-        
-        // Calculating back the percent for display during edit
-        const scPct = (Number(x.scVal) / Number(x.amt)) * 100;
-        document.getElementById('scPercent').value = scPct.toFixed(2);
-        
-        if(myRole.includes('admin') || myRole === 'manager') { 
-            document.getElementById('dateEditArea').classList.remove('hidden'); 
-            document.getElementById('entryDate').value = x.date; 
-        }
-        
-        document.getElementById('submitBtn').innerText = "UPDATE DATA"; 
-        document.getElementById('cancelBtn').classList.remove('hidden'); 
-        showSection('entry');
+            h += `<tr>
+                <td>${x.date}</td>
+                <td style="color:#e67e22; font-weight:bold;">${x.user || 'Unknown'}</td>
+                <td>${x.category}</td>
+                <td>${x.pos}</td>
+                <td>${amt.toFixed(2)}</td>
+                <td>${sc.toFixed(2)}</td>
+                <td style="background:#fff9db;">${cashOut}</td>
+                <td>${Number(x.netProfit).toFixed(2)}</td>
+                <td>${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : '-'}</td>
+            </tr>`;
+        });
+        document.getElementById('adminTbody').innerHTML = h;
     }
 
     document.getElementById('billingForm').onsubmit = e => {
         e.preventDefault();
         const a = parseFloat(document.getElementById('amt').value);
         const scPct = parseFloat(document.getElementById('scPercent').value) || 0;
-        const scVal = (a * scPct) / 100; // Calculated SC Amount
-        
+        const scVal = (a * scPct) / 100;
         const mdrP = updateMDR(); 
         const mdrVal = (a * mdrP) / 100; 
-        
         const editId = document.getElementById('editId').value;
         const id = editId ? editId : Date.now();
         
@@ -269,7 +239,9 @@
         if(editId && (myRole.includes('admin') || myRole === 'manager')) fDate = document.getElementById('entryDate').value;
         
         db.ref('transactions/' + id).update({ 
-            id: id, user: myRole, date: fDate, time: fTime, 
+            id: id, 
+            user: myRole, // இங்கே ஸ்டாஃப் பெயர் சேமிக்கப்படுகிறது
+            date: fDate, time: fTime, 
             mobile: document.getElementById('cMobile').value, 
             name: document.getElementById('cName').value, 
             cardBank: document.getElementById('cBank').value, 
@@ -277,17 +249,26 @@
             pos: document.getElementById('posSelect').value, 
             category: document.getElementById('actionType').value, 
             amt: a, scVal: scVal, mdrVal: mdrVal, netProfit: scVal - mdrVal, netPay: a - scVal 
-        }).then(() => { alert("Saved Successfully!"); resetForm(); showSection('daily'); });
+        }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
+    function editRow(id) {
+        const x = trans.find(t => t.id == id);
+        document.getElementById('editId').value = x.id;
+        document.getElementById('cMobile').value = x.mobile; document.getElementById('cName').value = x.name;
+        document.getElementById('cBank').value = x.cardBank; document.getElementById('cLast4').value = x.cardLast4;
+        document.getElementById('posSelect').value = x.pos; document.getElementById('actionType').value = x.category;
+        document.getElementById('amt').value = x.amt;
+        const scPct = (Number(x.scVal) / Number(x.amt)) * 100;
+        document.getElementById('scPercent').value = scPct.toFixed(2);
+        if(myRole.includes('admin') || myRole === 'manager') { document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date; }
+        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden'); showSection('entry');
+    }
+
     function resetForm() { 
-        document.getElementById('billingForm').reset(); 
-        document.getElementById('editId').value = ""; 
-        document.getElementById('dateEditArea').classList.add('hidden'); 
-        document.getElementById('submitBtn').innerText = "SAVE DATA"; 
-        document.getElementById('cancelBtn').classList.add('hidden'); 
-        document.getElementById('recallArea').classList.add('hidden');
-        document.getElementById('scPercent').value = "2.00"; // Default back to 2%
+        document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; 
+        document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE DATA"; 
+        document.getElementById('cancelBtn').classList.add('hidden'); document.getElementById('scPercent').value = "2.00";
     }
 
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
