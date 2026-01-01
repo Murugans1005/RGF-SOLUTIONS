@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Admin Total Control</title>
+    <title>RGF Solutions - Final Master Control</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -27,7 +27,7 @@
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
         .btn-action { padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; color: white; font-weight: bold; }
         .grid-6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .admin-section { background: #f9f9f9; padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid #ddd; }
+        .admin-box { background: #fdfdfd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eaeaea; }
     </style>
 </head>
 <body>
@@ -59,10 +59,10 @@
                 <input type="hidden" id="editId">
                 <input type="hidden" id="actionType" value="LOAN">
                 <div id="dateEditArea" class="hidden"><input type="date" id="entryDate"></div>
-                <input type="tel" id="cMobile" placeholder="Customer Mobile" oninput="recallCustomer()" required>
+                <input type="tel" id="cMobile" placeholder="Mobile" oninput="recallCustomer()" required>
                 <input type="text" id="cName" placeholder="Customer Name" required>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" id="cBank" placeholder="Customer Card Bank" required>
+                    <input type="text" id="cBank" placeholder="Card Bank" required>
                     <input type="text" id="cLast4" placeholder="Last 4" maxlength="4" required>
                 </div>
                 <select id="posSelect" onchange="updateMDR()" required></select>
@@ -72,13 +72,14 @@
                 </div>
                 <input type="number" id="amt" placeholder="Amount (₹)" step="0.01" required>
                 <button type="submit" id="submitBtn" class="btn-main" style="background:var(--profit-green);">SAVE DATA</button>
+                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:5px; background:#95a5a6; color:white; border:none; border-radius:8px;">CANCEL</button>
             </form>
         </div>
 
         <div id="dailySection" class="hidden">
             <div class="grid-6">
-                <div class="banner" style="background:var(--loan-blue);"><span>TODAY LOAN</span><span id="dLtot">₹0.00</span></div>
-                <div class="banner" style="background:var(--with-red);"><span>TODAY WITH</span><span id="dWtot">₹0.00</span></div>
+                <div class="banner" style="background:var(--loan-blue);"><span>TODAY LOAN</span><span id="dLtot">₹0.00</span><span id="dLsc" style="font-size:9px;">SC: ₹0.00</span></div>
+                <div class="banner" style="background:var(--with-red);"><span>TODAY WITH</span><span id="dWtot">₹0.00</span><span id="dWsc" style="font-size:9px;">SC: ₹0.00</span></div>
                 <div class="banner" style="background:var(--profit-green);"><span>LOAN PROFIT</span><span id="dLpr">₹0.00</span></div>
                 <div class="banner" style="background:#8e44ad;"><span>WITH PROFIT</span><span id="dWpr">₹0.00</span></div>
                 <div class="banner" style="background:var(--dark);"><span>MONTH LOAN</span><span id="mLVal">₹0.00</span></div>
@@ -86,54 +87,57 @@
             </div>
             <div style="overflow-x:auto;">
                 <table id="dailyTable">
-                    <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS Bank</th><th>ID</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Bank</th><th>POS ID</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="adminSection" class="hidden">
-            <div class="admin-section">
-                <h3>POS Machine Master</h3>
+            <div class="admin-box">
+                <h3>Business History & Reports</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="date" id="fDate" style="width:140px;"> <input type="date" id="tDate" style="width:140px;">
+                    <button onclick="renderAdmin()" style="padding:10px; background:var(--dark); color:white; border:none; border-radius:5px;">GENERATE REPORT</button>
+                    <button onclick="exportExcel()" style="padding:10px; background:var(--profit-green); color:white; border:none; border-radius:5px;">EXPORT EXCEL</button>
+                </div>
+                <div id="adminStats" class="grid-6" style="margin-top:15px;"></div>
+                <div id="posStats" class="grid-6"></div>
+                <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
+            </div>
+
+            <div class="admin-box" style="background:#f0f7ff">
+                <h3>POS & MDR Settings</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
-                    <input type="text" id="newPosId" placeholder="POS ID (e.g. AXIS-01)">
+                    <input type="text" id="newPosId" placeholder="POS ID (AXIS-01)">
                     <input type="text" id="newPosBank" placeholder="Bank Name">
                     <input type="number" id="newPosMDR" step="0.001" placeholder="Normal MDR %">
                     <input type="number" id="newPosCorpMDR" step="0.001" placeholder="Corp MDR %">
                 </div>
                 <button class="btn-main" style="margin-top:10px; background:var(--loan-blue);" onclick="addPOS()">ADD / UPDATE POS</button>
-                <div style="overflow-x:auto; margin-top:10px;">
-                    <table id="posTableMaster"><thead><tr><th>ID</th><th>Bank</th><th>Normal %</th><th>Corp %</th><th>Action</th></tr></thead><tbody id="posList"></tbody></table>
-                </div>
+                <div style="overflow-x:auto; margin-top:10px;"><table style="background:white"><thead><tr><th>ID</th><th>Bank</th><th>Normal %</th><th>Corp %</th><th>Action</th></tr></thead><tbody id="posList"></tbody></table></div>
             </div>
 
-            <div class="admin-section">
-                <h3>Staff Master</h3>
+            <div class="admin-box" style="background:#f0fff4">
+                <h3>Staff Management</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" id="newStaffId" placeholder="User ID">
+                    <input type="text" id="newStaffId" placeholder="User Name">
                     <input type="text" id="newStaffPass" placeholder="Password">
                 </div>
-                <button class="btn-main" style="margin-top:10px; background:var(--profit-green);" onclick="addStaff()">ADD / UPDATE STAFF</button>
-                <div id="staffListArea" style="margin-top:10px;"></div>
-            </div>
-
-            <div class="admin-section">
-                <h3>Business Reports</h3>
-                <input type="date" id="fDate"> <input type="date" id="tDate">
-                <button onclick="renderAdminReport()" style="padding:10px; background:var(--dark); color:white; border:none; border-radius:5px;">GENERATE REPORT</button>
-                <div style="overflow-x:auto; margin-top:10px;"><table id="adminTable"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>POS</th><th>Amt</th><th>Profit</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
+                <button class="btn-main" style="margin-top:10px; background:var(--profit-green);" onclick="addStaff()">ADD STAFF</button>
+                <div id="staffListArea" style="margin-top:10px; background:white; padding:10px; border-radius:5px;"></div>
             </div>
         </div>
 
         <div id="custSection" class="hidden">
-             <input type="tel" id="regMobile" placeholder="Mobile">
+             <h3>Master Registration</h3>
+             <input type="tel" id="regMobile" placeholder="Mobile" oninput="recallCustomer()">
              <input type="text" id="regName" placeholder="Name">
-             <button class="btn-main" onclick="saveCustomer()">SAVE CUSTOMER</button>
+             <button class="btn-main" onclick="saveCustomer()">SAVE MASTER</button>
         </div>
     </div>
 
 <script>
-    // Config
     const firebaseConfig = {
         apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
         authDomain: "rgf-solutions.firebaseapp.com",
@@ -148,11 +152,10 @@
 
     let trans = []; let posMaster = []; let staffMaster = {}; let curUser = "";
 
-    // Sync Everything
+    // Sync Data
     db.ref('pos_master').on('value', snap => {
         posMaster = snap.val() ? Object.values(snap.val()) : [];
-        updatePOSDropdown();
-        renderPOSList();
+        updatePOSDropdown(); renderPOSList();
     });
     db.ref('staff_master').on('value', snap => {
         staffMaster = snap.val() || { "sabariraj admin": "Guru", "manager": "Murugan" };
@@ -160,7 +163,7 @@
     });
     db.ref('transactions').on('value', snap => {
         trans = snap.val() ? Object.values(snap.val()) : [];
-        renderDaily();
+        renderDaily(); renderAdmin();
     });
 
     function checkLogin() {
@@ -170,58 +173,95 @@
             curUser = u; document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
             showSection('entry');
-        } else alert("Invalid Login!");
+        } else alert("Login Invalid!");
     }
 
-    // POS & Staff Admin Logic
     function addPOS() {
         const id = document.getElementById('newPosId').value;
+        if(!id) return alert("Enter ID");
         db.ref('pos_master/' + id).set({
             id: id, bank: document.getElementById('newPosBank').value,
             n: parseFloat(document.getElementById('newPosMDR')),
             c: parseFloat(document.getElementById('newPosCorpMDR'))
         });
     }
+
     function addStaff() {
         const id = document.getElementById('newStaffId').value.toLowerCase();
+        if(!id) return alert("Enter Staff ID");
         db.ref('staff_master/' + id).set(document.getElementById('newStaffPass').value);
     }
-    function renderPOSList() {
-        let h = posMaster.map(p => `<tr><td>${p.id}</td><td>${p.bank}</td><td>${p.n}%</td><td>${p.c}%</td><td><button onclick="deletePOS('${p.id}')">X</button></td></tr>`).join('');
-        document.getElementById('posList').innerHTML = h;
-    }
-    function deletePOS(id) { if(confirm("Delete?")) db.ref('pos_master/'+id).remove(); }
-    function renderStaffList() {
-        let h = Object.keys(staffMaster).map(s => `<div style="padding:5px; border-bottom:1px solid #eee;">${s} <button onclick="deleteStaff('${s}')">X</button></div>`).join('');
-        document.getElementById('staffListArea').innerHTML = h;
-    }
-    function deleteStaff(s) { if(confirm("Delete?")) db.ref('staff_master/'+s).remove(); }
-    function updatePOSDropdown() {
-        document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id} (${x.bank})</option>`).join('');
+
+    function renderDaily() {
+        const today = new Date().toLocaleDateString('en-CA');
+        const mPre = today.substring(0, 7);
+        let dL=0, dW=0, dLsc=0, dWsc=0, dLp=0, dWp=0, mL=0, mW=0, h="";
+
+        trans.forEach(x => {
+            if(x.category === "REGISTRATION") return;
+            let a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
+            if(x.date && x.date.startsWith(mPre)) { if(x.category==='LOAN') mL+=a; if(x.category==='WITHDRAW') mW+=a; }
+            if(x.date === today) {
+                if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; } else { dW+=a; dWsc+=s; dWp+=p; }
+                const isAdm = (curUser.includes('admin') || curUser === 'manager');
+                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.posBank || ''}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td>
+                    <button class="btn-action" style="background:var(--loan-blue)" onclick="printSlip(${x.id})">🖨️</button>
+                    ${isAdm ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:var(--with-red)" onclick="deleteRow(${x.id})">X</button>` : ''}
+                </td></tr>` + h;
+            }
+        });
+        document.getElementById('dLtot').innerText = "₹" + dL.toFixed(2);
+        document.getElementById('dLsc').innerText = "SC: ₹" + dLsc.toFixed(2);
+        document.getElementById('dLpr').innerText = "₹" + dLp.toFixed(2);
+        document.getElementById('dWtot').innerText = "₹" + dW.toFixed(2);
+        document.getElementById('dWsc').innerText = "SC: ₹" + dWsc.toFixed(2);
+        document.getElementById('dWpr').innerText = "₹" + dWp.toFixed(2);
+        document.getElementById('mLVal').innerText = "₹" + mL.toFixed(2);
+        document.getElementById('mWVal').innerText = "₹" + mW.toFixed(2);
+        document.getElementById('dailyTbody').innerHTML = h;
     }
 
-    // Main Billing Logic
-    function setType(t) {
-        document.getElementById('actionType').value = t;
-        document.getElementById('toggleLoan').className = 't-btn ' + (t==='LOAN'?'loan-active':'');
-        document.getElementById('toggleWith').className = 't-btn ' + (t==='WITHDRAW'?'with-active':'');
+    function renderAdmin() {
+        const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
+        let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
+        let ts=0, tsc=0, tp=0, h=""; let posC = {};
+        data.slice().reverse().forEach(x => {
+            ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
+            if(x.pos) posC[x.pos] = (posC[x.pos] || 0) + Number(x.amt);
+            const isAdm = (curUser.includes('admin') || curUser === 'manager');
+            h += `<tr><td>${x.date}</td><td>${x.user}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>
+                <button class="btn-action" style="background:var(--loan-blue)" onclick="printSlip(${x.id})">🖨️</button>
+                ${isAdm ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:var(--with-red)" onclick="deleteRow(${x.id})">X</button>` : ''}
+            </td></tr>`;
+        });
+        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:var(--dark);"><span>Total Amt</span><span>₹${ts.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Total SC</span><span>₹${tsc.toFixed(2)}</span></div><div class="banner" style="background:var(--profit-green);"><span>Total Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
+        let ph = ""; for(let k in posC) { ph += `<div class="banner" style="background:#7f8c8d"><span>${k}</span><span>₹${posC[k].toFixed(2)}</span></div>`; }
+        document.getElementById('posStats').innerHTML = ph;
+        document.getElementById('adminTbody').innerHTML = h;
     }
 
-    function updateMDR() {
-        const pid = document.getElementById('posSelect').value;
-        const p = posMaster.find(x => x.id === pid);
-        const type = document.getElementById('cType').value;
-        const rate = p ? (type === 'CORPORATE' ? p.c : p.n) : 0;
-        document.getElementById('mdrShow').innerText = "MDR: " + rate + "%";
-        return rate;
+    function editRow(id) {
+        const x = trans.find(t => t.id == id);
+        document.getElementById('editId').value = x.id;
+        document.getElementById('cMobile').value = x.mobile; document.getElementById('cName').value = x.name;
+        document.getElementById('cBank').value = x.cardBank; document.getElementById('cLast4').value = x.cardLast4;
+        document.getElementById('posSelect').value = x.pos; setType(x.category);
+        document.getElementById('amt').value = x.amt;
+        if(curUser.includes('admin') || curUser === 'manager') { document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date; }
+        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden');
+        showSection('entry');
     }
 
     document.getElementById('billingForm').onsubmit = e => {
         e.preventDefault();
-        const a = parseFloat(document.getElementById('amt').value), r = updateMDR(), sc = (a*2)/100, mdr = (a*r)/100, eid = document.getElementById('editId').value, id = eid || Date.now();
+        const a = parseFloat(document.getElementById('amt').value), p = updateMDR(), sc = (a*2)/100, mdr = (a*p)/100, eid = document.getElementById('editId').value, id = eid || Date.now();
         const pData = posMaster.find(x => x.id === document.getElementById('posSelect').value);
+        let fDate = new Date().toLocaleDateString('en-CA');
+        if(eid && (curUser.includes('admin') || curUser === 'manager')) fDate = document.getElementById('entryDate').value;
+        else if(eid) fDate = trans.find(x=>x.id==eid).date;
+
         db.ref('transactions/' + id).update({
-            id: id, user: curUser, date: new Date().toLocaleDateString('en-CA'), time: new Date().toLocaleTimeString(),
+            id: id, user: curUser, date: fDate, time: eid ? trans.find(x=>x.id==eid).time : new Date().toLocaleTimeString(),
             mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value,
             cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value,
             pos: pData.id, posBank: pData.bank, category: document.getElementById('actionType').value,
@@ -229,23 +269,17 @@
         }).then(() => { resetForm(); showSection('daily'); });
     };
 
-    function renderDaily() {
-        const today = new Date().toLocaleDateString('en-CA');
-        let dL=0, dW=0, dLp=0, dWp=0, h="";
-        trans.forEach(x => {
-            if(x.date === today && x.category !== "REGISTRATION") {
-                if(x.category==='LOAN') { dL+=x.amt; dLp+=x.netProfit; } else { dW+=x.amt; dWp+=x.netProfit; }
-                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.posBank}</td><td>${x.pos}</td><td>${x.category}</td><td>${x.amt}</td><td>${x.scVal}</td><td>${x.netProfit}</td><td><button onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
-            }
-        });
-        document.getElementById('dLtot').innerText = "₹"+dL; document.getElementById('dLpr').innerText = "₹"+dLp;
-        document.getElementById('dWtot').innerText = "₹"+dW; document.getElementById('dWpr').innerText = "₹"+dWp;
-        document.getElementById('dailyTbody').innerHTML = h;
-    }
-
+    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); setType('LOAN'); }
+    function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/'+id).remove(); }
     function showSection(s) { ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section').classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active')); document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('active'); }
-    function resetForm() { document.getElementById('billingForm').reset(); setType('LOAN'); }
-    function printSlip(id) { /* Existing Print Function */ }
+    function setType(t) { document.getElementById('actionType').value = t; document.getElementById('toggleLoan').className = 't-btn ' + (t==='LOAN'?'loan-active':''); document.getElementById('toggleWith').className = 't-btn ' + (t==='WITHDRAW'?'with-active':''); }
+    function updateMDR() { const pid = document.getElementById('posSelect').value; const p = posMaster.find(x => x.id === pid); const type = document.getElementById('cType').value; const rate = p ? (type === 'CORPORATE' ? p.c : p.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + rate + "%"; return rate; }
+    function updatePOSDropdown() { document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id} (${x.bank})</option>`).join(''); }
+    function renderPOSList() { document.getElementById('posList').innerHTML = posMaster.map(p => `<tr><td>${p.id}</td><td>${p.bank}</td><td>${p.n}%</td><td>${p.c}%</td><td><button onclick="db.ref('pos_master/${p.id}').remove()">X</button></td></tr>`).join(''); }
+    function renderStaffList() { document.getElementById('staffListArea').innerHTML = Object.keys(staffMaster).map(s => `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${s}</span><button onclick="db.ref('staff_master/${s}').remove()">Remove</button></div>`).join(''); }
+    function recallCustomer() { const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[0].name; } }
+    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('', '', 'width=300,height=400'); w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Staff: ${x.user}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`); w.print(); w.close(); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Report.xlsx"); }
 </script>
 </body>
 </html>
