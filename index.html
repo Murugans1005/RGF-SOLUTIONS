@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF SOLUTIONS - FINAL PRO</title>
+    <title>RGF SOLUTIONS - COMPLETE</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -13,7 +13,7 @@
         body { background-color: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .nav-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; }
+        .nav-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .nav-tabs button { padding: 12px 18px; border: none; border-radius: 8px; background: #95a5a6; color: white; font-weight: bold; cursor: pointer; }
         .nav-tabs button.active { background: var(--dark); }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; }
@@ -44,6 +44,7 @@
         <div class="nav-tabs">
             <button id="btnEntry" class="active" onclick="showSection('entry')">NEW ENTRY</button>
             <button id="btnDaily" onclick="showSection('daily')">DASHBOARD</button>
+            <button id="btnAdmin" onclick="showSection('admin')">ACCOUNTING</button>
             <button id="btnCust" onclick="showSection('cust')">MASTER</button>
             <button style="background:#7f8c8d;" onclick="location.reload()">LOGOUT</button>
         </div>
@@ -57,7 +58,7 @@
                 <input type="hidden" id="editId">
                 <input type="hidden" id="actionType" value="LOAN">
                 <div id="dateEditArea" class="hidden" style="margin-bottom:10px; padding:10px; background:#fff2f2; border-radius:8px;">
-                    <label style="font-weight:bold; color:red;">Entry Date:</label>
+                    <label style="font-weight:bold; color:red;">Change Date:</label>
                     <input type="date" id="entryDate">
                 </div>
                 <input type="tel" id="cMobile" placeholder="Mobile Number" oninput="recallCustomer()" required>
@@ -74,16 +75,29 @@
 
         <div id="dailySection" class="hidden">
             <div class="grid-6">
-                <div class="banner" style="background:var(--loan-blue);">LOAN: <span id="dLtot">₹0.00</span></div>
-                <div class="banner" style="background:var(--with-red);">WITH: <span id="dWtot">₹0.00</span></div>
-                <div class="banner" style="background:var(--profit-green);">PROFIT: <span id="dLpr">₹0.00</span></div>
+                <div class="banner" style="background:var(--loan-blue);">LOAN<br><span id="dLtot">₹0.00</span></div>
+                <div class="banner" style="background:var(--with-red);">WITH<br><span id="dWtot">₹0.00</span></div>
+                <div class="banner" style="background:var(--profit-green);">PROFIT<br><span id="dLpr">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;">
-                <table id="dailyTable">
+                <table>
                     <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS ID</th><th>POS Bank</th><th>Settle Bank</th><th>Amt</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div id="adminSection" class="hidden">
+             <h3>History & Reports</h3>
+             <div style="display:flex; gap:10px; margin-bottom:15px;">
+                 <input type="date" id="fDate" style="width:150px;">
+                 <input type="date" id="tDate" style="width:150px;">
+                 <button onclick="renderAdmin()" style="padding:10px; background:var(--dark); color:white; border:none; border-radius:5px; cursor:pointer;">CHECK</button>
+             </div>
+             <div id="adminStats" class="grid-6"></div>
+             <h4>Machine Summary</h4>
+             <div id="posStats" class="grid-6"></div>
+             <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>Type</th><th>Customer</th><th>POS Bank</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
         </div>
 
         <div id="custSection" class="hidden">
@@ -105,7 +119,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // FIXED 10 POS ID AND SETTLE BANKS
     const defaultPOS = [
         {id: "IOB-3897", bank: "IOB", settle: "IOB-MAIN", n: 1.357, c: 3.528},
         {id: "CUB-9204", bank: "CUB", settle: "CUB-OFFICE", n: 1.298, c: 3.528},
@@ -122,17 +135,19 @@
     let trans = []; let activeUser = ""; let custData = [];
     const staffList = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
 
-    db.ref('transactions').on('value', snap => { trans = snap.val() ? Object.values(snap.val()) : []; renderDaily(); });
+    db.ref('transactions').on('value', snap => { trans = snap.val() ? Object.values(snap.val()) : []; renderDaily(); renderAdmin(); });
     db.ref('customers').on('value', snap => { custData = snap.val() ? Object.values(snap.val()) : []; renderCustomerList(); });
 
     function checkLogin() {
         const u = document.getElementById('userId').value.toLowerCase().trim();
         const p = document.getElementById('password').value.trim();
         if(staffList[u] === p) {
-            activeUser = u; document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + defaultPOS.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
+            activeUser = u; 
+            document.getElementById('loginPage').classList.add('hidden'); 
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + defaultPOS.map(x=>`<option value="${x.id}">${x.id} (${x.bank})</option>`).join('');
             showSection('entry');
-        } else alert("Login Failed!");
+        } else alert("Invalid Login!");
     }
 
     function renderDaily() {
@@ -143,11 +158,10 @@
             if(x.date === today) {
                 if(x.category==='LOAN') dL+=Number(x.amt); else dW+=Number(x.amt);
                 dP+=Number(x.netProfit);
-                // DIRECTLY ADDING EDIT/DELETE BUTTONS WITHOUT ANY CONDITION
-                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.posBank || '-'}</td><td>${x.settleBank || '-'}</td><td>${x.amt}</td><td>
+                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.posBank}</td><td>${x.settleBank}</td><td>${x.amt}</td><td>
                     <button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow('${x.id}')">✏️</button>
                     <button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>
-                    <button class="btn-action" style="background:#3498db" onclick="window.print()">🖨️</button>
+                    <button class="btn-action" style="background:#3498db" onclick="printSlip(${x.id})">🖨️</button>
                 </td></tr>` + h;
             }
         });
@@ -155,6 +169,23 @@
         document.getElementById('dWtot').innerText = "₹" + dW.toFixed(2);
         document.getElementById('dLpr').innerText = "₹" + dP.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
+    }
+
+    function renderAdmin() {
+        const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
+        let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
+        let ts=0, tp=0, h=""; let ps = {};
+        data.slice().reverse().forEach(x => {
+            ts += Number(x.amt); tp += Number(x.netProfit);
+            ps[x.pos] = (ps[x.pos] || 0) + Number(x.amt);
+            h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.name}</td><td>${x.posBank}</td><td>${x.amt}</td><td>${x.netProfit}</td><td>
+                <button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow('${x.id}')">✏️</button>
+                <button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}')">❌</button>
+            </td></tr>`;
+        });
+        document.getElementById('adminTbody').innerHTML = h;
+        let ph = ""; for(let k in ps) ph += `<div class="banner" style="background:#7f8c8d">${k}<br>₹${ps[k].toFixed(2)}</div>`;
+        document.getElementById('posStats').innerHTML = ph;
     }
 
     function editRow(id) {
@@ -167,7 +198,7 @@
         showSection('entry');
     }
 
-    function deleteItem(id) { if(confirm("Are you sure?")) db.ref('transactions/'+id).remove(); }
+    function deleteItem(id) { if(confirm("Delete permanently?")) db.ref('transactions/'+id).remove(); }
 
     document.getElementById('billingForm').onsubmit = e => {
         e.preventDefault();
@@ -182,15 +213,16 @@
             pos: pObj.id, posBank: pObj.bank, settleBank: pObj.settle, amt: a, scVal: sc, netProfit: sc - mdr,
             date: document.getElementById('entryDate').value || new Date().toLocaleDateString('en-CA'),
             time: new Date().toLocaleTimeString(), category: document.getElementById('actionType').value
-        }).then(() => { alert("Success!"); resetForm(); showSection('daily'); });
+        }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
-    function showSection(s) { ['entry','daily','cust'].forEach(x => document.getElementById(x+'Section').classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); }
+    function showSection(s) { ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section').classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active')); document.getElementById('btn'+s.charAt(0).toUpperCase()+s.slice(1)).classList.add('active');}
     function setType(t) { document.getElementById('actionType').value = t; document.getElementById('toggleLoan').className = 't-btn ' + (t==='LOAN'?'loan-active':''); document.getElementById('toggleWith').className = 't-btn ' + (t==='WITHDRAW'?'with-active':''); }
     function updateMDR() { const p = defaultPOS.find(x => x.id === document.getElementById('posSelect').value); const rate = p ? (document.getElementById('cType').value === 'CORPORATE' ? p.c : p.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + rate + "%"; }
     function recallCustomer() { const c = custData.find(x => x.mobile === document.getElementById('cMobile').value); if(c) { document.getElementById('cName').value = c.name; document.getElementById('cBank').value = c.cardBank; } }
     function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); }
     function renderCustomerList() { document.getElementById('custListBody').innerHTML = custData.map(c => `<tr><td>${c.mobile}</td><td>${c.name}</td><td>${c.cardBank}</td></tr>`).join(''); }
+    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('', '', 'width=300,height=400'); w.document.write(`RGF SOLUTIONS\nDate: ${x.date}\nAmt: ${x.amt}`); w.print(); w.close(); }
 </script>
 </body>
 </html>
