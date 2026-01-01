@@ -8,121 +8,127 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f0f2f5; --success: #27ae60; --info: #3498db; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
-        body { background-color: var(--bg); margin: 0; padding: 10px; }
+        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f4f7f6; --success: #27ae60; --info: #3498db; --white: #ffffff; }
+        * { box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); margin: 0; padding: 10px; color: #444; }
         .hidden { display: none !important; }
-        .container { max-width: 1450px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .container { max-width: 1450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
         
         /* Nav Tabs */
-        .nav-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        .nav-tabs button { padding: 12px 18px; border: none; border-radius: 10px; background: #95a5a6; color: white; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .nav-tabs button.active { background: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3); }
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .nav-tabs button { padding: 14px 22px; border: none; border-radius: 12px; background: #bdc3c7; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .nav-tabs button.active { background: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(230, 126, 34, 0.3); }
 
-        /* Entry Form Styling - Improved Look */
-        #entrySection { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 20px; border: 1px solid #eee; }
-        #entrySection h3 { text-align: center; color: var(--dark); margin-top: 0; font-size: 22px; border-bottom: 2px solid var(--primary); display: inline-block; padding-bottom: 5px; margin-bottom: 20px; width: 100%; }
+        /* PREMIUM ENTRY FORM DESIGN */
+        #entrySection { max-width: 650px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.03); }
+        #entrySection h3 { text-align: center; color: var(--dark); font-size: 24px; margin-bottom: 25px; font-weight: 700; letter-spacing: 0.5px; position: relative; }
+        #entrySection h3::after { content: ''; width: 50px; height: 4px; background: var(--primary); position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); border-radius: 10px; }
         
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-section { background: #f9fbff; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #edf2f7; }
+        .section-title { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
         
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1.5px solid #dfe6e9; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; background: #fdfdfd; }
-        input:focus, select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 8px rgba(230, 126, 34, 0.1); }
+        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: var(--white); color: var(--dark); font-weight: 500; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(230, 126, 34, 0.1); background: #fff; }
         
-        .card-row { display: flex; gap: 8px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px dashed #ccc; }
-        .btn-add-card { background: var(--success); color: white; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-add-card:hover { transform: scale(1.05); }
+        .card-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .btn-add-card { background: var(--success); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
+        
+        .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; font-size: 17px; margin-top: 20px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2); text-transform: uppercase; letter-spacing: 1px; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(44, 62, 80, 0.3); }
 
-        .btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 15px; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .btn-main:hover { background: #1a252f; transform: translateY(-1px); }
-        
-        /* Banners & Stats */
-        .banner { color: white; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; display: flex; flex-direction: column; justify-content: center; min-height: 70px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 25px; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 15px; }
-        th { background: #f8f9fa; color: #636e72; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eee; }
-        th, td { padding: 12px; border: 1px solid #f1f1f1; text-align: left; }
-        tr:hover { background: #fdfdfd; }
-        
-        .btn-edit { background: #f1c40f; color: black; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 4px; }
-        .btn-del { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+        /* Daily & Admin View Style (Keeping Same Logic) */
+        .banner { color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 12px; display: flex; flex-direction: column; justify-content: center; min-height: 80px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 14px; border: 1px solid #f1f1f1; text-align: left; }
+        th { background: #f8f9fa; font-weight: 600; color: #7f8c8d; }
+        .btn-edit { background: #f1c40f; color: black; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+        .btn-del { background: #e74c3c; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
         .admin-only { display: none; }
-        .pos-stat-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 12px; text-align: center; border-left: 5px solid var(--primary); }
+        .pos-stat-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; text-align: center; border-left: 5px solid var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="loginPage" style="text-align:center; padding-top: 80px;">
-        <div style="background:white; display:inline-block; padding:40px; border-radius:25px; width:320px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);">
-            <h2 style="color: var(--dark); margin-bottom: 25px; letter-spacing: 1px;">RGF SOLUTIONS</h2>
-            <input type="text" id="userId" placeholder="User ID">
+    <div id="loginPage" style="text-align:center; padding-top: 100px;">
+        <div style="background:white; display:inline-block; padding:45px; border-radius:30px; width:350px; box-shadow: 0 25px 50px rgba(0,0,0,0.1);">
+            <h2 style="color: var(--dark); margin-bottom: 30px; font-weight: 800;">RGF SOLUTIONS</h2>
+            <input type="text" id="userId" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
-            <button class="btn-main" onclick="checkLogin()">LOG IN</button>
+            <button class="btn-main" onclick="checkLogin()">LOGIN NOW</button>
         </div>
     </div>
 
     <div id="mainApp" class="container hidden">
         <div class="nav-tabs">
-            <button id="btnEntry" class="active" onclick="showSection('entry')">📝 Entry</button>
-            <button id="btnDaily" onclick="showSection('daily')">📊 Daily View</button>
-            <button id="btnCust" onclick="showSection('cust')">👥 Master</button>
-            <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">💼 Admin Accounting</button>
-            <button style="background:#e74c3c;" onclick="location.reload()">🚪 Logout</button>
+            <button id="btnEntry" class="active" onclick="showSection('entry')">📝 ENTRY</button>
+            <button id="btnDaily" onclick="showSection('daily')">📊 DAILY VIEW</button>
+            <button id="btnCust" onclick="showSection('cust')">👥 MASTER</button>
+            <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">💼 ADMIN</button>
+            <button style="background:#e74c3c;" onclick="location.reload()">🚪 EXIT</button>
         </div>
 
         <div id="entrySection">
             <h3 id="formTitle">New Transaction</h3>
             <form id="billingForm">
                 <input type="hidden" id="editId">
-                <div id="dateEditArea" class="hidden" style="background:#fff2f2; padding:15px; border-radius:12px; border:1px solid #ffcccc; margin-bottom:15px; text-align: center;">
-                    <label style="font-size:12px; font-weight:bold; color:#c0392b;">⚠️ Edit Transaction Date:</label>
+                <div id="dateEditArea" class="hidden" style="background:#fff5f5; padding:15px; border-radius:15px; border:2px dashed #feb2b2; margin-bottom:20px; text-align: center;">
+                    <label style="font-size:12px; font-weight:700; color:#c53030;">📅 MODIFY TRANSACTION DATE</label>
                     <input type="date" id="entryDate">
                 </div>
 
-                <div class="form-grid">
-                    <div class="full-width">
-                        <input type="tel" id="cMobile" placeholder="📱 Mobile Number" oninput="recallCustomer()" required>
+                <div class="form-section">
+                    <span class="section-title">Customer Details</span>
+                    <div class="form-grid">
+                        <div class="full-width"><input type="tel" id="cMobile" placeholder="📱 Mobile Number" oninput="recallCustomer()" required></div>
+                        <div id="recallArea" class="full-width hidden"><select id="recallSelect" onchange="applyCard()" style="background:#f0f7ff; border-color: #bee3f8;"></select></div>
+                        <div class="full-width"><input type="text" id="cName" placeholder="👤 Full Name" required></div>
                     </div>
-                    <div id="recallArea" class="full-width hidden">
-                        <select id="recallSelect" onchange="applyCard()" style="background:#eef7ff; border: 1px solid #3498db;"></select>
-                    </div>
-                    <div class="full-width">
-                        <input type="text" id="cName" placeholder="👤 Customer Name" required>
-                    </div>
+                </div>
 
-                    <div id="cardContainer" class="full-width">
+                <div class="form-section">
+                    <span class="section-title">Card Information</span>
+                    <div id="cardContainer">
                         <div class="card-row">
                             <input type="text" class="cBank" placeholder="🏦 Bank Name" required style="margin:0">
-                            <input type="text" class="cLast4" placeholder="🔢 Last 4" maxlength="4" required style="margin:0; width:80px">
+                            <input type="text" class="cLast4" placeholder="🔢 Last 4" maxlength="4" required style="margin:0; width:90px">
                             <button type="button" class="btn-add-card" onclick="addNewCardRow()">+</button>
                         </div>
                     </div>
-
-                    <div class="full-width">
-                        <select id="posSelect" onchange="updateMDR()" required></select>
-                    </div>
-
-                    <select id="cType" onchange="updateMDR()">
-                        <option value="NORMAL">💳 Normal Card</option>
-                        <option value="CORPORATE">🏢 Corporate Card</option>
-                    </select>
-                    <div id="mdrShow" style="padding:12px; background:#fff9db; border-radius:10px; text-align:center; font-weight:bold; font-size: 13px; color:#856404; display:flex; align-items:center; justify-content:center; border:1px solid #ffeeba;">MDR: 0.00%</div>
-
-                    <div class="full-width">
-                        <select id="actionType">
-                            <option value="NONE">⚡ NORMAL SWIPE</option>
-                            <option value="LOAN">💰 LOAN</option>
-                            <option value="WITHDRAW">🏧 WITHDRAW</option>
-                        </select>
-                    </div>
-
-                    <input type="number" id="amt" placeholder="💵 Amount (₹)" step="0.01" required>
-                    <input type="number" id="scPercent" placeholder="📈 SC %" step="0.01" value="2.00" required>
                 </div>
 
-                <button type="submit" id="submitBtn" class="btn-main" style="background:var(--success);">💾 SAVE TRANSACTION</button>
-                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:12px; margin-top:10px; background:#95a5a6; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">❌ CANCEL EDIT</button>
+                <div class="form-section">
+                    <span class="section-title">Machine & Action</span>
+                    <div class="form-grid">
+                        <div class="full-width"><select id="posSelect" onchange="updateMDR()" required></select></div>
+                        <select id="cType" onchange="updateMDR()">
+                            <option value="NORMAL">Normal Card</option>
+                            <option value="CORPORATE">Corporate Card</option>
+                        </select>
+                        <div id="mdrShow" style="padding:14px; background:#fffaf0; border-radius:12px; text-align:center; font-weight:700; font-size: 13px; color:#c05621; border:2px solid #feebc8;">MDR: 0.00%</div>
+                        <div class="full-width">
+                            <select id="actionType">
+                                <option value="NONE">⚡ NORMAL SWIPE</option>
+                                <option value="LOAN">💰 LOAN</option>
+                                <option value="WITHDRAW">🏧 WITHDRAW</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <span class="section-title">Payment Calculation</span>
+                    <div class="form-grid">
+                        <input type="number" id="amt" placeholder="💵 Amount (₹)" step="0.01" required>
+                        <input type="number" id="scPercent" placeholder="📈 SC %" step="0.01" value="2.00" required>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-main" style="background:var(--success);">SAVE DATA</button>
+                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:15px; margin-top:10px; background:#a0aec0; color:white; border:none; border-radius:15px; font-weight:bold; cursor:pointer;">CANCEL EDIT</button>
             </form>
         </div>
 
@@ -132,20 +138,13 @@
                 <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot" style="font-size:16px;">₹0.00</span></div>
-                
                 <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot" style="font-size:16px;">₹0.00</span></div>
-                
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
-            <div style="overflow-x:auto;">
-                <table id="dailyTable">
-                    <thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead>
-                    <tbody id="dailyTbody"></tbody>
-                </table>
-            </div>
+            <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
         </div>
 
         <div id="adminSection" class="hidden">
@@ -157,23 +156,12 @@
             <h4 style="margin: 10px 0;">All POS Performance (Today vs Month)</h4>
             <div id="posDetailedStats" class="summary-grid"></div>
             <div id="adminStats" class="summary-grid"></div>
-            <div style="overflow-x:auto;">
-                <table id="adminTable">
-                    <thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead>
-                    <tbody id="adminTbody"></tbody>
-                </table>
-            </div>
+            <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
         </div>
 
         <div id="custSection" class="hidden">
             <h3>Master Registration</h3>
-            <form id="custRegForm" style="max-width:500px; margin:0 auto;">
-                <input type="tel" id="regMobile" placeholder="Mobile" required>
-                <input type="text" id="regName" placeholder="Name" required>
-                <input type="text" id="regBank" placeholder="Bank" required>
-                <input type="text" id="regLast4" maxlength="4" placeholder="Last 4" required>
-                <button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
-            </form>
+            <form id="custRegForm" style="max-width:500px; margin:0 auto;"><input type="tel" id="regMobile" placeholder="Mobile"><input type="text" id="regName" placeholder="Name"><input type="text" id="regBank" placeholder="Bank"><input type="text" id="regLast4" maxlength="4" placeholder="Last 4"><button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button></form>
         </div>
     </div>
 
@@ -214,10 +202,10 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
-            document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select POS Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
+            document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
             renderDaily(); renderAdmin();
-        } else alert("Invalid Login!");
+        } else alert("Invalid!");
     }
 
     function showSection(s) {
@@ -230,9 +218,7 @@
     function addNewCardRow() {
         const div = document.createElement('div');
         div.className = 'card-row';
-        div.innerHTML = `<input type="text" class="cBank" placeholder="Bank Name" required style="margin:0">
-                         <input type="text" class="cLast4" placeholder="Last 4" maxlength="4" required style="margin:0; width:80px">
-                         <button type="button" class="btn-add-card" style="background:#e74c3c" onclick="this.parentElement.remove()">-</button>`;
+        div.innerHTML = `<input type="text" class="cBank" placeholder="Bank" required style="margin:0"><input type="text" class="cLast4" placeholder="L4" maxlength="4" required style="margin:0; width:90px"><button type="button" class="btn-add-card" style="background:#e53e3e" onclick="this.parentElement.remove()">×</button>`;
         document.getElementById('cardContainer').appendChild(div);
     }
 
@@ -241,13 +227,11 @@
         const monthPre = today.substring(0, 7);
         const isM = (myRole.includes('admin') || myRole === 'manager');
         let dL=0, dW=0, dLsc=0, dWsc=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
-
         trans.filter(x => x.category !== "REGISTRATION").forEach(x => {
             const a = Number(x.amt); const s = Number(x.scVal); const p = Number(x.netProfit);
             if(x.date && x.date.startsWith(monthPre)) { if(x.category==='LOAN') mL+=a; if(x.category==='WITHDRAW') mW+=a; }
             if(x.date === today) {
-                dTp += p;
-                if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; }
+                dTp += p; if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; }
                 if(x.category==='WITHDRAW') { dW+=a; dWsc+=s; dWp+=p; }
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
                 h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user || ''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button> ${isM ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button>` : ''}</td></tr>` + h;
@@ -271,13 +255,7 @@
         const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
         const isM = (myRole.includes('admin') || myRole === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
-        trans.filter(x => x.category !== "REGISTRATION").forEach(x => {
-            if(posData[x.pos]) {
-                const a = Number(x.amt);
-                if(x.date === today) posData[x.pos].t += a;
-                if(x.date.startsWith(monthPre)) posData[x.pos].m += a;
-            }
-        });
+        trans.filter(x => x.category !== "REGISTRATION").forEach(x => { if(posData[x.pos]) { const a = Number(x.amt); if(x.date === today) posData[x.pos].t += a; if(x.date.startsWith(monthPre)) posData[x.pos].m += a; } });
         let totalAmt = 0, totalSC = 0, totalProfit = 0, h = "";
         let filtered = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
         filtered.slice().reverse().forEach(x => {
@@ -293,86 +271,38 @@
     }
 
     function editRow(id) {
-        const x = trans.find(t => t.id == id);
-        if(!x) return;
-        document.getElementById('editId').value = x.id;
-        document.getElementById('cMobile').value = x.mobile; 
-        document.getElementById('cName').value = x.name;
-        document.getElementById('posSelect').value = x.pos; 
-        document.getElementById('actionType').value = x.category;
-        document.getElementById('amt').value = x.amt;
-        const scPct = (Number(x.scVal) / Number(x.amt)) * 100;
-        document.getElementById('scPercent').value = scPct.toFixed(2);
-        
-        document.getElementById('cardContainer').innerHTML = `<div class="card-row"><input type="text" class="cBank" placeholder="Bank Name" value="${x.cardBank}" required><input type="text" class="cLast4" placeholder="Last 4" maxlength="4" value="${x.cardLast4}" required style="width:80px"><button type="button" class="btn-add-card" onclick="addNewCardRow()">+</button></div>`;
-        
+        const x = trans.find(t => t.id == id); if(!x) return;
+        document.getElementById('editId').value = x.id; document.getElementById('cMobile').value = x.mobile; document.getElementById('cName').value = x.name;
+        document.getElementById('posSelect').value = x.pos; document.getElementById('actionType').value = x.category; document.getElementById('amt').value = x.amt;
+        document.getElementById('scPercent').value = ((Number(x.scVal) / Number(x.amt)) * 100).toFixed(2);
+        document.getElementById('cardContainer').innerHTML = `<div class="card-row"><input type="text" class="cBank" placeholder="Bank" value="${x.cardBank}" required><input type="text" class="cLast4" placeholder="L4" maxlength="4" value="${x.cardLast4}" required style="width:90px"><button type="button" class="btn-add-card" onclick="addNewCardRow()">+</button></div>`;
         if(myRole.includes('admin') || myRole === 'manager') { document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date; }
-        document.getElementById('submitBtn').innerText = "✅ UPDATE RECORD"; document.getElementById('cancelBtn').classList.remove('hidden'); showSection('entry');
+        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden'); showSection('entry');
     }
 
     document.getElementById('billingForm').onsubmit = e => {
         e.preventDefault();
-        const a = parseFloat(document.getElementById('amt').value);
-        const scPct = parseFloat(document.getElementById('scPercent').value);
-        const scVal = (a * scPct) / 100;
-        const mdrP = updateMDR(); const mdrVal = (a * mdrP) / 100;
-        const editId = document.getElementById('editId').value;
-        const id = editId ? editId : Date.now();
-        const banks = Array.from(document.getElementsByClassName('cBank')).map(i => i.value);
-        const lasts = Array.from(document.getElementsByClassName('cLast4')).map(i => i.value);
-
-        let fDate = new Date().toLocaleDateString('en-CA');
-        let fTime = editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString();
+        const a = parseFloat(document.getElementById('amt').value), scPct = parseFloat(document.getElementById('scPercent').value);
+        const scVal = (a * scPct) / 100, mdrP = updateMDR(), mdrVal = (a * mdrP) / 100, editId = document.getElementById('editId').value, id = editId ? editId : Date.now();
+        const banks = Array.from(document.getElementsByClassName('cBank')).map(i => i.value), lasts = Array.from(document.getElementsByClassName('cLast4')).map(i => i.value);
+        let fDate = new Date().toLocaleDateString('en-CA'), fTime = editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString();
         if(editId && (myRole.includes('admin') || myRole === 'manager')) fDate = document.getElementById('entryDate').value;
-
-        db.ref('transactions/' + id).update({ 
-            id: id, user: myRole, date: fDate, time: fTime, mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value, cardBank: banks[0], cardLast4: lasts[0], pos: document.getElementById('posSelect').value, category: document.getElementById('actionType').value, amt: a, scVal: scVal, mdrVal: mdrVal, netProfit: scVal - mdrVal, netPay: a - scVal 
-        }).then(() => { alert("Success!"); resetForm(); showSection('daily'); });
+        db.ref('transactions/' + id).update({ id: id, user: myRole, date: fDate, time: fTime, mobile: document.getElementById('cMobile').value, name: document.getElementById('cName').value, cardBank: banks[0], cardLast4: lasts[0], pos: document.getElementById('posSelect').value, category: document.getElementById('actionType').value, amt: a, scVal: scVal, mdrVal: mdrVal, netProfit: scVal - mdrVal, netPay: a - scVal }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
     function resetForm() { 
         document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; 
-        document.getElementById('cardContainer').innerHTML = `<div class="card-row"><input type="text" class="cBank" placeholder="Bank Name" required><input type="text" class="cLast4" placeholder="Last 4" maxlength="4" required style="width:80px"><button type="button" class="btn-add-card" onclick="addNewCardRow()">+</button></div>`;
-        document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "💾 SAVE TRANSACTION"; 
+        document.getElementById('cardContainer').innerHTML = `<div class="card-row"><input type="text" class="cBank" placeholder="Bank" required><input type="text" class="cLast4" placeholder="L4" maxlength="4" required style="width:90px"><button type="button" class="btn-add-card" onclick="addNewCardRow()">+</button></div>`;
+        document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE DATA"; 
         document.getElementById('cancelBtn').classList.add('hidden'); document.getElementById('scPercent').value = "2.00";
     }
 
-    function deleteRow(id) { if(confirm("Confirm Delete?")) db.ref('transactions/' + id).remove(); }
+    function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
     function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('', '', 'width=300,height=400'); w.document.write(`<div style="font-family:monospace;text-align:center;"><h3>RGF SOLUTIONS</h3><hr>Date: ${x.date}<br>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Net: ₹${Number(x.netPay).toFixed(2)}<hr>Thank You!</div>`); w.print(); w.close(); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
-    
-    function recallCustomer() { 
-        const m = document.getElementById('cMobile').value; 
-        const hits = trans.filter(x => x.mobile === m); 
-        if(hits.length > 0) { 
-            document.getElementById('cName').value = hits[hits.length-1].name; 
-            document.getElementById('recallArea').classList.remove('hidden'); 
-            let opts = ""; let seen = new Set(); 
-            hits.reverse().forEach(h => { 
-                if(h.cardBank) { 
-                    let k = h.cardBank + "|" + h.cardLast4; 
-                    if(!seen.has(k)) { opts += `<option value="${k}">${k.replace('|',' - ')}</option>`; seen.add(k); } 
-                } 
-            }); 
-            document.getElementById('recallSelect').innerHTML = '<option value="">📋 Select Saved Card</option>' + opts; 
-        } 
-    }
-    
-    function applyCard() { 
-        const v = document.getElementById('recallSelect').value; 
-        if(v) { 
-            const [b,l] = v.split('|'); 
-            document.getElementsByClassName('cBank')[0].value = b; 
-            document.getElementsByClassName('cLast4')[0].value = l; 
-        } 
-    }
-
-    function saveCustomer() { 
-        const id = "REG_" + Date.now(); 
-        const banks = Array.from(document.getElementsByClassName('cBank')).map(i => i.value);
-        const lasts = Array.from(document.getElementsByClassName('cLast4')).map(i => i.value);
-        db.ref('transactions/' + id).set({ id: id, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: banks[0], cardLast4: lasts[0], date: new Date().toLocaleDateString('en-CA') }).then(() => alert("Master Saved!")); 
-    }
+    function recallCustomer() { const m = document.getElementById('cMobile').value; const hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[hits.length-1].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = ""; let seen = new Set(); hits.reverse().forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k.replace('|',' - ')}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">📋 Select Saved Card</option>' + opts; } }
+    function applyCard() { const v = document.getElementById('recallSelect').value; if(v) { const [b,l] = v.split('|'); document.getElementsByClassName('cBank')[0].value = b; document.getElementsByClassName('cLast4')[0].value = l; } }
+    function saveCustomer() { const id = "REG_" + Date.now(); const banks = Array.from(document.getElementsByClassName('cBank')).map(i => i.value), lasts = Array.from(document.getElementsByClassName('cLast4')).map(i => i.value); db.ref('transactions/' + id).set({ id: id, category: "REGISTRATION", name: document.getElementById('regName').value, mobile: document.getElementById('regMobile').value, cardBank: banks[0], cardLast4: lasts[0], date: new Date().toLocaleDateString('en-CA') }).then(() => alert("Master Saved!")); }
     function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Report.xlsx"); }
 </script>
 </body>
