@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Total Fix</title>
+    <title>RGF Solutions - Admin Secured Version</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -26,7 +26,7 @@
         table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
         .btn-action { padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; color: white; font-weight: bold; margin: 2px; }
-        .grid-6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .grid-6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .admin-box { background: #fdfdfd; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eaeaea; }
         .admin-only { display: none; }
     </style>
@@ -63,11 +63,11 @@
                     <label style="font-weight:bold; color:red;">Change Date:</label>
                     <input type="date" id="entryDate">
                 </div>
-                <input type="tel" id="cMobile" placeholder="Mobile Number" oninput="recallCustomer()" required>
+                <input type="tel" id="cMobile" placeholder="Mobile" oninput="recallCustomer()" required>
                 <input type="text" id="cName" placeholder="Customer Name" required>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="text" id="cBank" placeholder="Card Bank" required>
-                    <input type="text" id="cLast4" placeholder="Last 4 Digits" maxlength="4" required>
+                    <input type="text" id="cLast4" placeholder="Last 4" maxlength="4" required>
                 </div>
                 <select id="posSelect" onchange="updateMDR()" required></select>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -75,8 +75,8 @@
                     <div id="mdrShow" style="padding:12px; background:#fff9db; border-radius:8px; text-align:center; font-weight:bold;">MDR: 0.00%</div>
                 </div>
                 <input type="number" id="amt" placeholder="Amount (₹)" step="0.01" required>
-                <button type="submit" id="submitBtn" class="btn-main" style="background:var(--profit-green);">SAVE TRANSACTION</button>
-                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; margin-top:5px; background:#95a5a6; color:white; border:none; border-radius:8px; padding:10px;">CANCEL</button>
+                <button type="submit" id="submitBtn" class="btn-main" style="background:var(--profit-green);">SAVE DATA</button>
+                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; margin-top:5px; background:#95a5a6; color:white; border:none; padding:10px; border-radius:8px;">CANCEL</button>
             </form>
         </div>
 
@@ -91,7 +91,7 @@
             </div>
             <div style="overflow-x:auto;">
                 <table id="dailyTable">
-                    <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS ID</th><th>Settle Bank</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>POS ID</th><th>POS Bank</th><th>Settle Bank</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead>
                     <tbody id="dailyTbody"></tbody>
                 </table>
             </div>
@@ -99,33 +99,33 @@
 
         <div id="adminSection" class="hidden">
             <div class="admin-box">
-                <h3>Reports & History</h3>
+                <h3>Admin Reports & POS Breakdown</h3>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
                     <input type="date" id="fDate"> <input type="date" id="tDate">
                     <button onclick="renderAdmin()" style="padding:10px; background:var(--dark); color:white; border:none; border-radius:5px;">GENERATE</button>
                 </div>
                 <div id="adminStats" class="grid-6"></div>
-                <h4>Machine Wise Breakdown</h4>
+                <h4>POS Wise Summary</h4>
                 <div id="posStats" class="grid-6"></div>
-                <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>POS Bank</th><th>Settle</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
+                <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>POS Bank</th><th>Settle Bank</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
             </div>
 
             <div class="admin-box">
-                <h3>POS Master</h3>
+                <h3>POS & Settle Master</h3>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
                     <input type="text" id="newPosId" placeholder="POS ID">
                     <input type="text" id="newPosBank" placeholder="POS Bank">
-                    <input type="text" id="newSettleBank" placeholder="Settle To">
+                    <input type="text" id="newSettleBank" placeholder="Settle Bank">
                     <input type="number" id="newPosMDR" step="0.001" placeholder="Normal %">
                     <input type="number" id="newPosCorpMDR" step="0.001" placeholder="Corp %">
                 </div>
                 <button class="btn-main" style="margin-top:10px; background:var(--loan-blue);" onclick="addPOS()">ADD POS</button>
-                <div style="overflow-x:auto; margin-top:10px;"><table><thead><tr><th>ID</th><th>Bank</th><th>Settle</th><th>MDR</th><th>Action</th></tr></thead><tbody id="posList"></tbody></table></div>
+                <div style="overflow-x:auto; margin-top:10px;"><table><thead><tr><th>ID</th><th>Bank</th><th>Settle</th><th>MDR N/C</th><th>Action</th></tr></thead><tbody id="posList"></tbody></table></div>
             </div>
 
             <div class="admin-box">
                 <h3>Staff Master</h3>
-                <input type="text" id="newStaffId" placeholder="New User ID">
+                <input type="text" id="newStaffId" placeholder="User ID">
                 <input type="text" id="newStaffPass" placeholder="Password">
                 <button class="btn-main" style="margin-top:10px; background:var(--profit-green);" onclick="addStaff()">ADD STAFF</button>
                 <div id="staffListArea" style="margin-top:10px;"></div>
@@ -136,8 +136,8 @@
              <h3>Customer Master</h3>
              <form id="custRegForm" style="max-width:400px; padding:20px; border:1px solid #ddd; border-radius:10px;">
                 <input type="tel" id="regMobile" placeholder="Mobile Number" required>
-                <input type="text" id="regName" placeholder="Customer Name" required>
-                <input type="text" id="regBank" placeholder="Bank" required>
+                <input type="text" id="regName" placeholder="Name" required>
+                <input type="text" id="regBank" placeholder="Card Bank" required>
                 <input type="text" id="regLast4" maxlength="4" placeholder="Last 4" required>
                 <button type="button" onclick="saveCustomer()" class="btn-main">SAVE MASTER</button>
              </form>
@@ -162,7 +162,7 @@
 
     // Continuous Sync
     db.ref('pos_master').on('value', snap => { posMaster = snap.val() ? Object.values(snap.val()) : []; updatePOSDropdown(); renderPOSList(); });
-    db.ref('staff_master').on('value', snap => { staffMaster = snap.val() || { "sabariraj admin": "Guru", "manager": "Murugan" }; renderStaffList(); });
+    db.ref('staff_master').on('value', snap => { staffMaster = snap.val() || { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" }; renderStaffList(); });
     db.ref('transactions').on('value', snap => { trans = snap.val() ? Object.values(snap.val()) : []; renderDaily(); renderAdmin(); });
     db.ref('customers').on('value', snap => { custData = snap.val() ? Object.values(snap.val()) : []; renderCustomerList(); });
 
@@ -170,7 +170,9 @@
         const u = document.getElementById('userId').value.toLowerCase().trim();
         const p = document.getElementById('password').value.trim();
         if(staffMaster[u] === p) {
-            activeUser = u; document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
+            activeUser = u; 
+            document.getElementById('loginPage').classList.add('hidden'); 
+            document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
             showSection('entry');
         } else alert("Invalid Login!");
@@ -180,6 +182,10 @@
         const today = new Date().toLocaleDateString('en-CA');
         const mPre = today.substring(0, 7);
         let dL=0, dW=0, dLsc=0, dWsc=0, dLp=0, dWp=0, mL=0, mW=0, h="";
+        
+        // PURE ROLE CHECK
+        const canMod = (activeUser.includes('admin') || activeUser === 'manager');
+
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             let a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
@@ -187,11 +193,9 @@
             if(x.date === today) {
                 if(x.category==='LOAN') { dL+=a; dLsc+=s; dLp+=p; } else { dW+=a; dWsc+=s; dWp+=p; }
                 
-                // FORCE SHOW EDIT/DELETE BUTTONS
-                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.posBank || x.pos}</td><td>${x.settleBank || '-'}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td>
+                h = `<tr><td>${x.time}</td><td>${x.user}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.posBank || '-'}</td><td>${x.settleBank || '-'}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td>
                     <button class="btn-action" style="background:#3498db" onclick="printSlip(${x.id})">🖨️</button>
-                    <button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button>
-                    <button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}','transactions')">❌</button>
+                    ${canMod ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}','transactions')">❌</button>` : ''}
                 </td></tr>` + h;
             }
         });
@@ -205,20 +209,20 @@
     function renderAdmin() {
         const f = document.getElementById('fDate').value, t = document.getElementById('tDate').value;
         let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
-        let ts=0, tsc=0, tp=0, h=""; let posSales = {};
+        let ts=0, tsc=0, tp=0, h=""; let ps = {};
+        const canMod = (activeUser.includes('admin') || activeUser === 'manager');
+
         data.slice().reverse().forEach(x => {
             ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
-            let pid = x.posBank || x.pos; posSales[pid] = (posSales[pid] || 0) + Number(x.amt);
+            let pid = x.posBank || x.pos; ps[pid] = (ps[pid] || 0) + Number(x.amt);
             
-            // FORCE SHOW BUTTONS IN ADMIN TABLE
             h += `<tr><td>${x.date}</td><td>${x.user}</td><td>${x.category}</td><td>${x.posBank || ''}</td><td>${x.settleBank || ''}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>
                 <button class="btn-action" style="background:#3498db" onclick="printSlip(${x.id})">🖨️</button>
-                <button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button>
-                <button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}','transactions')">❌</button>
+                ${canMod ? `<button class="btn-action" style="background:#f1c40f;color:black" onclick="editRow(${x.id})">✏️</button><button class="btn-action" style="background:#e74c3c" onclick="deleteItem('${x.id}','transactions')">❌</button>` : ''}
             </td></tr>`;
         });
         document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:var(--dark);"><span>Total Amt</span><span>₹${ts.toFixed(2)}</span></div><div class="banner" style="background:#f39c12;"><span>Total SC</span><span>₹${tsc.toFixed(2)}</span></div><div class="banner" style="background:var(--profit-green);"><span>Total Profit</span><span>₹${tp.toFixed(2)}</span></div>`;
-        let ph = ""; for(let k in posSales) { ph += `<div class="banner" style="background:#7f8c8d"><span>${k}</span><span>₹${posSales[k].toFixed(2)}</span></div>`; }
+        let ph = ""; for(let k in ps) { ph += `<div class="banner" style="background:#7f8c8d"><span>${k}</span><span>₹${ps[k].toFixed(2)}</span></div>`; }
         document.getElementById('posStats').innerHTML = ph;
         document.getElementById('adminTbody').innerHTML = h;
     }
@@ -231,7 +235,7 @@
         document.getElementById('posSelect').value = x.pos; setType(x.category);
         document.getElementById('amt').value = x.amt;
         document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date;
-        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden');
+        document.getElementById('submitBtn').innerText = "UPDATE DATA"; document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
 
@@ -246,18 +250,18 @@
             cardBank: document.getElementById('cBank').value, cardLast4: document.getElementById('cLast4').value,
             pos: pData.id, posBank: pData.bank, settleBank: pData.settle || '', category: document.getElementById('actionType').value,
             amt: a, scVal: sc, mdrVal: mdr, netProfit: sc - mdr, netPay: a - sc
-        }).then(() => { alert("Success!"); resetForm(); showSection('daily'); });
+        }).then(() => { resetForm(); showSection('daily'); });
     };
 
     function addPOS() { const id = document.getElementById('newPosId').value; db.ref('pos_master/'+id).set({ id: id, bank: document.getElementById('newPosBank').value, settle: document.getElementById('newSettleBank').value, n: parseFloat(document.getElementById('newPosMDR')), c: parseFloat(document.getElementById('newPosCorpMDR')) }); }
     function addStaff() { const id = document.getElementById('newStaffId').value.toLowerCase(); db.ref('staff_master/'+id).set(document.getElementById('newStaffPass').value); }
-    function deleteItem(id, path) { if(confirm("Delete Permanently?")) db.ref(path+'/'+id).remove(); }
+    function deleteItem(id, path) { if(confirm("Confirm Delete?")) db.ref(path+'/'+id).remove(); }
     function showSection(s) { ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section').classList.add('hidden')); document.getElementById(s+'Section').classList.remove('hidden'); document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active')); document.getElementById('btn'+s.charAt(0).toUpperCase()+s.slice(1)).classList.add('active'); }
     function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value = ""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText = "SAVE TRANSACTION"; document.getElementById('cancelBtn').classList.add('hidden'); setType('LOAN'); }
     function setType(t) { document.getElementById('actionType').value = t; document.getElementById('toggleLoan').className = 't-btn ' + (t==='LOAN'?'loan-active':''); document.getElementById('toggleWith').className = 't-btn ' + (t==='WITHDRAW'?'with-active':''); }
     function updateMDR() { const pid = document.getElementById('posSelect').value; const p = posMaster.find(x => x.id === pid); const type = document.getElementById('cType').value; const rate = p ? (type === 'CORPORATE' ? p.c : p.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + rate + "%"; return rate; }
     function updatePOSDropdown() { document.getElementById('posSelect').innerHTML = '<option value="">Select POS</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id} (${x.bank})</option>`).join(''); }
-    function renderPOSList() { document.getElementById('posList').innerHTML = posMaster.map(p => `<tr><td>${p.id}</td><td>${p.bank}</td><td>${p.settle || '-'}</td><td>N:${p.n}% C:${p.c}%</td><td><button onclick="deleteItem('${p.id}','pos_master')">X</button></td></tr>`).join(''); }
+    function renderPOSList() { document.getElementById('posList').innerHTML = posMaster.map(p => `<tr><td>${p.id}</td><td>${p.bank}</td><td>${p.settle || '-'}</td><td>${p.n}%</td><td>${p.c}%</td><td><button onclick="deleteItem('${p.id}','pos_master')">X</button></td></tr>`).join(''); }
     function renderStaffList() { document.getElementById('staffListArea').innerHTML = Object.keys(staffMaster).map(s => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#fff; padding:8px; border-radius:5px;"><span>${s}</span><button onclick="deleteItem('${s}','staff_master')">Remove</button></div>`).join(''); }
     function recallCustomer() { const m = document.getElementById('cMobile').value; const c = custData.find(x => x.mobile === m); if(c) { document.getElementById('cName').value = c.name; document.getElementById('cBank').value = c.bank; document.getElementById('cLast4').value = c.last4; } }
     function renderCustomerList() { document.getElementById('custListBody').innerHTML = custData.map(c => `<tr><td>${c.mobile}</td><td>${c.name}</td><td>${c.bank}</td><td>${c.last4}</td><td><button onclick="deleteItem('${c.mobile}','customers')">X</button></td></tr>`).join(''); }
