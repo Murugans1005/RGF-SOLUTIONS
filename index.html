@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGF Solutions - Perfect Final Version</title>
+    <title>RGF Solutions - Staff Profit View</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -26,7 +26,7 @@
         .btn-print { background: #3498db; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer; }
         .voice-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
         .admin-only { display: none; }
-        .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .pos-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 20px; }
         .pos-card-color { padding: 15px; border-radius: 10px; text-align: center; color: white; font-weight: bold; }
     </style>
 </head>
@@ -55,7 +55,7 @@
             <form id="billingForm">
                 <input type="hidden" id="editId">
                 <div id="dateEditArea" class="hidden">
-                    <label style="font-size:12px; font-weight:bold;">Transaction Date (Admin/Manager Only):</label>
+                    <label style="font-size:12px; font-weight:bold; color: #c0392b;">Edit Transaction Date:</label>
                     <input type="date" id="entryDate">
                 </div>
                 <div style="display:flex; align-items:center;">
@@ -86,10 +86,9 @@
             <div class="pos-summary-grid">
                 <div id="dSale" class="banner" style="background:#2ecc71;">Sale: ₹0.00</div>
                 <div id="dSC" class="banner" style="background:#f39c12;">Total SC: ₹0.00</div>
-                <div id="dLoan" class="banner" style="background:#3498db;">Loan Tot: ₹0.00</div>
-                <div id="dLoanSC" class="banner" style="background:#2980b9;">Loan SC: ₹0.00</div>
-                <div id="dWith" class="banner" style="background:#e74c3c;">With Tot: ₹0.00</div>
-                <div id="dWithSC" class="banner" style="background:#c0392b;">With SC: ₹0.00</div>
+                <div id="dLoanProfit" class="banner" style="background:#3498db;">Loan Profit: ₹0.00</div>
+                <div id="dWithProfit" class="banner" style="background:#8e44ad;">With Profit: ₹0.00</div>
+                <div id="dTotalProfit" class="banner" style="background:#27ae60;">Day Profit: ₹0.00</div>
             </div>
             <div style="overflow-x:auto;">
                 <table>
@@ -179,7 +178,6 @@
     function showSection(s) {
         ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section').classList.add('hidden'));
         document.getElementById(s+'Section').classList.remove('hidden');
-        if(s === 'admin') renderAdmin();
     }
 
     function updateMDR() {
@@ -226,12 +224,12 @@
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA');
         const data = trans.filter(x => x.date === today && x.category !== "REGISTRATION");
-        let ts=0, tsc=0, tl=0, tlc=0, tw=0, twc=0, h="";
+        let ts=0, tsc=0, lp=0, wp=0, tp=0, h="";
         data.slice().reverse().forEach(x => {
-            let a = Number(x.amt); let s = Number(x.scVal);
-            ts += a; tsc += s;
-            if(x.category === 'LOAN') { tl += a; tlc += s; }
-            else if(x.category === 'WITHDRAW') { tw += a; twc += s; }
+            let a = Number(x.amt); let s = Number(x.scVal); let p = Number(x.netProfit);
+            ts += a; tsc += s; tp += p;
+            if(x.category === 'LOAN') lp += p;
+            else if(x.category === 'WITHDRAW') wp += p;
             const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
             h += `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>
                 <button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>
@@ -239,16 +237,14 @@
             </td></tr>`;
         });
         document.getElementById('dSale').innerText = "Sale: ₹" + ts.toFixed(2);
-        document.getElementById('dSC').innerText = "SC: ₹" + tsc.toFixed(2);
-        document.getElementById('dLoan').innerText = "Loan: ₹" + tl.toFixed(2);
-        document.getElementById('dLoanSC').innerText = "L-SC: ₹" + tlc.toFixed(2);
-        document.getElementById('dWith').innerText = "With: ₹" + tw.toFixed(2);
-        document.getElementById('dWithSC').innerText = "W-SC: ₹" + twc.toFixed(2);
+        document.getElementById('dSC').innerText = "Total SC: ₹" + tsc.toFixed(2);
+        document.getElementById('dLoanProfit').innerText = "Loan Profit: ₹" + lp.toFixed(2);
+        document.getElementById('dWithProfit').innerText = "With Profit: ₹" + wp.toFixed(2);
+        document.getElementById('dTotalProfit').innerText = "Day Profit: ₹" + tp.toFixed(2);
         document.getElementById('dailyTbody').innerHTML = h;
     }
 
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
-
     function editRow(id) {
         const x = trans.find(t => t.id == id);
         document.getElementById('editId').value = x.id;
@@ -272,16 +268,14 @@
         const f = document.getElementById('fDate').value;
         const t = document.getElementById('tDate').value;
         let data = (f && t) ? trans.filter(x => x.date >= f && x.date <= t && x.category !== "REGISTRATION") : trans.filter(x => x.category !== "REGISTRATION");
-        let ts=0, tsc=0, tp=0, tl=0, tw=0, h=""; let pos = {}; posMaster.forEach(p => pos[p.id] = 0);
+        let ts=0, tp=0, h=""; let pos = {}; posMaster.forEach(p => pos[p.id] = 0);
         data.slice().reverse().forEach(x => {
-            ts += Number(x.amt); tsc += Number(x.scVal); tp += Number(x.netProfit);
-            if(x.category === 'LOAN') tl += Number(x.amt);
-            if(x.category === 'WITHDRAW') tw += Number(x.amt);
+            ts += Number(x.amt); tp += Number(x.netProfit);
             if(pos[x.pos] !== undefined) pos[x.pos] += Number(x.amt);
             const isAdm = (currentUser.includes('admin') || currentUser === 'manager');
             h += `<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-print" onclick="printSlip(${x.id})">🖨️</button>${isAdm ? `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">X</button>` : ''}</td></tr>`;
         });
-        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;">Tot: ₹${ts.toFixed(2)}</div><div class="banner" style="background:#27ae60;">Profit: ₹${tp.toFixed(2)}</div><div class="banner" style="background:#3498db;">Loan: ₹${tl.toFixed(2)}</div><div class="banner" style="background:#e74c3c;">With: ₹${tw.toFixed(2)}</div>`;
+        document.getElementById('adminStats').innerHTML = `<div class="banner" style="background:#2c3e50;">Tot: ₹${ts.toFixed(2)}</div><div class="banner" style="background:#27ae60;">Profit: ₹${tp.toFixed(2)}</div>`;
         let ph = ""; for(let k in pos) if(pos[k] > 0) { const c = posMaster.find(m => m.id === k).color; ph += `<div class="pos-card-color" style="background:${c};">${k}<br>₹${pos[k].toFixed(2)}</div>`; }
         document.getElementById('posStats').innerHTML = ph;
         document.getElementById('adminTbody').innerHTML = h;
