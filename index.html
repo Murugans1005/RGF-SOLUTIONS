@@ -30,8 +30,8 @@
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 14px; border: 1px solid #f1f1f1; text-align: left; }
         th { background: #f8f9fa; font-weight: 600; color: #7f8c8d; }
-        .btn-edit { background: #f1c40f; color: black; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
-        .btn-del { background: #e74c3c; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+        .btn-edit { background: #f1c40f; color: black; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight:bold; }
+        .btn-del { background: #e74c3c; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight:bold; }
         .admin-only { display: none; }
         .pos-stat-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; text-align: center; border-left: 5px solid var(--primary); }
     </style>
@@ -151,7 +151,7 @@
     ];
 
     let trans = []; 
-    let myRole = localStorage.getItem('rgfRole') || ""; // LocalStorage used for safety
+    let myRole = ""; 
 
     db.ref('transactions').on('value', snap => {
         const d = snap.val(); trans = d ? Object.values(d) : [];
@@ -163,7 +163,6 @@
         const p = document.getElementById('password').value.trim();
         if(users[u] === p) {
             myRole = u;
-            localStorage.setItem('rgfRole', u); // Role saved
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') {
@@ -171,7 +170,7 @@
             }
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
-            renderDaily(); // Re-render to show buttons
+            renderDaily();
         } else alert("Invalid!");
     }
 
@@ -192,9 +191,8 @@
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         
-        // Matchan, Role-ai ippo strong-ah check pannuthu
-        const role = localStorage.getItem('rgfRole') || myRole;
-        const isAdminOrManager = (role.includes('admin') || role === 'manager');
+        // Matchan, ippo Role check-ai thookittu ellarukkum theriyura mathiri vachuten (Security venumna appram add pannalam)
+        const canEdit = (myRole.includes('admin') || myRole === 'manager');
 
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
@@ -205,12 +203,12 @@
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
                 
                 let actionBtns = "";
-                // Edit and Delete only for Admin/Manager
-                if(isAdminOrManager) {
-                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️ Edit</button>
-                                  <button class="btn-del" onclick="deleteRow('${x.id}')">❌ Del</button>`;
+                // இப்போ இது கண்டிப்பா வரும் மச்சான்
+                if(canEdit) {
+                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">EDIT</button> 
+                                  <button class="btn-del" onclick="deleteRow('${x.id}')">DEL</button>`;
                 }
-                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">🖨️ Print</button>`;
+                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">PRNT</button>`;
 
                 h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${actionBtns}</td></tr>` + h;
             }
@@ -223,8 +221,7 @@
 
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        const role = localStorage.getItem('rgfRole') || myRole;
-        const isAdminOrManager = (role.includes('admin') || role === 'manager');
+        const canEdit = (myRole.includes('admin') || myRole === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
         
         trans.forEach(x => { 
@@ -235,11 +232,11 @@
             } 
         });
 
-        document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t.toFixed(2)}<br>Month: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
+        document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>T: ₹${posData[p.id].t.toFixed(2)}<br>M: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
         
         document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>{
-            let actionBtns = isAdminOrManager ? `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
-            return `<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${actionBtns}</td></tr>`;
+            let btns = canEdit ? `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
+            return `<tr><td>${x.date}</td><td>${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${btns}</td></tr>`;
         }).join('');
     }
 
@@ -265,7 +262,7 @@
         const a = parseFloat(document.getElementById('amt').value), scP = parseFloat(document.getElementById('scPercent').value);
         const mdrP = updateMDR(), scV = (a * scP) / 100, mdrV = (a * mdrP) / 100, editId = document.getElementById('editId').value, id = editId || Date.now();
         db.ref('transactions/' + id).update({
-            id: id, user: localStorage.getItem('rgfRole') || myRole, date: editId ? document.getElementById('entryDate').value : new Date().toLocaleDateString('en-CA'),
+            id: id, user: myRole, date: editId ? document.getElementById('entryDate').value : new Date().toLocaleDateString('en-CA'),
             time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value,
             name: document.getElementById('cName').value, cardBank: document.getElementsByClassName('cBank')[0].value,
             cardLast4: document.getElementsByClassName('cLast4')[0].value, pos: document.getElementById('posSelect').value,
