@@ -9,34 +9,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f4f7f6; --success: #27ae60; --info: #3498db; --white: #ffffff; }
-        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background-color: var(--bg); margin: 0; padding: 10px; }
+        * { box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); margin: 0; padding: 10px; color: #444; }
         .hidden { display: none !important; }
         .container { max-width: 1450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
-        .nav-tabs button { padding: 14px 22px; border: none; border-radius: 12px; background: #bdc3c7; color: white; font-weight: 600; cursor: pointer; }
+        .nav-tabs button { padding: 14px 22px; border: none; border-radius: 12px; background: #bdc3c7; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .nav-tabs button.active { background: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(230, 126, 34, 0.3); }
-        #entrySection { max-width: 650px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 25px; border: 1px solid rgba(0,0,0,0.03); }
+        #entrySection { max-width: 650px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.03); }
         .form-section { background: #f9fbff; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #edf2f7; }
+        .section-title { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; margin-bottom: 10px; display: block; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; }
-        .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; }
+        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: var(--white); color: var(--dark); font-weight: 500; }
+        .card-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .btn-add-card { background: var(--success); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; font-size: 17px; margin-top: 20px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2); text-transform: uppercase; letter-spacing: 1px; }
         .banner { color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 11px; display: flex; flex-direction: column; justify-content: center; min-height: 80px; }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 30px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { padding: 12px; border: 1px solid #f1f1f1; text-align: left; }
-        th { background: #f8f9fa; color: #7f8c8d; }
-        .btn-edit { background: #f1c40f; color: black; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .btn-del { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .pos-stat-card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; border-left: 5px solid var(--primary); font-size: 12px; }
+        th, td { padding: 14px; border: 1px solid #f1f1f1; text-align: left; }
+        th { background: #f8f9fa; font-weight: 600; color: #7f8c8d; }
+        .btn-edit { background: #f1c40f; color: black; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+        .btn-del { background: #e74c3c; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="loginPage" style="text-align:center; padding-top: 100px;">
         <div style="background:white; display:inline-block; padding:45px; border-radius:30px; width:350px; box-shadow: 0 25px 50px rgba(0,0,0,0.1);">
-            <h2 style="color: var(--dark);">RGF SOLUTIONS</h2>
+            <h2 style="color: var(--dark); margin-bottom: 30px; font-weight: 800;">RGF SOLUTIONS</h2>
             <input type="text" id="userId" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
             <button class="btn-main" onclick="checkLogin()">LOGIN NOW</button>
@@ -52,40 +54,57 @@
         </div>
 
         <div id="entrySection">
+            <h3 id="formTitle">New Transaction</h3>
             <form id="billingForm">
                 <input type="hidden" id="editId">
                 <div class="form-section">
+                    <span class="section-title">Customer Details</span>
                     <div class="form-grid">
-                        <div class="full-width"><input type="tel" id="cMobile" placeholder="Mobile Number" required></div>
-                        <div class="full-width"><input type="text" id="cName" placeholder="Full Name" required></div>
+                        <div class="full-width"><input type="tel" id="cMobile" placeholder="📱 Mobile Number" required></div>
+                        <div class="full-width"><input type="text" id="cName" placeholder="👤 Full Name" required></div>
                     </div>
                 </div>
+
                 <div class="form-section">
+                    <span class="section-title">Card Information</span>
+                    <div id="cardContainer">
+                        <div class="card-row">
+                            <input type="text" id="cBank" placeholder="🏦 Bank Name" required>
+                            <input type="text" id="cLast4" placeholder="🔢 Last 4" maxlength="4" required style="width:90px">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <span class="section-title">Machine & Action</span>
                     <div class="form-grid">
                         <div class="full-width"><select id="posSelect" onchange="updateMDR()" required></select></div>
-                        <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal</option><option value="CORPORATE">Corporate</option></select>
+                        <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal Card</option><option value="CORPORATE">Corporate Card</option></select>
                         <div id="mdrShow" style="padding:14px; background:#fffaf0; border-radius:12px; text-align:center; font-weight:700;">MDR: 0.00%</div>
                         <div class="full-width"><select id="actionType"><option value="LOAN">💰 LOAN</option><option value="WITHDRAW">🏧 WITHDRAW</option></select></div>
                     </div>
                 </div>
+
                 <div class="form-section">
+                    <span class="section-title">Payment Calculation</span>
                     <div class="form-grid">
-                        <input type="number" id="amt" placeholder="Amount (₹)" required>
-                        <input type="number" id="scPercent" placeholder="SC %" value="2.00" required>
+                        <input type="number" id="amt" placeholder="💵 Amount (₹)" step="0.01" required>
+                        <input type="number" id="scPercent" placeholder="📈 SC %" step="0.01" value="2.00" required>
                     </div>
                 </div>
+
                 <button type="submit" id="submitBtn" class="btn-main" style="background:var(--success);">SAVE DATA</button>
-                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="background:#aaa; color:white; border:none; padding:10px; border-radius:10px; margin-top:10px; width:100%;">CANCEL EDIT</button>
+                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:10px; background:#aaa; color:white; border-radius:10px; border:none;">CANCEL EDIT</button>
             </form>
         </div>
 
         <div id="dailySection" class="hidden">
             <div class="summary-grid">
                 <div class="banner" style="background:#2980b9;"><span>Today Loan</span><span id="dLtot">₹0.00</span></div>
-                <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc">₹0.00</span></div>
+                <div class="banner" style="background:#3498db;"><span>Today Loan Profit</span><span id="dLpr">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot">₹0.00</span></div>
                 <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot">₹0.00</span></div>
-                <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc">₹0.00</span></div>
+                <div class="banner" style="background:#e74c3c;"><span>Today With Profit</span><span id="dWpr">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot">₹0.00</span></div>
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
@@ -112,6 +131,8 @@
     const db = firebase.database();
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan" };
+    
+    // Updated POS ID Names as per your image
     const posMaster = [
         {id: "PAYTM-3897", n: 1.357, c: 3.528}, {id: "PAYTM-9204", n: 1.298, c: 3.528},
         {id: "PAYTM-4705", n: 1.210, c: 3.528}, {id: "PAYTM-5175", n: 1.357, c: 3.528},
@@ -136,7 +157,7 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') document.getElementById('btnAdmin').classList.remove('hidden');
-            document.getElementById('posSelect').innerHTML = posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
+            document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
         } else alert("Invalid!");
     }
@@ -148,17 +169,18 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        let dL=0, dW=0, dLsc=0, dWsc=0, dTp=0, mL=0, mW=0, h="";
+        let dL=0, dW=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         trans.forEach(x => {
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
             if(x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
             if(x.date === today) {
-                dTp += p; if(x.category==='LOAN') { dL+=a; dLsc+=s; } else { dW+=a; dWsc+=s; }
+                dTp += p; 
+                if(x.category==='LOAN') { dL+=a; dLp+=p; } else { dW+=a; dWp+=p; }
                 h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.category}</td><td>${a}</td><td>${s}</td><td>${p}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
             }
         });
-        document.getElementById('dLtot').innerText="₹"+dL; document.getElementById('dLsc').innerText="₹"+dLsc;
-        document.getElementById('dWtot').innerText="₹"+dW; document.getElementById('dWsc').innerText="₹"+dWsc;
+        document.getElementById('dLtot').innerText="₹"+dL; document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
+        document.getElementById('dWtot').innerText="₹"+dW; document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
         document.getElementById('mLtot').innerText="₹"+mL; document.getElementById('mWtot').innerText="₹"+mW;
         document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); document.getElementById('dailyTbody').innerHTML=h;
     }
@@ -175,9 +197,10 @@
     function editRow(id) {
         const x = trans.find(t => t.id == id); if(!x) return;
         document.getElementById('editId').value = x.id; document.getElementById('cMobile').value = x.mobile;
-        document.getElementById('cName').value = x.name; document.getElementById('posSelect').value = x.pos;
+        document.getElementById('cName').value = x.name; document.getElementById('cBank').value = x.cardBank || '';
+        document.getElementById('cLast4').value = x.cardLast4 || ''; document.getElementById('posSelect').value = x.pos;
         document.getElementById('amt').value = x.amt; document.getElementById('actionType').value = x.category;
-        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden');
+        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
 
@@ -188,15 +211,16 @@
         db.ref('transactions/' + id).update({
             id: id, user: myRole, date: editId ? trans.find(x=>x.id==editId).date : new Date().toLocaleDateString('en-CA'),
             time: new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value,
-            name: document.getElementById('cName').value, pos: document.getElementById('posSelect').value,
+            name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value,
+            cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value,
             category: document.getElementById('actionType').value, amt: a, scVal: scV.toFixed(2), netProfit: (scV - mdrV).toFixed(2)
-        }).then(() => { alert("Success!"); resetForm(); showSection('daily'); });
+        }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
     function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value=""; document.getElementById('submitBtn').innerText="SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
-    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
+    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Bank: ${x.cardBank} (${x.cardLast4})<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
 </script>
 </body>
 </html>
