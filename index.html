@@ -162,19 +162,18 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
+        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, h="";
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
-            if(x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
             if(x.date === today) {
                 dTp += p; 
                 if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
                 h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.category}</td><td>${a}</td><td>${s}</td><td>${p}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
             }
         });
-        document.getElementById('dLtot').innerText="₹"+dL; document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
-        document.getElementById('dWtot').innerText="₹"+dW; document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2); document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
+        document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
+        document.getElementById('dWtot').innerText="₹"+dW.toFixed(2); document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2); document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
         document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); document.getElementById('dailyTbody').innerHTML=h;
     }
 
