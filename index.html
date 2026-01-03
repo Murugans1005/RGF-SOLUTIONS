@@ -142,13 +142,20 @@
     const db = firebase.database();
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
-    // Mismatch problem varathukku original POS IDs-ah appadiyae kuduthutaen mapla
+    
+    // Names updated from image, mapping added for total calculation fix
     const posMaster = [
-        {id: "IOB-3897", n: 1.357, c: 3.528}, {id: "CUB-9204", n: 1.298, c: 3.528},
-        {id: "CUB-4705", n: 1.210, c: 3.528}, {id: "UNION-5175", n: 1.357, c: 3.528},
-        {id: "UNION-8423", n: 1.357, c: 3.528}, {id: "AXIS-0028", n: 1.735, c: 2.655},
-        {id: "HDFC-7860", n: 1.652, c: 3.528}, {id: "HDFC-6508", n: 1.829, c: 3.528},
-        {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
+        {id: "PAYTM-3897", old: "IOB - 3897", n: 1.357, c: 3.528}, 
+        {id: "PAYTM-9204", old: "CUB - 9204", n: 1.298, c: 3.528},
+        {id: "PAYTM-4705", old: "CUB - 4705", n: 1.210, c: 3.528}, 
+        {id: "PAYTM-5175", old: "UNION - 5175", n: 1.357, c: 3.528},
+        {id: "PAYTM-8423", old: "UNION - 8423", n: 1.357, c: 3.528}, 
+        {id: "AXIS-0028", old: "AXIS-0028", n: 1.735, c: 2.655},
+        {id: "HDFC-7860", old: "HDFC-7860", n: 1.652, c: 3.528}, 
+        {id: "PAYTM-6508", old: "HDFC - 6508", n: 1.829, c: 3.528},
+        {id: "FINKEDA", old: "FINKEDA", n: 1.350, c: 3.528}, 
+        {id: "MOS", old: "MOS", n: 1.700, c: 3.528},
+        {id: "IOB QR", old: "IOB QR", n: 0.00, c: 0.00}
     ];
 
     let trans = []; let myRole = "";
@@ -206,7 +213,16 @@
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
-        trans.forEach(x => { if(x.category !== "REGISTRATION" && posData[x.pos]) { const a = Number(x.amt); if(x.date === today) posData[x.pos].t += a; if(x.date && x.date.startsWith(month)) posData[x.pos].m += a; } });
+        trans.forEach(x => { 
+            if(x.category !== "REGISTRATION") {
+                const posEntry = posMaster.find(p => p.id === x.pos || p.old === x.pos);
+                if(posEntry) {
+                    const a = Number(x.amt);
+                    if(x.date === today) posData[posEntry.id].t += a;
+                    if(x.date && x.date.startsWith(month)) posData[posEntry.id].m += a;
+                }
+            } 
+        });
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t.toFixed(2)}<br>Month: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
         document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
     }
