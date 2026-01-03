@@ -49,6 +49,7 @@
         <div class="nav-tabs">
             <button id="btnEntry" class="active" onclick="showSection('entry')">📝 ENTRY</button>
             <button id="btnDaily" onclick="showSection('daily')">📊 DAILY VIEW</button>
+            <button id="btnCust" onclick="showSection('cust')">👥 MASTER</button>
             <button id="btnAdmin" class="hidden" onclick="showSection('admin')">💼 ADMIN</button>
             <button style="background:#e74c3c;" onclick="location.reload()">🚪 EXIT</button>
         </div>
@@ -101,14 +102,27 @@
         <div id="dailySection" class="hidden">
             <div class="summary-grid">
                 <div class="banner" style="background:#2980b9;"><span>Today Loan</span><span id="dLtot">₹0.00</span></div>
-                <div class="banner" style="background:#3498db;"><span>Today Loan Profit</span><span id="dLpr">₹0.00</span></div>
+                <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc">₹0.00</span></div>
+                <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot">₹0.00</span></div>
                 <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot">₹0.00</span></div>
-                <div class="banner" style="background:#e74c3c;"><span>Today With Profit</span><span id="dWpr">₹0.00</span></div>
+                <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc">₹0.00</span></div>
+                <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot">₹0.00</span></div>
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
+        </div>
+
+        <div id="custSection" class="hidden">
+            <h3 style="text-align: center;">Master Registration</h3>
+            <form id="custRegForm" style="max-width:500px; margin:0 auto;">
+                <input type="tel" id="regMobile" placeholder="Mobile Number">
+                <input type="text" id="regName" placeholder="Full Name">
+                <input type="text" id="regBank" placeholder="Bank Name">
+                <input type="text" id="regLast4" maxlength="4" placeholder="Card Last 4">
+                <button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
+            </form>
         </div>
 
         <div id="adminSection" class="hidden">
@@ -132,7 +146,6 @@
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan" };
     
-    // Updated POS ID Names as per your image
     const posMaster = [
         {id: "PAYTM-3897", n: 1.357, c: 3.528}, {id: "PAYTM-9204", n: 1.298, c: 3.528},
         {id: "PAYTM-4705", n: 1.210, c: 3.528}, {id: "PAYTM-5175", n: 1.357, c: 3.528},
@@ -163,24 +176,25 @@
     }
 
     function showSection(s) {
-        ['entry','daily','admin'].forEach(x => document.getElementById(x+'Section')?.classList.add('hidden'));
+        ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section')?.classList.add('hidden'));
         document.getElementById(s+'Section').classList.remove('hidden');
     }
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        let dL=0, dW=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
+        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         trans.forEach(x => {
+            if(x.category === "REGISTRATION") return;
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
             if(x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
             if(x.date === today) {
                 dTp += p; 
-                if(x.category==='LOAN') { dL+=a; dLp+=p; } else { dW+=a; dWp+=p; }
+                if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
                 h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.category}</td><td>${a}</td><td>${s}</td><td>${p}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
             }
         });
-        document.getElementById('dLtot').innerText="₹"+dL; document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
-        document.getElementById('dWtot').innerText="₹"+dW; document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
+        document.getElementById('dLtot').innerText="₹"+dL; document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
+        document.getElementById('dWtot').innerText="₹"+dW; document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2); document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
         document.getElementById('mLtot').innerText="₹"+mL; document.getElementById('mWtot').innerText="₹"+mW;
         document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); document.getElementById('dailyTbody').innerHTML=h;
     }
@@ -188,10 +202,10 @@
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
-        trans.forEach(x => { if(posData[x.pos]) { const a = Number(x.amt); if(x.date === today) posData[x.pos].t += a; if(x.date.startsWith(month)) posData[x.pos].m += a; } });
+        trans.forEach(x => { if(x.category !== "REGISTRATION" && posData[x.pos]) { const a = Number(x.amt); if(x.date === today) posData[x.pos].t += a; if(x.date.startsWith(month)) posData[x.pos].m += a; } });
         let ph = ""; posMaster.forEach(p => ph += `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t}<br>Month: ₹${posData[p.id].m}</div>`);
         document.getElementById('posDetailedStats').innerHTML = ph;
-        document.getElementById('adminTbody').innerHTML = trans.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${x.amt}</td><td>${x.netProfit}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
+        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${x.amt}</td><td>${x.netProfit}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
     }
 
     function editRow(id) {
@@ -217,10 +231,19 @@
         }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
 
+    function saveCustomer() {
+        const id = "REG_" + Date.now();
+        db.ref('transactions/' + id).set({
+            id: id, category: "REGISTRATION", name: document.getElementById('regName').value,
+            mobile: document.getElementById('regMobile').value, cardBank: document.getElementById('regBank').value,
+            cardLast4: document.getElementById('regLast4').value, date: new Date().toLocaleDateString('en-CA')
+        }).then(() => { alert("Master Saved!"); document.getElementById('custRegForm').reset(); });
+    }
+
     function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value=""; document.getElementById('submitBtn').innerText="SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
-    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Bank: ${x.cardBank} (${x.cardLast4})<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
+    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
 </script>
 </body>
 </html>
