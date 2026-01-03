@@ -21,15 +21,18 @@
         .section-title { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; margin-bottom: 10px; display: block; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; background: var(--white); color: var(--dark); font-weight: 500; }
+        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: var(--white); color: var(--dark); font-weight: 500; }
+        .card-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .btn-add-card { background: var(--success); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
         .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; font-size: 17px; margin-top: 20px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2); text-transform: uppercase; letter-spacing: 1px; }
-        .banner { color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 11px; display: flex; flex-direction: column; justify-content: center; min-height: 80px; }
+        .banner { color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 12px; display: flex; flex-direction: column; justify-content: center; min-height: 80px; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 30px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 14px; border: 1px solid #f1f1f1; text-align: left; }
         th { background: #f8f9fa; font-weight: 600; color: #7f8c8d; }
         .btn-edit { background: #f1c40f; color: black; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
         .btn-del { background: #e74c3c; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+        .admin-only { display: none; }
         .pos-stat-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; text-align: center; border-left: 5px solid var(--primary); }
     </style>
 </head>
@@ -49,7 +52,7 @@
             <button id="btnEntry" class="active" onclick="showSection('entry')">📝 ENTRY</button>
             <button id="btnDaily" onclick="showSection('daily')">📊 DAILY VIEW</button>
             <button id="btnCust" onclick="showSection('cust')">👥 MASTER</button>
-            <button id="btnAdmin" class="hidden" onclick="showSection('admin')">💼 ADMIN</button>
+            <button id="btnAdmin" class="admin-only" onclick="showSection('admin')">💼 ADMIN</button>
             <button style="background:#e74c3c;" onclick="location.reload()">🚪 EXIT</button>
         </div>
 
@@ -64,60 +67,64 @@
                 <div class="form-section">
                     <span class="section-title">Customer Details</span>
                     <div class="form-grid">
-                        <div class="full-width"><input type="tel" id="cMobile" placeholder="Mobile Number" required></div>
-                        <div class="full-width"><input type="text" id="cName" placeholder="Full Name" required></div>
+                        <div class="full-width"><input type="tel" id="cMobile" placeholder="📱 Mobile Number" oninput="recallCustomer()" required></div>
+                        <div id="recallArea" class="full-width hidden"><select id="recallSelect" onchange="applyCard()" style="background:#f0f7ff; border-color: #bee3f8;"></select></div>
+                        <div class="full-width"><input type="text" id="cName" placeholder="👤 Full Name" required></div>
                     </div>
                 </div>
                 <div class="form-section">
                     <span class="section-title">Card Information</span>
-                    <div class="form-grid">
-                        <input type="text" id="cBank" placeholder="Bank Name" required>
-                        <input type="text" id="cLast4" placeholder="Last 4" maxlength="4" required style="width:90px">
+                    <div id="cardContainer">
+                        <div class="card-row">
+                            <input type="text" class="cBank" placeholder="🏦 Bank Name" required style="margin:0">
+                            <input type="text" class="cLast4" placeholder="🔢 Last 4" maxlength="4" required style="margin:0; width:90px">
+                            <button type="button" class="btn-add-card" onclick="addNewCardRow()">+</button>
+                        </div>
                     </div>
                 </div>
                 <div class="form-section">
                     <span class="section-title">Machine & Action</span>
                     <div class="form-grid">
                         <div class="full-width"><select id="posSelect" onchange="updateMDR()" required></select></div>
-                        <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal</option><option value="CORPORATE">Corporate</option></select>
-                        <div id="mdrShow" style="padding:14px; background:#fffaf0; border-radius:12px; text-align:center; font-weight:700;">MDR: 0.00%</div>
-                        <div class="full-width"><select id="actionType"><option value="LOAN">💰 LOAN</option><option value="WITHDRAW">🏧 WITHDRAW</option></select></div>
+                        <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal Card</option><option value="CORPORATE">Corporate Card</option></select>
+                        <div id="mdrShow" style="padding:14px; background:#fffaf0; border-radius:12px; text-align:center; font-weight:700; font-size: 13px; color:#c05621; border:2px solid #feebc8;">MDR: 0.00%</div>
+                        <div class="full-width"><select id="actionType"><option value="NONE">⚡ NORMAL SWIPE</option><option value="LOAN">💰 LOAN</option><option value="WITHDRAW">🏧 WITHDRAW</option></select></div>
                     </div>
                 </div>
                 <div class="form-section">
-                    <div class="form-grid"><input type="number" id="amt" placeholder="Amount (₹)" required><input type="number" id="scPercent" placeholder="SC %" value="2.00"></div>
+                    <span class="section-title">Payment Calculation</span>
+                    <div class="form-grid"><input type="number" id="amt" placeholder="💵 Amount (₹)" step="0.01" required><input type="number" id="scPercent" placeholder="📈 SC %" step="0.01" value="2.00" required></div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn-main" style="background:var(--success);">SAVE DATA</button>
-                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:10px; margin-top:10px; background:#aaa; color:white; border-radius:10px; border:none;">CANCEL EDIT</button>
+                <button type="button" id="cancelBtn" class="hidden" onclick="resetForm()" style="width:100%; padding:15px; margin-top:10px; background:#a0aec0; color:white; border:none; border-radius:15px; font-weight:bold; cursor:pointer;">CANCEL EDIT</button>
             </form>
         </div>
 
         <div id="dailySection" class="hidden">
             <div class="summary-grid">
-                <div class="banner" style="background:#2980b9;"><span>Today Loan</span><span id="dLtot">₹0.00</span></div>
-                <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc">₹0.00</span></div>
-                <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot">₹0.00</span></div>
-                <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot">₹0.00</span></div>
-                <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc">₹0.00</span></div>
-                <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot">₹0.00</span></div>
+                <div class="banner" style="background:#2980b9;"><span>Today Loan</span><span id="dLtot" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
-            <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
-        </div>
-
-        <div id="custSection" class="hidden">
-            <h3 style="text-align: center;">Master Registration</h3>
-            <form id="custRegForm" style="max-width:500px; margin:0 auto;">
-                <input type="tel" id="regMobile" placeholder="Mobile"><input type="text" id="regName" placeholder="Name"><input type="text" id="regBank" placeholder="Bank"><input type="text" id="regLast4" maxlength="4" placeholder="Last 4">
-                <button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
-            </form>
+            <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
         </div>
 
         <div id="adminSection" class="hidden">
+            <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:15px;"><input type="date" id="fDate" style="width:130px;"> <input type="date" id="tDate" style="width:130px;"> <button onclick="renderAdmin()" style="padding:10px; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">CHECK</button> <button onclick="exportExcel()" style="padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold;">📊 EXCEL</button></div>
             <div id="posDetailedStats" class="summary-grid"></div>
-            <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>Type</th><th>POS</th><th>Amt</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
+            <div id="adminStats" class="summary-grid"></div>
+            <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>POS</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="adminTbody"></tbody></table></div>
+        </div>
+
+        <div id="custSection" class="hidden">
+            <h3>Master Registration</h3>
+            <form id="custRegForm" style="max-width:500px; margin:0 auto;"><input type="tel" id="regMobile" placeholder="Mobile"><input type="text" id="regName" placeholder="Name"><input type="text" id="regBank" placeholder="Bank"><input type="text" id="regLast4" maxlength="4" placeholder="Last 4"><button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button></form>
         </div>
     </div>
 
@@ -134,21 +141,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const users = { "sabariraj admin": "Guru", "manager": "Murugan" };
-    
-    // POS Masters mapped with PAYTM names but recognizing OLD names for totals
+    const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
+    // Mismatch problem varathukku original POS IDs-ah appadiyae kuduthutaen mapla
     const posMaster = [
-        {id: "PAYTM-3897", old: "IOB - 3897", n: 1.357, c: 3.528}, 
-        {id: "PAYTM-9204", old: "CUB - 9204", n: 1.298, c: 3.528},
-        {id: "PAYTM-4705", old: "CUB - 4705", n: 1.210, c: 3.528}, 
-        {id: "PAYTM-5175", old: "UNION - 5175", n: 1.357, c: 3.528},
-        {id: "PAYTM-8423", old: "UNION - 8423", n: 1.357, c: 3.528}, 
-        {id: "AXIS-0028", old: "AXIS-0028", n: 1.735, c: 2.655},
-        {id: "HDFC-7860", old: "HDFC-7860", n: 1.652, c: 3.528}, 
-        {id: "PAYTM-6508", old: "HDFC - 6508", n: 1.829, c: 3.528},
-        {id: "FINKEDA", old: "FINKEDA", n: 1.350, c: 3.528}, 
-        {id: "MOS", old: "MOS", n: 1.700, c: 3.528},
-        {id: "IOB QR", old: "IOB QR", n: 0.00, c: 0.00}
+        {id: "IOB-3897", n: 1.357, c: 3.528}, {id: "CUB-9204", n: 1.298, c: 3.528},
+        {id: "CUB-4705", n: 1.210, c: 3.528}, {id: "UNION-5175", n: 1.357, c: 3.528},
+        {id: "UNION-8423", n: 1.357, c: 3.528}, {id: "AXIS-0028", n: 1.735, c: 2.655},
+        {id: "HDFC-7860", n: 1.652, c: 3.528}, {id: "HDFC-6508", n: 1.829, c: 3.528},
+        {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
     ];
 
     let trans = []; let myRole = "";
@@ -165,7 +165,7 @@
             myRole = u;
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            if(u.includes('admin') || u === 'manager') document.getElementById('btnAdmin').classList.remove('hidden');
+            if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only, #btnAdmin').forEach(e => e.classList.remove('hidden'));
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
         } else alert("Invalid!");
@@ -174,6 +174,14 @@
     function showSection(s) {
         ['entry','daily','cust','admin'].forEach(x => document.getElementById(x+'Section')?.classList.add('hidden'));
         document.getElementById(s+'Section').classList.remove('hidden');
+        document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('active');
+    }
+
+    function addNewCardRow() {
+        const div = document.createElement('div'); div.className = 'card-row';
+        div.innerHTML = `<input type="text" class="cBank" placeholder="Bank" required style="margin:0"><input type="text" class="cLast4" placeholder="L4" maxlength="4" required style="margin:0; width:90px"><button type="button" class="btn-add-card" style="background:#e53e3e" onclick="this.parentElement.remove()">×</button>`;
+        document.getElementById('cardContainer').appendChild(div);
     }
 
     function renderDaily() {
@@ -182,11 +190,11 @@
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
-            if(x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
+            if(x.date && x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
             if(x.date === today) {
-                dTp += p; 
-                if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
-                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.category}</td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
+                dTp += p; if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
+                const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
+                h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
             }
         });
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
@@ -198,30 +206,19 @@
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
-        
-        trans.forEach(x => { 
-            if(x.category !== "REGISTRATION") {
-                const posEntry = posMaster.find(p => p.id === x.pos || p.old === x.pos);
-                if(posEntry) {
-                    const a = Number(x.amt);
-                    if(x.date === today) posData[posEntry.id].t += a;
-                    if(x.date && x.date.startsWith(month)) posData[posEntry.id].m += a;
-                }
-            } 
-        });
-        
+        trans.forEach(x => { if(x.category !== "REGISTRATION" && posData[x.pos]) { const a = Number(x.amt); if(x.date === today) posData[x.pos].t += a; if(x.date && x.date.startsWith(month)) posData[x.pos].m += a; } });
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t.toFixed(2)}<br>Month: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
-        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
+        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
     }
 
     function editRow(id) {
         const x = trans.find(t => t.id == id); if(!x) return;
         document.getElementById('editId').value = x.id; document.getElementById('cMobile').value = x.mobile;
-        document.getElementById('cName').value = x.name; document.getElementById('cBank').value = x.cardBank || '';
-        document.getElementById('cLast4').value = x.cardLast4 || ''; document.getElementById('posSelect').value = x.pos;
+        document.getElementById('cName').value = x.name; document.getElementsByClassName('cBank')[0].value = x.cardBank || '';
+        document.getElementsByClassName('cLast4')[0].value = x.cardLast4 || ''; document.getElementById('posSelect').value = x.pos;
         document.getElementById('amt').value = x.amt; document.getElementById('actionType').value = x.category;
         document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date;
-        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden');
+        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
 
@@ -232,8 +229,8 @@
         db.ref('transactions/' + id).update({
             id: id, user: myRole, date: editId ? document.getElementById('entryDate').value : new Date().toLocaleDateString('en-CA'),
             time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value,
-            name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value,
-            cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value,
+            name: document.getElementById('cName').value, cardBank: document.getElementsByClassName('cBank')[0].value,
+            cardLast4: document.getElementsByClassName('cLast4')[0].value, pos: document.getElementById('posSelect').value,
             category: document.getElementById('actionType').value, amt: a, scVal: scV.toFixed(2), netProfit: (scV - mdrV).toFixed(2)
         }).then(() => { alert("Saved!"); resetForm(); showSection('daily'); });
     };
@@ -250,7 +247,10 @@
     function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value=""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText="SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
-    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
+    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Profit: ₹${Number(x.netProfit).toFixed(2)}<hr>`); w.print(); w.close(); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Report.xlsx"); }
+    function recallCustomer() { const m = document.getElementById('cMobile').value, hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[hits.length-1].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = "", seen = new Set(); hits.reverse().forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k.replace('|',' - ')}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">📋 Select Saved Card</option>' + opts; } }
+    function applyCard() { const v = document.getElementById('recallSelect').value; if(v) { const [b,l] = v.split('|'); document.getElementsByClassName('cBank')[0].value = b; document.getElementsByClassName('cLast4')[0].value = l; } }
 </script>
 </body>
 </html>
