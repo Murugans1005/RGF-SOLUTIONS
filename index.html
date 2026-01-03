@@ -21,9 +21,7 @@
         .section-title { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; margin-bottom: 10px; display: block; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: var(--white); color: var(--dark); font-weight: 500; }
-        .card-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .btn-add-card { background: var(--success); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; background: var(--white); color: var(--dark); font-weight: 500; }
         .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; font-size: 17px; margin-top: 20px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2); text-transform: uppercase; letter-spacing: 1px; }
         .banner { color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 11px; display: flex; flex-direction: column; justify-content: center; min-height: 80px; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 30px; }
@@ -58,6 +56,11 @@
             <h3 id="formTitle">New Transaction</h3>
             <form id="billingForm">
                 <input type="hidden" id="editId">
+                <div id="dateEditArea" class="hidden" style="background:#fff5f5; padding:15px; border-radius:15px; border:2px dashed #feb2b2; margin-bottom:20px; text-align: center;">
+                    <label style="font-size:12px; font-weight:700; color:#c53030;">📅 MODIFY TRANSACTION DATE</label>
+                    <input type="date" id="entryDate">
+                </div>
+
                 <div class="form-section">
                     <span class="section-title">Customer Details</span>
                     <div class="form-grid">
@@ -68,11 +71,9 @@
 
                 <div class="form-section">
                     <span class="section-title">Card Information</span>
-                    <div id="cardContainer">
-                        <div class="card-row">
-                            <input type="text" id="cBank" placeholder="🏦 Bank Name" required>
-                            <input type="text" id="cLast4" placeholder="🔢 Last 4" maxlength="4" required style="width:90px">
-                        </div>
+                    <div class="form-grid">
+                        <input type="text" id="cBank" placeholder="🏦 Bank Name" required>
+                        <input type="text" id="cLast4" placeholder="🔢 Last 4" maxlength="4" required style="width:90px">
                     </div>
                 </div>
 
@@ -117,10 +118,10 @@
         <div id="custSection" class="hidden">
             <h3 style="text-align: center;">Master Registration</h3>
             <form id="custRegForm" style="max-width:500px; margin:0 auto;">
-                <input type="tel" id="regMobile" placeholder="Mobile Number">
-                <input type="text" id="regName" placeholder="Full Name">
-                <input type="text" id="regBank" placeholder="Bank Name">
-                <input type="text" id="regLast4" maxlength="4" placeholder="Card Last 4">
+                <input type="tel" id="regMobile" placeholder="Mobile">
+                <input type="text" id="regName" placeholder="Name">
+                <input type="text" id="regBank" placeholder="Bank">
+                <input type="text" id="regLast4" maxlength="4" placeholder="Last 4">
                 <button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
             </form>
         </div>
@@ -145,7 +146,6 @@
     const db = firebase.database();
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan" };
-    
     const posMaster = [
         {id: "PAYTM-3897", n: 1.357, c: 3.528}, {id: "PAYTM-9204", n: 1.298, c: 3.528},
         {id: "PAYTM-4705", n: 1.210, c: 3.528}, {id: "PAYTM-5175", n: 1.357, c: 3.528},
@@ -214,6 +214,7 @@
         document.getElementById('cName').value = x.name; document.getElementById('cBank').value = x.cardBank || '';
         document.getElementById('cLast4').value = x.cardLast4 || ''; document.getElementById('posSelect').value = x.pos;
         document.getElementById('amt').value = x.amt; document.getElementById('actionType').value = x.category;
+        document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date;
         document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
@@ -223,8 +224,8 @@
         const a = parseFloat(document.getElementById('amt').value), scP = parseFloat(document.getElementById('scPercent').value);
         const mdrP = updateMDR(), scV = (a * scP) / 100, mdrV = (a * mdrP) / 100, editId = document.getElementById('editId').value, id = editId || Date.now();
         db.ref('transactions/' + id).update({
-            id: id, user: myRole, date: editId ? trans.find(x=>x.id==editId).date : new Date().toLocaleDateString('en-CA'),
-            time: new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value,
+            id: id, user: myRole, date: editId ? document.getElementById('entryDate').value : new Date().toLocaleDateString('en-CA'),
+            time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value,
             name: document.getElementById('cName').value, cardBank: document.getElementById('cBank').value,
             cardLast4: document.getElementById('cLast4').value, pos: document.getElementById('posSelect').value,
             category: document.getElementById('actionType').value, amt: a, scVal: scV.toFixed(2), netProfit: (scV - mdrV).toFixed(2)
@@ -240,10 +241,10 @@
         }).then(() => { alert("Master Saved!"); document.getElementById('custRegForm').reset(); });
     }
 
-    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value=""; document.getElementById('submitBtn').innerText="SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
+    function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value=""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText="SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
     function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
-    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
+    function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Bank: ${x.cardBank} (${x.cardLast4})<br>Amt: ₹${x.amt}<br>Profit: ₹${x.netProfit}<hr>`); w.print(); w.close(); }
 </script>
 </body>
 </html>
