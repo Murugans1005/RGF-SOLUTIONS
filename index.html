@@ -54,6 +54,7 @@
         </div>
 
         <div id="entrySection">
+            <h3 id="formTitle">New Transaction</h3>
             <form id="billingForm">
                 <input type="hidden" id="editId">
                 <div id="dateEditArea" class="hidden" style="background:#fff5f5; padding:15px; border-radius:15px; border:2px dashed #feb2b2; margin-bottom:20px; text-align: center;">
@@ -63,15 +64,20 @@
                 <div class="form-section">
                     <span class="section-title">Customer Details</span>
                     <div class="form-grid">
-                        <div class="full-width"><input type="tel" id="cMobile" placeholder="Mobile" required></div>
+                        <div class="full-width"><input type="tel" id="cMobile" placeholder="Mobile Number" required></div>
                         <div class="full-width"><input type="text" id="cName" placeholder="Full Name" required></div>
                     </div>
                 </div>
                 <div class="form-section">
-                    <span class="section-title">Card & Machine</span>
+                    <span class="section-title">Card Information</span>
                     <div class="form-grid">
-                        <input type="text" id="cBank" placeholder="Bank" required>
+                        <input type="text" id="cBank" placeholder="Bank Name" required>
                         <input type="text" id="cLast4" placeholder="Last 4" maxlength="4" required style="width:90px">
+                    </div>
+                </div>
+                <div class="form-section">
+                    <span class="section-title">Machine & Action</span>
+                    <div class="form-grid">
                         <div class="full-width"><select id="posSelect" onchange="updateMDR()" required></select></div>
                         <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal</option><option value="CORPORATE">Corporate</option></select>
                         <div id="mdrShow" style="padding:14px; background:#fffaf0; border-radius:12px; text-align:center; font-weight:700;">MDR: 0.00%</div>
@@ -102,6 +108,7 @@
         </div>
 
         <div id="custSection" class="hidden">
+            <h3 style="text-align: center;">Master Registration</h3>
             <form id="custRegForm" style="max-width:500px; margin:0 auto;">
                 <input type="tel" id="regMobile" placeholder="Mobile"><input type="text" id="regName" placeholder="Name"><input type="text" id="regBank" placeholder="Bank"><input type="text" id="regLast4" maxlength="4" placeholder="Last 4">
                 <button type="button" onclick="saveCustomer()" class="btn-main" style="background:#3498db;">SAVE CUSTOMER</button>
@@ -129,7 +136,7 @@
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan" };
     
-    // Updated POS IDs with their original names mapping for total calculation
+    // POS Masters mapped with PAYTM names but recognizing OLD names for totals
     const posMaster = [
         {id: "PAYTM-3897", old: "IOB - 3897", n: 1.357, c: 3.528}, 
         {id: "PAYTM-9204", old: "CUB - 9204", n: 1.298, c: 3.528},
@@ -171,10 +178,11 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, h="";
+        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
+            if(x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
             if(x.date === today) {
                 dTp += p; 
                 if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
@@ -183,6 +191,7 @@
         });
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
         document.getElementById('dWtot').innerText="₹"+dW.toFixed(2); document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2); document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
+        document.getElementById('mLtot').innerText="₹"+mL.toFixed(2); document.getElementById('mWtot').innerText="₹"+mW.toFixed(2);
         document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); document.getElementById('dailyTbody').innerHTML=h;
     }
 
@@ -192,7 +201,6 @@
         
         trans.forEach(x => { 
             if(x.category !== "REGISTRATION") {
-                // Matching both New Name and Old Name to ensure 14L total is correct
                 const posEntry = posMaster.find(p => p.id === x.pos || p.old === x.pos);
                 if(posEntry) {
                     const a = Number(x.amt);
@@ -213,7 +221,7 @@
         document.getElementById('cLast4').value = x.cardLast4 || ''; document.getElementById('posSelect').value = x.pos;
         document.getElementById('amt').value = x.amt; document.getElementById('actionType').value = x.category;
         document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date;
-        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden');
+        document.getElementById('submitBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
 
