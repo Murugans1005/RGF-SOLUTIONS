@@ -142,7 +142,6 @@
     const db = firebase.database();
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
-    // Mismatch problem varathukku original POS IDs-ah appadiyae kuduthutaen mapla
     const posMaster = [
         {id: "IOB-3897", n: 1.357, c: 3.528}, {id: "CUB-9204", n: 1.298, c: 3.528},
         {id: "CUB-4705", n: 1.210, c: 3.528}, {id: "UNION-5175", n: 1.357, c: 3.528},
@@ -187,6 +186,10 @@
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
+        
+        // Privilege Check Mapla
+        const isAdminOrManager = (myRole.includes('admin') || myRole === 'manager');
+
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
@@ -194,7 +197,17 @@
             if(x.date === today) {
                 dTp += p; if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
-                h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
+                
+                // Show Edit/Delete only for Admin/Manager
+                let actionBtns = "";
+                if(isAdminOrManager) {
+                    actionBtns = `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button>
+                                  <button class="btn-del" onclick="deleteRow(${x.id})">❌</button>`;
+                }
+                // Everyone can print
+                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button>`;
+
+                h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${actionBtns}</td></tr>` + h;
             }
         });
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
