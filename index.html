@@ -8,11 +8,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f4f7f6; --success: #27ae60; --info: #3498db; --white: #white; }
+        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f4f7f6; --success: #27ae60; --info: #3498db; --white: #ffffff; }
         * { box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', sans-serif; }
         body { background-color: var(--bg); margin: 0; padding: 10px; color: #444; }
         .hidden { display: none !important; }
-        .container { max-width: 1450px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        .container { max-width: 1450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .nav-tabs button { padding: 14px 22px; border: none; border-radius: 12px; background: #bdc3c7; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .nav-tabs button.active { background: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(230, 126, 34, 0.3); }
@@ -21,7 +21,7 @@
         .section-title { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; margin-bottom: 10px; display: block; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: white; color: var(--dark); font-weight: 500; }
+        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: var(--white); color: var(--dark); font-weight: 500; }
         .card-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
         .btn-add-card { background: var(--success); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
         .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; font-size: 17px; margin-top: 20px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2); text-transform: uppercase; letter-spacing: 1px; }
@@ -150,7 +150,8 @@
         {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
     ];
 
-    let trans = []; let myRole = "";
+    let trans = []; 
+    let myRole = localStorage.getItem('rgfRole') || ""; // LocalStorage used for safety
 
     db.ref('transactions').on('value', snap => {
         const d = snap.val(); trans = d ? Object.values(d) : [];
@@ -162,6 +163,7 @@
         const p = document.getElementById('password').value.trim();
         if(users[u] === p) {
             myRole = u;
+            localStorage.setItem('rgfRole', u); // Role saved
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             if(u.includes('admin') || u === 'manager') {
@@ -169,6 +171,7 @@
             }
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
+            renderDaily(); // Re-render to show buttons
         } else alert("Invalid!");
     }
 
@@ -189,7 +192,9 @@
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         
-        const isAdminOrManager = (myRole.includes('admin') || myRole === 'manager');
+        // Matchan, Role-ai ippo strong-ah check pannuthu
+        const role = localStorage.getItem('rgfRole') || myRole;
+        const isAdminOrManager = (role.includes('admin') || role === 'manager');
 
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
@@ -202,10 +207,10 @@
                 let actionBtns = "";
                 // Edit and Delete only for Admin/Manager
                 if(isAdminOrManager) {
-                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button>
-                                  <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>`;
+                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️ Edit</button>
+                                  <button class="btn-del" onclick="deleteRow('${x.id}')">❌ Del</button>`;
                 }
-                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">🖨️</button>`;
+                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">🖨️ Print</button>`;
 
                 h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${actionBtns}</td></tr>` + h;
             }
@@ -218,7 +223,8 @@
 
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        const isAdminOrManager = (myRole.includes('admin') || myRole === 'manager');
+        const role = localStorage.getItem('rgfRole') || myRole;
+        const isAdminOrManager = (role.includes('admin') || role === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
         
         trans.forEach(x => { 
@@ -232,8 +238,8 @@
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t.toFixed(2)}<br>Month: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
         
         document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>{
-            let delBtn = isAdminOrManager ? `<button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
-            return `<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${delBtn}</td></tr>`;
+            let actionBtns = isAdminOrManager ? `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
+            return `<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${actionBtns}</td></tr>`;
         }).join('');
     }
 
@@ -259,7 +265,7 @@
         const a = parseFloat(document.getElementById('amt').value), scP = parseFloat(document.getElementById('scPercent').value);
         const mdrP = updateMDR(), scV = (a * scP) / 100, mdrV = (a * mdrP) / 100, editId = document.getElementById('editId').value, id = editId || Date.now();
         db.ref('transactions/' + id).update({
-            id: id, user: myRole, date: editId ? document.getElementById('entryDate').value : new Date().toLocaleDateString('en-CA'),
+            id: id, user: localStorage.getItem('rgfRole') || myRole, date: editId ? document.getElementById('entryDate').value : new Date().toLocaleDateString('en-CA'),
             time: editId ? trans.find(x=>x.id==editId).time : new Date().toLocaleTimeString(), mobile: document.getElementById('cMobile').value,
             name: document.getElementById('cName').value, cardBank: document.getElementsByClassName('cBank')[0].value,
             cardLast4: document.getElementsByClassName('cLast4')[0].value, pos: document.getElementById('posSelect').value,
