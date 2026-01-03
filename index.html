@@ -8,11 +8,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f4f7f6; --success: #27ae60; --info: #3498db; --white: #ffffff; }
+        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f4f7f6; --success: #27ae60; --info: #3498db; --white: #white; }
         * { box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', sans-serif; }
         body { background-color: var(--bg); margin: 0; padding: 10px; color: #444; }
         .hidden { display: none !important; }
-        .container { max-width: 1450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        .container { max-width: 1450px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .nav-tabs button { padding: 14px 22px; border: none; border-radius: 12px; background: #bdc3c7; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .nav-tabs button.active { background: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(230, 126, 34, 0.3); }
@@ -21,7 +21,7 @@
         .section-title { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; margin-bottom: 10px; display: block; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: var(--white); color: var(--dark); font-weight: 500; }
+        input, select { width: 100%; padding: 14px; margin: 6px 0; border: 2px solid #edf2f7; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s ease; background: white; color: var(--dark); font-weight: 500; }
         .card-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
         .btn-add-card { background: var(--success); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
         .btn-main { width: 100%; padding: 18px; background: var(--dark); color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; font-size: 17px; margin-top: 20px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2); text-transform: uppercase; letter-spacing: 1px; }
@@ -164,7 +164,9 @@
             myRole = u;
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            if(u.includes('admin') || u === 'manager') document.querySelectorAll('.admin-only, #btnAdmin').forEach(e => e.classList.remove('hidden'));
+            if(u.includes('admin') || u === 'manager') {
+                document.querySelectorAll('.admin-only, #btnAdmin').forEach(e => e.classList.remove('hidden'));
+            }
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
         } else alert("Invalid!");
@@ -187,7 +189,6 @@
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         
-        // Privilege Check Mapla
         const isAdminOrManager = (myRole.includes('admin') || myRole === 'manager');
 
         trans.forEach(x => {
@@ -198,14 +199,13 @@
                 dTp += p; if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
                 
-                // Show Edit/Delete only for Admin/Manager
                 let actionBtns = "";
+                // Edit and Delete only for Admin/Manager
                 if(isAdminOrManager) {
-                    actionBtns = `<button class="btn-edit" onclick="editRow(${x.id})">✏️</button>
-                                  <button class="btn-del" onclick="deleteRow(${x.id})">❌</button>`;
+                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button>
+                                  <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>`;
                 }
-                // Everyone can print
-                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button>`;
+                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">🖨️</button>`;
 
                 h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${actionBtns}</td></tr>` + h;
             }
@@ -218,20 +218,39 @@
 
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
+        const isAdminOrManager = (myRole.includes('admin') || myRole === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
-        trans.forEach(x => { if(x.category !== "REGISTRATION" && posData[x.pos]) { const a = Number(x.amt); if(x.date === today) posData[x.pos].t += a; if(x.date && x.date.startsWith(month)) posData[x.pos].m += a; } });
+        
+        trans.forEach(x => { 
+            if(x.category !== "REGISTRATION" && posData[x.pos]) { 
+                const a = Number(x.amt); 
+                if(x.date === today) posData[x.pos].t += a; 
+                if(x.date && x.date.startsWith(month)) posData[x.pos].m += a; 
+            } 
+        });
+
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t.toFixed(2)}<br>Month: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
-        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
+        
+        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>{
+            let delBtn = isAdminOrManager ? `<button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
+            return `<tr><td>${x.date}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${delBtn}</td></tr>`;
+        }).join('');
     }
 
     function editRow(id) {
         const x = trans.find(t => t.id == id); if(!x) return;
-        document.getElementById('editId').value = x.id; document.getElementById('cMobile').value = x.mobile;
-        document.getElementById('cName').value = x.name; document.getElementsByClassName('cBank')[0].value = x.cardBank || '';
-        document.getElementsByClassName('cLast4')[0].value = x.cardLast4 || ''; document.getElementById('posSelect').value = x.pos;
-        document.getElementById('amt').value = x.amt; document.getElementById('actionType').value = x.category;
-        document.getElementById('dateEditArea').classList.remove('hidden'); document.getElementById('entryDate').value = x.date;
-        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; document.getElementById('cancelBtn').classList.remove('hidden');
+        document.getElementById('editId').value = x.id; 
+        document.getElementById('cMobile').value = x.mobile;
+        document.getElementById('cName').value = x.name; 
+        document.getElementsByClassName('cBank')[0].value = x.cardBank || '';
+        document.getElementsByClassName('cLast4')[0].value = x.cardLast4 || ''; 
+        document.getElementById('posSelect').value = x.pos;
+        document.getElementById('amt').value = x.amt; 
+        document.getElementById('actionType').value = x.category;
+        document.getElementById('dateEditArea').classList.remove('hidden'); 
+        document.getElementById('entryDate').value = x.date;
+        document.getElementById('submitBtn').innerText = "UPDATE TRANSACTION"; 
+        document.getElementById('cancelBtn').classList.remove('hidden');
         showSection('entry');
     }
 
@@ -259,7 +278,7 @@
 
     function resetForm() { document.getElementById('billingForm').reset(); document.getElementById('editId').value=""; document.getElementById('dateEditArea').classList.add('hidden'); document.getElementById('submitBtn').innerText="SAVE DATA"; document.getElementById('cancelBtn').classList.add('hidden'); }
     function updateMDR() { const p = document.getElementById('posSelect').value, t = document.getElementById('cType').value, d = posMaster.find(x => x.id === p), r = d ? (t === 'CORPORATE' ? d.c : d.n) : 0; document.getElementById('mdrShow').innerText = "MDR: " + r + "%"; return r; }
-    function deleteRow(id) { if(confirm("Delete?")) db.ref('transactions/' + id).remove(); }
+    function deleteRow(id) { if(confirm("நிச்சயமாக நீக்க வேண்டுமா?")) db.ref('transactions/' + id).remove(); }
     function printSlip(id) { const x = trans.find(t => t.id == id); const w = window.open('','','width=300'); w.document.write(`<h3>RGF SOLUTIONS</h3><hr>Name: ${x.name}<br>Amt: ₹${Number(x.amt).toFixed(2)}<br>Profit: ₹${Number(x.netProfit).toFixed(2)}<hr>`); w.print(); w.close(); }
     function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('adminTable')), "RGF_Report.xlsx"); }
     function recallCustomer() { const m = document.getElementById('cMobile').value, hits = trans.filter(x => x.mobile === m); if(hits.length > 0) { document.getElementById('cName').value = hits[hits.length-1].name; document.getElementById('recallArea').classList.remove('hidden'); let opts = "", seen = new Set(); hits.reverse().forEach(h => { if(h.cardBank) { let k = h.cardBank + "|" + h.cardLast4; if(!seen.has(k)) { opts += `<option value="${k}">${k.replace('|',' - ')}</option>`; seen.add(k); } } }); document.getElementById('recallSelect').innerHTML = '<option value="">📋 Select Saved Card</option>' + opts; } }
