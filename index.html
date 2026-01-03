@@ -91,9 +91,11 @@
                 <div class="banner" style="background:#2980b9;"><span>Today Loan</span><span id="dLtot">₹0.00</span></div>
                 <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc">₹0.00</span></div>
                 <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot">₹0.00</span></div>
                 <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot">₹0.00</span></div>
                 <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc">₹0.00</span></div>
                 <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot">₹0.00</span></div>
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
@@ -126,13 +128,20 @@
     const db = firebase.database();
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan" };
+    
+    // Updated POS IDs with their original names mapping for total calculation
     const posMaster = [
-        {id: "PAYTM-3897", n: 1.357, c: 3.528}, {id: "PAYTM-9204", n: 1.298, c: 3.528},
-        {id: "PAYTM-4705", n: 1.210, c: 3.528}, {id: "PAYTM-5175", n: 1.357, c: 3.528},
-        {id: "PAYTM-8423", n: 1.357, c: 3.528}, {id: "AXIS-0028", n: 1.735, c: 2.655},
-        {id: "HDFC-7860", n: 1.652, c: 3.528}, {id: "PAYTM-6508", n: 1.829, c: 3.528},
-        {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528},
-        {id: "IOB QR", n: 0.00, c: 0.00}
+        {id: "PAYTM-3897", old: "IOB - 3897", n: 1.357, c: 3.528}, 
+        {id: "PAYTM-9204", old: "CUB - 9204", n: 1.298, c: 3.528},
+        {id: "PAYTM-4705", old: "CUB - 4705", n: 1.210, c: 3.528}, 
+        {id: "PAYTM-5175", old: "UNION - 5175", n: 1.357, c: 3.528},
+        {id: "PAYTM-8423", old: "UNION - 8423", n: 1.357, c: 3.528}, 
+        {id: "AXIS-0028", old: "AXIS-0028", n: 1.735, c: 2.655},
+        {id: "HDFC-7860", old: "HDFC-7860", n: 1.652, c: 3.528}, 
+        {id: "PAYTM-6508", old: "HDFC - 6508", n: 1.829, c: 3.528},
+        {id: "FINKEDA", old: "FINKEDA", n: 1.350, c: 3.528}, 
+        {id: "MOS", old: "MOS", n: 1.700, c: 3.528},
+        {id: "IOB QR", old: "IOB QR", n: 0.00, c: 0.00}
     ];
 
     let trans = []; let myRole = "";
@@ -169,7 +178,7 @@
             if(x.date === today) {
                 dTp += p; 
                 if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
-                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.category}</td><td>${a}</td><td>${s}</td><td>${p}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
+                h = `<tr><td>${x.time}</td><td>${x.name}</td><td>${x.pos}</td><td>${x.category}</td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td>${p.toFixed(2)}</td><td><button class="btn-edit" onclick="editRow(${x.id})">✏️</button><button class="btn-del" onclick="deleteRow(${x.id})">❌</button><button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip(${x.id})">🖨️</button></td></tr>` + h;
             }
         });
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
@@ -180,15 +189,21 @@
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
+        
         trans.forEach(x => { 
-            if(x.category !== "REGISTRATION" && posData[x.pos]) { 
-                const a = Number(x.amt); 
-                if(x.date === today) posData[x.pos].t += a; 
-                if(x.date && x.date.startsWith(month)) posData[x.pos].m += a; 
+            if(x.category !== "REGISTRATION") {
+                // Matching both New Name and Old Name to ensure 14L total is correct
+                const posEntry = posMaster.find(p => p.id === x.pos || p.old === x.pos);
+                if(posEntry) {
+                    const a = Number(x.amt);
+                    if(x.date === today) posData[posEntry.id].t += a;
+                    if(x.date && x.date.startsWith(month)) posData[posEntry.id].m += a;
+                }
             } 
         });
+        
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>Today: ₹${posData[p.id].t.toFixed(2)}<br>Month: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
-        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${x.amt}</td><td>${x.netProfit}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
+        document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.netProfit).toFixed(2)}</td><td><button class="btn-del" onclick="deleteRow(${x.id})">❌</button></td></tr>`).join('');
     }
 
     function editRow(id) {
