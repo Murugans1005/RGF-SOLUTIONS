@@ -171,6 +171,7 @@
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
             renderDaily();
+            renderAdmin(); // Login ஆனவுடன் அட்மின் பக்கத்தையும் அப்டேட் செய்கிறோம்
         } else alert("Invalid!");
     }
 
@@ -191,7 +192,6 @@
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         
-        // Matchan, ippo Role check-ai thookittu ellarukkum theriyura mathiri vachuten (Security venumna appram add pannalam)
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
 
         trans.forEach(x => {
@@ -203,12 +203,11 @@
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
                 
                 let actionBtns = "";
-                // இப்போ இது கண்டிப்பா வரும் மச்சான்
                 if(canEdit) {
-                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">EDIT</button> 
-                                  <button class="btn-del" onclick="deleteRow('${x.id}')">DEL</button>`;
+                    actionBtns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> 
+                                  <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>`;
                 }
-                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">PRNT</button>`;
+                actionBtns += `<button class="btn-edit" style="background:#3498db;color:white;" onclick="printSlip('${x.id}')">🖨️</button>`;
 
                 h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${actionBtns}</td></tr>` + h;
             }
@@ -221,6 +220,7 @@
 
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
+        // மச்சான், இங்கேயும் அதே canEdit லாஜிக் இப்போ வேலை செய்யும்
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
         
@@ -235,7 +235,14 @@
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>T: ₹${posData[p.id].t.toFixed(2)}<br>M: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
         
         document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>{
-            let btns = canEdit ? `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
+            // அட்மின் பக்கத்துலயும் எடிட் மற்றும் டெலிட் பட்டன்களைச் சேர்த்துள்ளேன்
+            let btns = "";
+            if(canEdit) {
+                btns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> 
+                        <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>`;
+            } else {
+                btns = "-";
+            }
             return `<tr><td>${x.date}</td><td>${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${btns}</td></tr>`;
         }).join('');
     }
