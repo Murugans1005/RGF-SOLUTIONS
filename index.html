@@ -88,7 +88,13 @@
                         <div class="full-width"><select id="posSelect" onchange="updateMDR()" required></select></div>
                         <select id="cType" onchange="updateMDR()"><option value="NORMAL">Normal Card</option><option value="CORPORATE">Corporate Card</option></select>
                         <div id="mdrShow" style="padding:14px; background:#fffaf0; border-radius:12px; text-align:center; font-weight:700; font-size: 13px; color:#c05621; border:2px solid #feebc8;">MDR: 0.00%</div>
-                        <div class="full-width"><select id="actionType"><option value="NONE">⚡ SERVICE CHARGE</option><option value="LOAN">💰 LOAN</option><option value="WITHDRAW">🏧 WITHDRAW</option></select></div>
+                        <div class="full-width">
+                            <select id="actionType">
+                                <option value="NONE">⚡ SERVICE CHARGE</option>
+                                <option value="LOAN">💰 LOAN</option>
+                                <option value="WITHDRAW">🏧 WITHDRAW</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="form-section">
@@ -106,10 +112,12 @@
                 <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot" style="font-size:16px;">₹0.00</span></div>
-                <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#c0392b;"><span>Today Withdraw</span><span id="dWtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#8e44ad;"><span>Today Cash POS</span><span id="dCashPos" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#16a085;"><span>Today QR POS</span><span id="dQrPos" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
@@ -142,6 +150,7 @@
     const db = firebase.database();
 
     const users = { "sabariraj admin": "Guru", "manager": "Murugan", "valli": "valli123", "sudha": "sudha123" };
+    // மச்சான் நீ சொன்ன CASH மற்றும் QR இங்க இருக்கு
     const posMaster = [
         {id: "IOB-3897", n: 1.357, c: 3.528}, {id: "CUB-9204", n: 1.298, c: 3.528},
         {id: "CUB-4705", n: 1.210, c: 3.528}, {id: "UNION-5175", n: 1.357, c: 3.528},
@@ -150,8 +159,7 @@
         {id: "FINKEDA", n: 1.350, c: 3.528}, {id: "MOS", n: 1.700, c: 3.528}
     ];
 
-    let trans = []; 
-    let myRole = ""; 
+    let trans = []; let myRole = ""; 
 
     db.ref('transactions').on('value', snap => {
         const d = snap.val(); trans = d ? Object.values(d) : [];
@@ -171,7 +179,6 @@
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
             renderDaily();
-            renderAdmin(); // Login ஆனவுடன் அட்மின் பக்கத்தையும் அப்டேட் செய்கிறோம்
         } else alert("Invalid!");
     }
 
@@ -190,16 +197,26 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
+        let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="", dCash=0, dQr=0;
         
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
 
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
             const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
+            
+            // Month Logic
             if(x.date && x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
+            
             if(x.date === today) {
-                dTp += p; if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
+                dTp += p; 
+                if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } 
+                else { dW+=a; dWs+=s; dWp+=p; }
+
+                // மச்சான் நீ கேட்ட CASH/QR தனி கணக்கு இங்க இருக்கு
+                if(x.pos === 'CASH') dCash += a;
+                if(x.pos === 'PAYTM-QR') dQr += a;
+
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
                 
                 let actionBtns = "";
@@ -212,15 +229,18 @@
                 h = `<tr><td>${x.time}</td><td style="color:#e67e22;font-weight:bold;">${x.user||''}</td><td>${x.name}</td><td>${x.pos}</td><td><b>${x.category}</b></td><td>${a.toFixed(2)}</td><td>${s.toFixed(2)}</td><td style="background:#fff9db;font-weight:bold;">${cashOut}</td><td>${p.toFixed(2)}</td><td>${actionBtns}</td></tr>` + h;
             }
         });
+
+        // Values display மச்சான்
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
         document.getElementById('dWtot').innerText="₹"+dW.toFixed(2); document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2); document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
         document.getElementById('mLtot').innerText="₹"+mL.toFixed(2); document.getElementById('mWtot').innerText="₹"+mW.toFixed(2);
+        document.getElementById('dCashPos').innerText="₹"+dCash.toFixed(2); // New Cash Box
+        document.getElementById('dQrPos').innerText="₹"+dQr.toFixed(2); // New QR Box
         document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); document.getElementById('dailyTbody').innerHTML=h;
     }
 
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        // மச்சான், இங்கேயும் அதே canEdit லாஜிக் இப்போ வேலை செய்யும்
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
         
@@ -235,14 +255,7 @@
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>T: ₹${posData[p.id].t.toFixed(2)}<br>M: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
         
         document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>{
-            // அட்மின் பக்கத்துலயும் எடிட் மற்றும் டெலிட் பட்டன்களைச் சேர்த்துள்ளேன்
-            let btns = "";
-            if(canEdit) {
-                btns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> 
-                        <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>`;
-            } else {
-                btns = "-";
-            }
+            let btns = canEdit ? `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
             return `<tr><td>${x.date}</td><td>${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${btns}</td></tr>`;
         }).join('');
     }
