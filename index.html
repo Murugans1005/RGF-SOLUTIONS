@@ -13,7 +13,7 @@
         body { background-color: var(--bg); margin: 0; padding: 10px; color: #444; }
         .hidden { display: none !important; }
         .container { max-width: 1450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
-        .nav-tabs { display: flex; justify(content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .nav-tabs button { padding: 14px 22px; border: none; border-radius: 12px; background: #bdc3c7; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .nav-tabs button.active { background: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(230, 126, 34, 0.3); }
         #entrySection { max-width: 650px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.03); }
@@ -109,7 +109,7 @@
                 <div class="banner" style="background:#c0392b;"><span>Today With</span><span id="dWtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr" style="font-size:16px;">₹0.00</span></div>
-                <div class="banner" style="background:#2c3e50;"><span>Month Withdraw</span><span id="mWtot" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
@@ -171,6 +171,7 @@
             document.getElementById('posSelect').innerHTML = '<option value="">🏦 Select Machine</option>' + posMaster.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
             showSection('entry');
             renderDaily();
+            renderAdmin(); // Login ஆனவுடன் அட்மின் பக்கத்தையும் அப்டேட் செய்கிறோம்
         } else alert("Invalid!");
     }
 
@@ -188,29 +189,17 @@
     }
 
     function renderDaily() {
-        const today = new Date().toLocaleDateString('en-CA');
-        const month = today.substring(0, 7); // yyyy-mm format
+        const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
         let dL=0, dW=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="";
         
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
 
         trans.forEach(x => {
             if(x.category === "REGISTRATION") return;
-            const a = Number(x.amt) || 0; 
-            const s = Number(x.scVal) || 0; 
-            const p = Number(x.netProfit) || 0;
-            
-            // Month Total Calculation (Matchan - Category correctly mapped)
-            if(x.date && x.date.startsWith(month)) { 
-                if(x.category === 'LOAN') mL += a; 
-                if(x.category === 'WITHDRAW' || x.category === 'NONE') mW += a; 
-            }
-
+            const a = Number(x.amt), s = Number(x.scVal), p = Number(x.netProfit);
+            if(x.date && x.date.startsWith(month)) { if(x.category==='LOAN') mL+=a; else mW+=a; }
             if(x.date === today) {
-                dTp += p; 
-                if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } 
-                else { dW+=a; dWs+=s; dWp+=p; }
-                
+                dTp += p; if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } else { dW+=a; dWs+=s; dWp+=p; }
                 const cashOut = (x.category === 'WITHDRAW') ? (a - s).toFixed(2) : '-';
                 
                 let actionBtns = "";
@@ -225,14 +214,13 @@
         });
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2); document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
         document.getElementById('dWtot').innerText="₹"+dW.toFixed(2); document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2); document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
-        document.getElementById('mLtot').innerText="₹"+mL.toFixed(2); 
-        document.getElementById('mWtot').innerText="₹"+mW.toFixed(2); // Intha idam thaan ippo correct aagum
-        document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); 
-        document.getElementById('dailyTbody').innerHTML=h;
+        document.getElementById('mLtot').innerText="₹"+mL.toFixed(2); document.getElementById('mWtot').innerText="₹"+mW.toFixed(2);
+        document.getElementById('dDayVal').innerText="₹"+dTp.toFixed(2); document.getElementById('dailyTbody').innerHTML=h;
     }
 
     function renderAdmin() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
+        // மச்சான், இங்கேயும் அதே canEdit லாஜிக் இப்போ வேலை செய்யும்
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
         let posData = {}; posMaster.forEach(p => posData[p.id] = { t: 0, m: 0 });
         
@@ -247,7 +235,14 @@
         document.getElementById('posDetailedStats').innerHTML = posMaster.map(p => `<div class="pos-stat-card"><b>${p.id}</b><br>T: ₹${posData[p.id].t.toFixed(2)}<br>M: ₹${posData[p.id].m.toFixed(2)}</div>`).join('');
         
         document.getElementById('adminTbody').innerHTML = trans.filter(x=>x.category!=="REGISTRATION").slice().reverse().map(x=>{
-            let btns = canEdit ? `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>` : "-";
+            // அட்மின் பக்கத்துலயும் எடிட் மற்றும் டெலிட் பட்டன்களைச் சேர்த்துள்ளேன்
+            let btns = "";
+            if(canEdit) {
+                btns = `<button class="btn-edit" onclick="editRow('${x.id}')">✏️</button> 
+                        <button class="btn-del" onclick="deleteRow('${x.id}')">❌</button>`;
+            } else {
+                btns = "-";
+            }
             return `<tr><td>${x.date}</td><td>${x.user||''}</td><td>${x.category}</td><td>${x.pos}</td><td>${Number(x.amt).toFixed(2)}</td><td>${Number(x.scVal).toFixed(2)}</td><td style="background:#fff9db;">${x.category==='WITHDRAW'?(x.amt-x.scVal).toFixed(2):'-'}</td><td>${Number(x.netProfit).toFixed(2)}</td><td>${btns}</td></tr>`;
         }).join('');
     }
