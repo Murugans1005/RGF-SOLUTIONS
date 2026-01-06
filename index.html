@@ -110,16 +110,15 @@
             <div class="summary-grid">
                 <div class="banner" style="background:#2980b9;"><span>Today Loan</span><span id="dLtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#3498db;"><span>Today Loan SC</span><span id="dLsc" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#5dade2;"><span>Today Loan Profit</span><span id="dLpr" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month Loan</span><span id="mLtot" style="font-size:16px;">₹0.00</span></div>
-                
                 <div class="banner" style="background:#c0392b;"><span>Today Withdraw</span><span id="dWtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#e74c3c;"><span>Today With SC</span><span id="dWsc" style="font-size:16px;">₹0.00</span></div>
+                <div class="banner" style="background:#ec7063;"><span>Today With Profit</span><span id="dWpr" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#2c3e50;"><span>Month With</span><span id="mWtot" style="font-size:16px;">₹0.00</span></div>
-
                 <div class="banner" style="background:#f39c12;"><span>Today Ser. Charge</span><span id="dSCtot" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#8e44ad;"><span>Today Cash POS</span><span id="dCashPos" style="font-size:16px;">₹0.00</span></div>
                 <div class="banner" style="background:#16a085;"><span>Today QR POS</span><span id="dQrPos" style="font-size:16px;">₹0.00</span></div>
-                
                 <div class="banner" style="background:#27ae60; grid-column: 1 / -1;"><span>Today Net Profit</span><span id="dDayVal" style="font-size:18px;">₹0.00</span></div>
             </div>
             <div style="overflow-x:auto;"><table id="dailyTable"><thead><tr><th>Time</th><th>Staff</th><th>Name</th><th>POS</th><th>Type</th><th>Amt</th><th>SC</th><th>Cash Out</th><th>Profit</th><th>Action</th></tr></thead><tbody id="dailyTbody"></tbody></table></div>
@@ -197,7 +196,7 @@
 
     function renderDaily() {
         const today = new Date().toLocaleDateString('en-CA'), month = today.substring(0, 7);
-        let dL=0, dW=0, dSC=0, dLs=0, dWs=0, dTp=0, mL=0, mW=0, h="", dCash=0, dQr=0;
+        let dL=0, dW=0, dSC=0, dLs=0, dWs=0, dLp=0, dWp=0, dTp=0, mL=0, mW=0, h="", dCash=0, dQr=0;
         
         const canEdit = (myRole.includes('admin') || myRole === 'manager');
 
@@ -212,9 +211,9 @@
 
             if(x.date === today) {
                 dTp += p; 
-                if(x.category==='LOAN') { dL+=a; dLs+=s; } 
-                else if(x.category==='WITHDRAW') { dW+=a; dWs+=s; }
-                else if(x.category==='NONE') { dSC+=a; } // மச்சான், இங்க தான் சர்வீஸ் சார்ஜ் தனியா கணக்காகுது
+                if(x.category==='LOAN') { dL+=a; dLs+=s; dLp+=p; } 
+                else if(x.category==='WITHDRAW') { dW+=a; dWs+=s; dWp+=p; }
+                else if(x.category==='NONE') { dSC+=a; } 
 
                 if(x.pos === 'CASH') dCash += a;
                 if(x.pos === 'PAYTM-QR') dQr += a;
@@ -234,9 +233,11 @@
         });
         document.getElementById('dLtot').innerText="₹"+dL.toFixed(2); 
         document.getElementById('dLsc').innerText="₹"+dLs.toFixed(2);
+        document.getElementById('dLpr').innerText="₹"+dLp.toFixed(2);
         document.getElementById('dWtot').innerText="₹"+dW.toFixed(2); 
         document.getElementById('dWsc').innerText="₹"+dWs.toFixed(2);
-        document.getElementById('dSCtot').innerText="₹"+dSC.toFixed(2); // New Service Charge Total
+        document.getElementById('dWpr').innerText="₹"+dWp.toFixed(2);
+        document.getElementById('dSCtot').innerText="₹"+dSC.toFixed(2);
         
         document.getElementById('mLtot').innerText="₹"+mL.toFixed(2); 
         document.getElementById('mWtot').innerText="₹"+mW.toFixed(2);
