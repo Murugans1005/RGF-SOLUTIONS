@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v21 - NaN Fix</title>
+    <title>RAJAGURU CMS v22 - Full Features</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -30,6 +30,7 @@
         table { width: 100%; border-collapse: collapse; font-size: 10px; }
         th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
         th { background: #1a237e; color: white; }
+        .act-btn { cursor: pointer; font-size: 18px; margin: 0 5px; }
     </style>
 </head>
 <body>
@@ -42,7 +43,7 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v21</h2></div>
+    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v22</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
@@ -159,7 +160,7 @@
             mode: document.getElementById('mode').value
         };
         db.ref('rajaguru_tracker/' + id).set(data).then(() => { 
-            alert("Saved Mapla!"); 
+            alert("Saved!"); 
             resetForm(); 
         });
     }
@@ -169,6 +170,8 @@
         document.querySelectorAll('.ni').forEach(n => n.value = "");
         document.getElementById('pandiIdBal').innerText = "0";
         document.getElementById('grandT').innerText = "0";
+        document.getElementById('formTitle').innerText = "Daily Transactions";
+        document.getElementById('mainSaveBtn').innerText = "💾 SAVE DATA";
     }
 
     let allData = {};
@@ -181,7 +184,6 @@
             
             Object.keys(allData).sort().forEach(key => {
                 const v = allData[key];
-                // Math conversion for security against NaN
                 const dep = Number(v.bomDep) || 0;
                 const h2a = Number(v.h2a) || 0;
                 const a2p = Number(v.a2p) || 0;
@@ -199,7 +201,10 @@
                     <td>${a2p}</td>
                     <td>${p2h}</td>
                     <td>${runningId.toFixed(2)}</td>
-                    <td><span style="cursor:pointer" onclick="editEntry('${key}')">✏️</span></td>
+                    <td>
+                        <span class="act-btn" onclick="editEntry('${key}')">✏️</span>
+                        <span class="act-btn" onclick="deleteEntry('${key}')">❌</span>
+                    </td>
                 </tr>` + tbody.innerHTML;
             });
             document.getElementById('sumB1').innerText = "₹" + b1.toLocaleString();
@@ -217,7 +222,15 @@
         document.getElementById('a2p').value = v.a2p || 0;
         document.getElementById('p2h').value = v.p2h || 0;
         document.getElementById('mode').value = v.mode || "Cash";
+        document.getElementById('formTitle').innerText = "Update Record";
+        document.getElementById('mainSaveBtn').innerText = "🔄 UPDATE DATA";
         runLogic(); goToEntry();
+    }
+
+    function deleteEntry(key) {
+        if(confirm("நிச்சயமாக இந்த பதிவை நீக்க வேண்டுமா?")) {
+            db.ref('rajaguru_tracker/' + key).remove().then(() => alert("Deleted!"));
+        }
     }
 
     function goToAdmin() { document.getElementById('entrySection').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
