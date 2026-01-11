@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v24 - Cash Tally</title>
+    <title>RAJAGURU CMS v25 - Final Fixed</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -43,7 +43,7 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v24</h2></div>
+    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v25</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
@@ -119,14 +119,18 @@
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('time').value = new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
 
+    // FIXED LOGIN LOGIC
     function handleLogin() {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
-        if(u.toLowerCase() === "smurugan" && p === "Manager") {
+        // SMurugan and Manager (Trimmed and strict)
+        if(u === "SMurugan" && p === "Manager") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { alert("Login Failed!"); }
+        } else { 
+            alert("Login Failed Mapla! Please use User ID: SMurugan and Password: Manager"); 
+        }
     }
 
     const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
@@ -169,12 +173,11 @@
         document.getElementById('mainSaveBtn').innerText = "💾 SAVE DATA";
     }
 
-    let allData = {};
     function loadReport() {
         db.ref('rajaguru_tracker').on('value', snap => {
             const tbody = document.getElementById('reportTbody'); tbody.innerHTML = "";
             let b1=0, b2=0, b3=0, cih=0; 
-            allData = snap.val() || {};
+            const allData = snap.val() || {};
             let runningId = 0;
             
             Object.keys(allData).sort().forEach(key => {
@@ -184,11 +187,10 @@
                 const p2h = Number(v.p2h) || 0;
                 const dep = Number(v.bomDep) || 0;
 
-                b1 += (dep - h2a); // BOM Bank Balance
-                b2 += (h2a - a2p); // Airtel Balance
-                b3 += (a2p - p2h); // Pandi Balance
+                b1 += (dep - h2a);
+                b2 += (h2a - a2p);
+                b3 += (a2p - p2h);
                 
-                // Cash in Hand Logic: vaanguna Cash (+) - Bank-la deposit pannuna cash (-)
                 if(v.mode === "Cash") { cih += p2h; }
                 cih -= dep;
 
@@ -204,20 +206,6 @@
             document.getElementById('sumB3').innerText = "₹" + b3.toLocaleString();
             document.getElementById('sumCIH').innerText = "₹" + cih.toLocaleString();
         });
-    }
-
-    function editEntry(key) {
-        const v = allData[key];
-        document.getElementById('editId').value = key;
-        document.getElementById('date').value = v.date;
-        document.getElementById('h2a').value = v.h2a || 0;
-        document.getElementById('a2p').value = v.a2p || 0;
-        document.getElementById('p2h').value = v.p2h || 0;
-        document.getElementById('bomDeposit').value = v.bomDep || 0;
-        document.getElementById('mode').value = v.mode || "Cash";
-        document.getElementById('formTitle').innerText = "Update Record";
-        document.getElementById('mainSaveBtn').innerText = "🔄 UPDATE DATA";
-        runLogic(); goToEntry();
     }
 
     function deleteEntry(key) { if(confirm("Delete?")) db.ref('rajaguru_tracker/' + key).remove(); }
