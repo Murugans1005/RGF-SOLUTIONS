@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v20 - Cash Deposit</title>
+    <title>RAJAGURU CMS v21 - NaN Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -42,7 +42,7 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v20</h2></div>
+    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v21</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
@@ -60,17 +60,17 @@
             </div>
             
             <label style="color:#1a237e;">BOM RHA Cash Deposit (+)</label>
-            <input type="number" id="bomDeposit" placeholder="₹ Cash Deposit in Bank">
+            <input type="number" id="bomDeposit" placeholder="₹ 0">
 
             <label style="color:#d32f2f;">BOM RHA ➔ Airtel Load (-)</label>
-            <input type="number" id="h2a" placeholder="₹ BOM to Airtel">
+            <input type="number" id="h2a" placeholder="₹ 0">
 
             <label style="color:#2e7d32;">Airtel ➔ Rajapandi Load</label>
-            <input type="number" id="a2p" placeholder="₹ Airtel to Pandi" oninput="runLogic()">
+            <input type="number" id="a2p" placeholder="₹ 0" oninput="runLogic()">
             
             <label>Rajapandi Return Amount</label>
             <div style="display:flex; gap:10px;">
-                <input type="number" id="p2h" placeholder="₹ Return" oninput="runLogic()">
+                <input type="number" id="p2h" placeholder="₹ 0" oninput="runLogic()">
                 <select id="mode" onchange="toggleDenom()"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Account</option></select>
             </div>
 
@@ -80,7 +80,7 @@
                 Current ID Balance: <strong style="font-size:18px; color:#d32f2f;">₹<span id="pandiIdBal">0</span></strong>
             </div>
             
-            <button id="mainSaveBtn" class="btn btn-save" onclick="save()">💾 SAVE ALL ENTRIES</button>
+            <button id="mainSaveBtn" class="btn btn-save" onclick="save()">💾 SAVE DATA</button>
             <button class="btn btn-wa" onclick="shareToGroup()">🟢 SHARE WHATSAPP</button>
             <button class="btn btn-admin" onclick="goToAdmin()">📊 VIEW HISTORY ➔</button>
         </div>
@@ -134,7 +134,7 @@
     function calcCash() {
         let t = 0; 
         document.querySelectorAll('.ni').forEach(input => {
-            t += (parseInt(input.getAttribute('data-v')) * (parseInt(input.value) || 0));
+            t += (Number(input.getAttribute('data-v')) * (Number(input.value) || 0));
         });
         document.getElementById('grandT').innerText = t; 
         document.getElementById('p2h').value = t;
@@ -142,8 +142,8 @@
     }
 
     function runLogic() {
-        const load = parseFloat(document.getElementById('a2p').value) || 0;
-        const ret = parseFloat(document.getElementById('p2h').value) || 0;
+        const load = Number(document.getElementById('a2p').value) || 0;
+        const ret = Number(document.getElementById('p2h').value) || 0;
         document.getElementById('pandiIdBal').innerText = (load - ret).toFixed(2);
     }
 
@@ -152,10 +152,10 @@
         const data = {
             date: document.getElementById('date').value, 
             time: document.getElementById('time').value,
-            bomDep: parseFloat(document.getElementById('bomDeposit').value) || 0,
-            h2a: parseFloat(document.getElementById('h2a').value) || 0,
-            a2p: parseFloat(document.getElementById('a2p').value) || 0, 
-            p2h: parseFloat(document.getElementById('p2h').value) || 0,
+            bomDep: Number(document.getElementById('bomDeposit').value) || 0,
+            h2a: Number(document.getElementById('h2a').value) || 0,
+            a2p: Number(document.getElementById('a2p').value) || 0, 
+            p2h: Number(document.getElementById('p2h').value) || 0,
             mode: document.getElementById('mode').value
         };
         db.ref('rajaguru_tracker/' + id).set(data).then(() => { 
@@ -181,17 +181,23 @@
             
             Object.keys(allData).sort().forEach(key => {
                 const v = allData[key];
-                b1 += (v.bomDep - v.h2a + v.p2h); // Overall BOM Balance
-                b2 += (v.h2a - v.a2p); // Overall Airtel Balance
-                b3 += (v.a2p - v.p2h); // Running Pandi Balance
-                runningId += (v.a2p - v.p2h);
+                // Math conversion for security against NaN
+                const dep = Number(v.bomDep) || 0;
+                const h2a = Number(v.h2a) || 0;
+                const a2p = Number(v.a2p) || 0;
+                const p2h = Number(v.p2h) || 0;
+
+                b1 += (dep - h2a + p2h); 
+                b2 += (h2a - a2p); 
+                b3 += (a2p - p2h); 
+                runningId += (a2p - p2h);
                 
                 tbody.innerHTML = `<tr>
                     <td>${v.date}</td>
-                    <td>${v.bomDep}</td>
-                    <td>${v.h2a}</td>
-                    <td>${v.a2p}</td>
-                    <td>${v.p2h}</td>
+                    <td>${dep}</td>
+                    <td>${h2a}</td>
+                    <td>${a2p}</td>
+                    <td>${p2h}</td>
                     <td>${runningId.toFixed(2)}</td>
                     <td><span style="cursor:pointer" onclick="editEntry('${key}')">✏️</span></td>
                 </tr>` + tbody.innerHTML;
@@ -207,10 +213,10 @@
         document.getElementById('editId').value = key;
         document.getElementById('date').value = v.date;
         document.getElementById('bomDeposit').value = v.bomDep || 0;
-        document.getElementById('h2a').value = v.h2a;
-        document.getElementById('a2p').value = v.a2p;
-        document.getElementById('p2h').value = v.p2h;
-        document.getElementById('mode').value = v.mode;
+        document.getElementById('h2a').value = v.h2a || 0;
+        document.getElementById('a2p').value = v.a2p || 0;
+        document.getElementById('p2h').value = v.p2h || 0;
+        document.getElementById('mode').value = v.mode || "Cash";
         runLogic(); goToEntry();
     }
 
@@ -218,7 +224,7 @@
     function goToEntry() { document.getElementById('entrySection').style.display = 'block'; document.getElementById('adminView').style.display = 'none'; }
     
     function shareToGroup() {
-        const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n----------------------------------\n🏦 *BOM Cash Dep:* ₹${document.getElementById('bomDeposit').value}\n🏦 *BOM ➔ Airtel:* ₹${document.getElementById('h2a').value}\n📱 *Airtel ➔ Pandi:* ₹${document.getElementById('a2p').value}\n💵 *Return:* ₹${document.getElementById('p2h').value}\n----------------------------------\n💰 *PANDI ID BAL:* ₹${document.getElementById('pandiIdBal').innerText}`;
+        const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n🏦 *BOM Cash Dep:* ₹${document.getElementById('bomDeposit').value}\n🏦 *BOM ➔ Airtel:* ₹${document.getElementById('h2a').value}\n📱 *Airtel ➔ Pandi:* ₹${document.getElementById('a2p').value}\n💵 *Return:* ₹${document.getElementById('p2h').value}\n----------------------------------\n💰 *PANDI ID BAL:* ₹${document.getElementById('pandiIdBal').innerText}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 </script>
