@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v14 - Fixed Login</title>
+    <title>RAJAGURU CMS v15 - Tally Logic</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -28,11 +28,12 @@
         .btn-wa { background: #25D366; }
         .btn-admin { background: #1a237e; }
         #adminView { display: none; margin-top: 20px; background: white; padding: 20px; border-radius: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
         th { background: #1a237e; color: white; }
         .act-btn { cursor: pointer; font-size: 18px; margin: 0 8px; }
         .back-btn { background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
+        .tally-msg { margin-top: 10px; font-size: 12px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
@@ -46,7 +47,7 @@
 
 <div class="container" id="mainApp">
     <div class="header">
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <button class="logout-btn" onclick="location.reload()">Logout</button>
         <h2 style="margin:0;">RAJAGURU TRACKER</h2>
     </div>
     
@@ -58,20 +59,32 @@
 
     <div id="entrySection">
         <div class="card">
-            <h3 id="formTitle" style="margin:0; color:#d32f2f;">Daily Entry Form</h3>
+            <h3 id="formTitle" style="margin:0; color:#d32f2f;">New Entry (Tally Mode)</h3>
             <input type="hidden" id="editId">
             <div style="display:flex; gap:10px;">
                 <div style="flex:1;"><label>Date</label><input type="date" id="date" value="2026-01-11"></div>
                 <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
             </div>
-            <label>1. BOM RHA ➔ Airtel A/C</label><input type="number" id="h2a" placeholder="0">
-            <label>2. Airtel ➔ Rajapandi ID</label><input type="number" id="a2p" placeholder="0">
-            <label>3. Rajapandi Return Amount</label>
+            
+            <label style="color:#2980b9;">1. Airtel ➔ Rajapandi (Load Amount)</label>
+            <input type="number" id="a2p" placeholder="₹ Enter Load Amount" oninput="calculateTally()">
+
+            <label style="color:#27ae60;">2. Rajapandi Return Amount</label>
             <div style="display:flex; gap:10px;">
-                <input type="number" id="p2h" readonly style="background:#f9f9f9; font-weight:bold; color:#d32f2f;">
+                <input type="number" id="p2h" placeholder="₹ Return" oninput="calculateTally()">
                 <select id="mode" onchange="toggleDenom()"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Account</option></select>
             </div>
-            <div id="denomBox" class="denom-box"><div id="denomInputs"></div><div style="text-align:right; font-weight:bold;">Total: ₹<span id="grandT">0</span></div></div>
+
+            <label style="color:#e67e22;">3. Rajapandi ID Balance (Remaining)</label>
+            <input type="number" id="pandiIdBal" placeholder="₹ Balance in ID" oninput="calculateTally()">
+
+            <div id="tallyResult" class="tally-msg"></div>
+
+            <div id="denomBox" class="denom-box"><div id="denomInputs"></div><div style="text-align:right; font-weight:bold;">Cash Total: ₹<span id="grandT">0</span></div></div>
+            
+            <label>4. BOM RHA ➔ Airtel (Transfer Ref)</label>
+            <input type="number" id="h2a" placeholder="₹ BOM Transfer">
+
             <button id="mainSaveBtn" class="btn btn-save" onclick="save()">💾 SAVE TRANSACTION</button>
             <button class="btn btn-wa" onclick="shareToGroup()">🟢 SHARE TO WHATSAPP</button>
             <button class="btn btn-admin" onclick="goToAdmin()">📊 VIEW ADMIN REPORT ➔</button>
@@ -84,7 +97,7 @@
             <h3 style="margin-top:0; color:#1a237e;">Transaction History</h3>
             <div style="overflow-x:auto;">
                 <table>
-                    <thead><tr><th>Date</th><th>BOM➔Air</th><th>Air➔Pan</th><th>Return</th><th>Bal</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Load</th><th>Return</th><th>ID Bal</th><th>Tally</th><th>Action</th></tr></thead>
                     <tbody id="reportTbody"></tbody>
                 </table>
             </div>
@@ -110,47 +123,63 @@
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { alert("Login Error Mapla!"); }
+        } else { alert("Login Thappu!"); }
     }
-
-    function logout() { location.reload(); }
 
     const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
     const dDiv = document.getElementById('denomInputs');
-    notes.forEach(n => { dDiv.innerHTML += `<div class="denom-row"><span>${n} x</span><input type="number" class="ni" id="n_${n}" oninput="calc()"></div>`; });
+    notes.forEach(n => { dDiv.innerHTML += `<div class="denom-row"><span>${n} x</span><input type="number" class="ni" id="n_${n}" oninput="calcCash()"></div>`; });
     
     function toggleDenom() { document.getElementById('denomBox').style.display = (document.getElementById('mode').value === 'Cash' ? 'block' : 'none'); }
-    function calc() {
+    
+    function calcCash() {
         let t = 0; notes.forEach(n => { t += (n * (parseInt(document.getElementById('n_'+n).value) || 0)); });
-        document.getElementById('grandT').innerText = t; document.getElementById('p2h').value = t;
+        document.getElementById('grandT').innerText = t; 
+        document.getElementById('p2h').value = t;
+        calculateTally();
     }
 
-    // --- Save Logic Modified (No Reload) ---
+    function calculateTally() {
+        const load = parseFloat(document.getElementById('a2p').value) || 0;
+        const ret = parseFloat(document.getElementById('p2h').value) || 0;
+        const idBal = parseFloat(document.getElementById('pandiIdBal').value) || 0;
+        const diff = load - (ret + idBal);
+        const resDiv = document.getElementById('tallyResult');
+        
+        if (load === 0) { resDiv.innerHTML = ""; return; }
+        
+        if (diff === 0) {
+            resDiv.style.color = "green";
+            resDiv.innerText = "✅ Tally Matched! (Equal)";
+        } else {
+            resDiv.style.color = "red";
+            resDiv.innerText = `❌ Not Equal! Diff: ₹${diff.toFixed(2)}`;
+        }
+    }
+
     function save() {
-        let dStr = ""; if(document.getElementById('mode').value === 'Cash') { notes.forEach(n => { let c = document.getElementById('n_'+n).value; if(c > 0) dStr += `${n}x${c}, `; }); }
         const id = document.getElementById('editId').value || Date.now();
         const data = {
-            date: document.getElementById('date').value, time: document.getElementById('time').value,
-            h2a: parseFloat(document.getElementById('h2a').value) || 0,
+            date: document.getElementById('date').value, 
+            time: document.getElementById('time').value,
             a2p: parseFloat(document.getElementById('a2p').value) || 0,
             p2h: parseFloat(document.getElementById('p2h').value) || 0,
-            mode: document.getElementById('mode').value, denomInfo: dStr
+            idBal: parseFloat(document.getElementById('pandiIdBal').value) || 0,
+            h2a: parseFloat(document.getElementById('h2a').value) || 0,
+            mode: document.getElementById('mode').value,
+            tallyStatus: (parseFloat(document.getElementById('a2p').value) === (parseFloat(document.getElementById('p2h').value) + parseFloat(document.getElementById('pandiIdBal').value))) ? "Matched" : "Mismatch"
         };
         db.ref('rajaguru_tracker/' + id).set(data).then(() => { 
             alert("Saved Mapla!"); 
-            resetForm(); // Reload pannaama form-ai mattum clean pannuvom
+            resetForm();
         });
     }
 
     function resetForm() {
-        document.getElementById('h2a').value = "";
-        document.getElementById('a2p').value = "";
-        document.getElementById('p2h').value = "";
-        document.getElementById('editId').value = "";
-        document.getElementById('formTitle').innerText = "Daily Entry Form";
-        document.getElementById('mainSaveBtn').innerText = "💾 SAVE TRANSACTION";
+        ["a2p","p2h","pandiIdBal","h2a","editId"].forEach(i => document.getElementById(i).value = "");
+        document.getElementById('formTitle').innerText = "New Entry (Tally Mode)";
+        document.getElementById('tallyResult').innerText = "";
         notes.forEach(n => document.getElementById('n_'+n).value = "");
-        document.getElementById('grandT').innerText = "0";
     }
 
     let allData = {};
@@ -159,8 +188,9 @@
             const tbody = document.getElementById('reportTbody'); tbody.innerHTML = "";
             let b1=0, b2=0, b3=0; allData = snap.val() || {};
             Object.keys(allData).reverse().forEach(key => {
-                const v = allData[key]; b1 -= v.h2a; b1 += v.p2h; b2 += v.h2a; b2 -= v.a2p; b3 += v.a2p; b3 -= v.p2h;
-                tbody.innerHTML += `<tr><td>${v.date}</td><td>${v.h2a}</td><td>${v.a2p}</td><td>${v.p2h}<br><small>${v.denomInfo||''}</small></td><td style="color:${(v.a2p-v.p2h)>0?'red':'green'}">₹${v.a2p-v.p2h}</td><td>
+                const v = allData[key];
+                b2 += (v.h2a - v.a2p); b3 += (v.a2p - v.p2h); b1 += (v.p2h - v.h2a);
+                tbody.innerHTML += `<tr><td>${v.date}</td><td>${v.a2p}</td><td>${v.p2h}</td><td>${v.idBal}</td><td style="color:${v.tallyStatus==='Matched'?'green':'red'}">${v.tallyStatus}</td><td>
                     <span class="act-btn" onclick="editEntry('${key}')">✏️</span>
                     <span class="act-btn" onclick="deleteEntry('${key}')">❌</span>
                 </td></tr>`;
@@ -175,21 +205,21 @@
         const v = allData[key];
         document.getElementById('editId').value = key;
         document.getElementById('date').value = v.date;
-        document.getElementById('h2a').value = v.h2a;
         document.getElementById('a2p').value = v.a2p;
         document.getElementById('p2h').value = v.p2h;
+        document.getElementById('pandiIdBal').value = v.idBal;
+        document.getElementById('h2a').value = v.h2a;
         document.getElementById('mode').value = v.mode;
-        document.getElementById('formTitle').innerText = "Update Record";
-        document.getElementById('mainSaveBtn').innerText = "🔄 UPDATE NOW";
+        calculateTally();
         goToEntry();
     }
 
-    function deleteEntry(key) { if(confirm("Are you sure?")) db.ref('rajaguru_tracker/' + key).remove(); }
+    function deleteEntry(key) { if(confirm("Delete?")) db.ref('rajaguru_tracker/' + key).remove(); }
     function goToAdmin() { document.getElementById('entrySection').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
     function goToEntry() { document.getElementById('entrySection').style.display = 'block'; document.getElementById('adminView').style.display = 'none'; }
     
     function shareToGroup() {
-        const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n🏦 *BOM ➔ Air:* ₹${document.getElementById('h2a').value}\n📱 *Air ➔ Pan:* ₹${document.getElementById('a2p').value}\n💵 *Ret:* ₹${document.getElementById('p2h').value} (${document.getElementById('mode').value})\n💰 *BOM Bal:* ${document.getElementById('sumB1').innerText}\n🚩 *Pan Bal:* ${document.getElementById('sumB3').innerText}`;
+        const msg = `*📊 RAJAGURU TALLY REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n📱 *Airtel ➔ Pandi:* ₹${document.getElementById('a2p').value}\n💵 *Return:* ₹${document.getElementById('p2h').value}\n🚩 *ID Bal:* ₹${document.getElementById('pandiIdBal').value}\n----------------------------------\n✅ *Status:* ${document.getElementById('tallyResult').innerText}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 </script>
