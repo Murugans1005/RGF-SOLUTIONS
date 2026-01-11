@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v19 - Everything Fixed</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <title>RAJAGURU CMS v19.1 - Fixed</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: auto; display: none; }
@@ -42,7 +42,7 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v19</h2></div>
+    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v19.1</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
@@ -55,7 +55,7 @@
             <h3 id="formTitle" style="margin:0; color:#d32f2f;">Entry Form</h3>
             <input type="hidden" id="editId">
             <div style="display:flex; gap:10px;">
-                <div style="flex:1;"><label>Date</label><input type="date" id="date" value="2026-01-11"></div>
+                <div style="flex:1;"><label>Date</label><input type="date" id="date"></div>
                 <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
             </div>
             
@@ -98,6 +98,7 @@
 </div>
 
 <script>
+    // 1. Firebase Initial Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
         authDomain: "rgf-solutions.firebaseapp.com",
@@ -107,25 +108,38 @@
         messagingSenderId: "324475817892",
         appId: "1:324475817892:web:103ecc2311e6b459f4fb31"
     };
+
+    // Initialize Firebase properly
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // Set default date
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('time').value = new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
 
     function handleLogin() {
         if(document.getElementById('username').value === "SMurugan" && document.getElementById('password').value === "Manager") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { alert("Error!"); }
+        } else { alert("Login Failed!"); }
     }
 
     const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
     const dDiv = document.getElementById('denomInputs');
-    notes.forEach(n => { dDiv.innerHTML += `<div class="denom-row"><span>${n} x</span><input type="number" class="ni" id="n_${n}" oninput="calcCash()"></div>`; });
+    notes.forEach(n => { dDiv.innerHTML += `<div class="denom-row"><span>${n} x</span><input type="number" class="ni" id="n_${n}" data-v="${n}" oninput="calcCash()"></div>`; });
     
     function toggleDenom() { document.getElementById('denomBox').style.display = (document.getElementById('mode').value === 'Cash' ? 'block' : 'none'); }
+    
     function calcCash() {
-        let t = 0; notes.forEach(n => { t += (n * (parseInt(document.getElementById('n_'+n).value) || 0)); });
-        document.getElementById('grandT').innerText = t; document.getElementById('p2h').value = t;
+        let t = 0; 
+        document.querySelectorAll('.ni').forEach(input => {
+            const n = parseInt(input.getAttribute('data-v'));
+            const count = parseInt(input.value) || 0;
+            t += (n * count);
+        });
+        document.getElementById('grandT').innerText = t; 
+        document.getElementById('p2h').value = t;
         runLogic();
     }
 
@@ -136,21 +150,26 @@
     }
 
     function save() {
-        const id = document.getElementById('editId').value || Date.now();
+        const id = document.getElementById('editId').value || Date.now().toString();
         const load = parseFloat(document.getElementById('a2p').value) || 0;
         const ret = parseFloat(document.getElementById('p2h').value) || 0;
         const data = {
-            date: document.getElementById('date').value, time: document.getElementById('time').value,
+            date: document.getElementById('date').value, 
+            time: document.getElementById('time').value,
             a2p: load, p2h: ret, h2a: parseFloat(document.getElementById('h2a').value) || 0,
             mode: document.getElementById('mode').value
         };
-        db.ref('rajaguru_tracker/' + id).set(data).then(() => { alert("Saved!"); resetForm(); });
+        db.ref('rajaguru_tracker/' + id).set(data).then(() => { 
+            alert("Saved!"); 
+            resetForm(); 
+        }).catch(e => alert("Error: " + e.message));
     }
 
     function resetForm() {
         ["a2p","p2h","h2a","editId"].forEach(i => document.getElementById(i).value = "");
-        notes.forEach(n => document.getElementById('n_'+n).value = "");
+        document.querySelectorAll('.ni').forEach(n => n.value = "");
         document.getElementById('pandiIdBal').innerText = "0";
+        document.getElementById('grandT').innerText = "0";
         document.getElementById('formTitle').innerText = "Entry Form";
         document.getElementById('mainSaveBtn').innerText = "💾 SAVE DATA";
     }
@@ -158,20 +177,34 @@
     let allData = {};
     function loadReport() {
         db.ref('rajaguru_tracker').on('value', snap => {
-            const tbody = document.getElementById('reportTbody'); tbody.innerHTML = "";
-            let b1=0, b2=0, b3=0; allData = snap.val() || {};
+            const tbody = document.getElementById('reportTbody'); 
+            tbody.innerHTML = "";
+            let b1=0, b2=0, b3=0; 
+            allData = snap.val() || {};
             let runningId = 0;
-            Object.keys(allData).forEach(key => {
+            
+            Object.keys(allData).sort().forEach(key => {
                 const v = allData[key];
-                b1 += (v.p2h - v.h2a); b2 += (v.h2a - v.a2p); b3 += (v.a2p - v.p2h);
+                b1 += (v.p2h - v.h2a); 
+                b2 += (v.h2a - v.a2p); 
+                b3 += (v.a2p - v.p2h);
                 runningId += (v.a2p - v.p2h);
-                tbody.innerHTML = `<tr><td>${v.date}</td><td>${v.a2p}</td><td>${v.p2h}</td><td>${runningId}</td><td>
-                    <span onclick="editEntry('${key}')">✏️</span> <span onclick="deleteEntry('${key}')">❌</span>
-                </td></tr>` + tbody.innerHTML;
+                
+                let row = `<tr>
+                    <td>${v.date}</td>
+                    <td>${v.a2p}</td>
+                    <td>${v.p2h}</td>
+                    <td>${runningId.toFixed(2)}</td>
+                    <td>
+                        <span style="cursor:pointer" onclick="editEntry('${key}')">✏️</span> 
+                        <span style="cursor:pointer" onclick="deleteEntry('${key}')">❌</span>
+                    </td>
+                </tr>`;
+                tbody.innerHTML = row + tbody.innerHTML;
             });
-            document.getElementById('sumB1').innerText = "₹"+b1.toLocaleString();
-            document.getElementById('sumB2').innerText = "₹"+b2.toLocaleString();
-            document.getElementById('sumB3').innerText = "₹"+b3.toLocaleString();
+            document.getElementById('sumB1').innerText = "₹" + b1.toLocaleString();
+            document.getElementById('sumB2').innerText = "₹" + b2.toLocaleString();
+            document.getElementById('sumB3').innerText = "₹" + b3.toLocaleString();
         });
     }
 
@@ -185,12 +218,21 @@
         document.getElementById('mode').value = v.mode;
         document.getElementById('formTitle').innerText = "Update Record";
         document.getElementById('mainSaveBtn').innerText = "🔄 UPDATE DATA";
-        runLogic(); goToEntry();
+        runLogic(); 
+        goToEntry();
     }
 
     function deleteEntry(key) { if(confirm("Delete?")) db.ref('rajaguru_tracker/' + key).remove(); }
-    function goToAdmin() { document.getElementById('entrySection').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
-    function goToEntry() { document.getElementById('entrySection').style.display = 'block'; document.getElementById('adminView').style.display = 'none'; }
+    
+    function goToAdmin() { 
+        document.getElementById('entrySection').style.display = 'none'; 
+        document.getElementById('adminView').style.display = 'block'; 
+    }
+    
+    function goToEntry() { 
+        document.getElementById('entrySection').style.display = 'block'; 
+        document.getElementById('adminView').style.display = 'none'; 
+    }
     
     function shareToGroup() {
         const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n📱 *Airtel ➔ Pandi:* ₹${document.getElementById('a2p').value}\n💵 *Return:* ₹${document.getElementById('p2h').value}\n----------------------------------\n💰 *PANDI ID BAL:* ₹${document.getElementById('pandiIdBal').innerText}`;
