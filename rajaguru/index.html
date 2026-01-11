@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v13 - Fixed</title>
+    <title>RAJAGURU CMS v14 - Fixed Login</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -46,8 +46,8 @@
 
 <div class="container" id="mainApp">
     <div class="header">
-        <button class="logout-btn" onclick="location.reload()">Logout</button>
-        <h2 id="welcomeText" style="margin:0;">RAJAGURU TRACKER</h2>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h2 style="margin:0;">RAJAGURU TRACKER</h2>
     </div>
     
     <div class="summary-grid">
@@ -110,8 +110,10 @@
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { alert("Login Thappu Mapla!"); }
+        } else { alert("Login Error Mapla!"); }
     }
+
+    function logout() { location.reload(); }
 
     const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
     const dDiv = document.getElementById('denomInputs');
@@ -123,6 +125,7 @@
         document.getElementById('grandT').innerText = t; document.getElementById('p2h').value = t;
     }
 
+    // --- Save Logic Modified (No Reload) ---
     function save() {
         let dStr = ""; if(document.getElementById('mode').value === 'Cash') { notes.forEach(n => { let c = document.getElementById('n_'+n).value; if(c > 0) dStr += `${n}x${c}, `; }); }
         const id = document.getElementById('editId').value || Date.now();
@@ -133,7 +136,21 @@
             p2h: parseFloat(document.getElementById('p2h').value) || 0,
             mode: document.getElementById('mode').value, denomInfo: dStr
         };
-        db.ref('rajaguru_tracker/' + id).set(data).then(() => { alert("Success!"); location.reload(); });
+        db.ref('rajaguru_tracker/' + id).set(data).then(() => { 
+            alert("Saved Mapla!"); 
+            resetForm(); // Reload pannaama form-ai mattum clean pannuvom
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('h2a').value = "";
+        document.getElementById('a2p').value = "";
+        document.getElementById('p2h').value = "";
+        document.getElementById('editId').value = "";
+        document.getElementById('formTitle').innerText = "Daily Entry Form";
+        document.getElementById('mainSaveBtn').innerText = "💾 SAVE TRANSACTION";
+        notes.forEach(n => document.getElementById('n_'+n).value = "");
+        document.getElementById('grandT').innerText = "0";
     }
 
     let allData = {};
@@ -168,7 +185,6 @@
     }
 
     function deleteEntry(key) { if(confirm("Are you sure?")) db.ref('rajaguru_tracker/' + key).remove(); }
-    
     function goToAdmin() { document.getElementById('entrySection').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
     function goToEntry() { document.getElementById('entrySection').style.display = 'block'; document.getElementById('adminView').style.display = 'none'; }
     
