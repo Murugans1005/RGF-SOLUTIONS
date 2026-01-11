@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v12 - Full Pro</title>
+    <title>RAJAGURU CMS v13 - Fixed</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: auto; display: none; }
         #loginPage { max-width: 400px; margin: 80px auto; background: white; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid #d32f2f; }
-        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; }
+        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; }
         .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 10px; position: relative; }
         .logout-btn { position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .s-card { background: white; padding: 12px; border-radius: 10px; text-align: center; border-top: 4px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .s-card p { margin: 5px 0 0; font-weight: bold; font-size: 16px; color: #333; }
+        .s-card p { margin: 5px 0 0; font-weight: bold; font-size: 16px; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 6px solid #d32f2f; }
         label { display: block; font-weight: bold; margin-top: 10px; font-size: 13px; color: #555; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
@@ -31,7 +31,8 @@
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
         th { background: #1a237e; color: white; }
-        .act-btn { cursor: pointer; font-size: 16px; margin: 0 5px; }
+        .act-btn { cursor: pointer; font-size: 18px; margin: 0 8px; }
+        .back-btn { background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -55,36 +56,38 @@
         <div class="s-card"><h4>Pandi ID</h4><p id="sumB3">₹0</p></div>
     </div>
 
-    <div class="card" id="entrySection">
-        <h3 id="formTitle" style="margin:0; color:#d32f2f;">Daily Entry Form</h3>
-        <input type="hidden" id="editId">
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1;"><label>Date</label><input type="date" id="date" value="2026-01-11"></div>
-            <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
+    <div id="entrySection">
+        <div class="card">
+            <h3 id="formTitle" style="margin:0; color:#d32f2f;">Daily Entry Form</h3>
+            <input type="hidden" id="editId">
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;"><label>Date</label><input type="date" id="date" value="2026-01-11"></div>
+                <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
+            </div>
+            <label>1. BOM RHA ➔ Airtel A/C</label><input type="number" id="h2a" placeholder="0">
+            <label>2. Airtel ➔ Rajapandi ID</label><input type="number" id="a2p" placeholder="0">
+            <label>3. Rajapandi Return Amount</label>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="p2h" readonly style="background:#f9f9f9; font-weight:bold; color:#d32f2f;">
+                <select id="mode" onchange="toggleDenom()"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Account</option></select>
+            </div>
+            <div id="denomBox" class="denom-box"><div id="denomInputs"></div><div style="text-align:right; font-weight:bold;">Total: ₹<span id="grandT">0</span></div></div>
+            <button id="mainSaveBtn" class="btn btn-save" onclick="save()">💾 SAVE TRANSACTION</button>
+            <button class="btn btn-wa" onclick="shareToGroup()">🟢 SHARE TO WHATSAPP</button>
+            <button class="btn btn-admin" onclick="goToAdmin()">📊 VIEW ADMIN REPORT ➔</button>
         </div>
-        <label>1. BOM RHA ➔ Airtel A/C</label><input type="number" id="h2a" placeholder="0">
-        <label>2. Airtel ➔ Rajapandi ID</label><input type="number" id="a2p" placeholder="0">
-        <label>3. Rajapandi Return Amount</label>
-        <div style="display:flex; gap:10px;">
-            <input type="number" id="p2h" readonly style="background:#f9f9f9; font-weight:bold; color:#d32f2f;">
-            <select id="mode" onchange="toggleDenom()"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Account</option></select>
-        </div>
-        <div id="denomBox" class="denom-box"><div id="denomInputs"></div><div style="text-align:right; font-weight:bold;">Total: ₹<span id="grandT">0</span></div></div>
-        <button id="mainSaveBtn" class="btn btn-save" onclick="save()">💾 SAVE TRANSACTION</button>
-        <button class="btn btn-wa" onclick="shareToGroup()">🟢 SHARE TO WHATSAPP</button>
-        <button class="btn btn-admin" onclick="toggleAdmin()">📊 VIEW ADMIN REPORT ➔</button>
     </div>
 
     <div id="adminView">
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin:0; color:#1a237e;">📊 History</h3>
-            <button onclick="toggleAdmin()" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">⬅ BACK TO ENTRY</button>
-        </div>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead><tr><th>Date</th><th>BOM➔Air</th><th>Air➔Pan</th><th>Return</th><th>Bal</th><th>Action</th></tr></thead>
-                <tbody id="reportTbody"></tbody>
-            </table>
+        <button class="back-btn" onclick="goToEntry()">⬅ BACK TO ENTRY FORM</button>
+        <div class="card">
+            <h3 style="margin-top:0; color:#1a237e;">Transaction History</h3>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>Date</th><th>BOM➔Air</th><th>Air➔Pan</th><th>Return</th><th>Bal</th><th>Action</th></tr></thead>
+                    <tbody id="reportTbody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -107,7 +110,7 @@
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { alert("Wrong ID/Pass!"); }
+        } else { alert("Login Thappu Mapla!"); }
     }
 
     const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
@@ -130,19 +133,19 @@
             p2h: parseFloat(document.getElementById('p2h').value) || 0,
             mode: document.getElementById('mode').value, denomInfo: dStr
         };
-        db.ref('rajaguru_tracker/' + id).set(data).then(() => { alert("Saved!"); location.reload(); });
+        db.ref('rajaguru_tracker/' + id).set(data).then(() => { alert("Success!"); location.reload(); });
     }
 
-    let allTrans = {};
+    let allData = {};
     function loadReport() {
         db.ref('rajaguru_tracker').on('value', snap => {
             const tbody = document.getElementById('reportTbody'); tbody.innerHTML = "";
-            let b1=0, b2=0, b3=0; allTrans = snap.val() || {};
-            Object.keys(allTrans).reverse().forEach(key => {
-                const v = allTrans[key]; b1 -= v.h2a; b1 += v.p2h; b2 += v.h2a; b2 -= v.a2p; b3 += v.a2p; b3 -= v.p2h;
+            let b1=0, b2=0, b3=0; allData = snap.val() || {};
+            Object.keys(allData).reverse().forEach(key => {
+                const v = allData[key]; b1 -= v.h2a; b1 += v.p2h; b2 += v.h2a; b2 -= v.a2p; b3 += v.a2p; b3 -= v.p2h;
                 tbody.innerHTML += `<tr><td>${v.date}</td><td>${v.h2a}</td><td>${v.a2p}</td><td>${v.p2h}<br><small>${v.denomInfo||''}</small></td><td style="color:${(v.a2p-v.p2h)>0?'red':'green'}">₹${v.a2p-v.p2h}</td><td>
-                    <span class="act-btn" onclick="editRow('${key}')">✏️</span>
-                    <span class="act-btn" onclick="deleteRow('${key}')">❌</span>
+                    <span class="act-btn" onclick="editEntry('${key}')">✏️</span>
+                    <span class="act-btn" onclick="deleteEntry('${key}')">❌</span>
                 </td></tr>`;
             });
             document.getElementById('sumB1').innerText = "₹"+b1.toLocaleString();
@@ -151,22 +154,24 @@
         });
     }
 
-    function editRow(key) {
-        const v = allTrans[key];
+    function editEntry(key) {
+        const v = allData[key];
         document.getElementById('editId').value = key;
         document.getElementById('date').value = v.date;
-        document.getElementById('time').value = v.time;
         document.getElementById('h2a').value = v.h2a;
         document.getElementById('a2p').value = v.a2p;
         document.getElementById('p2h').value = v.p2h;
         document.getElementById('mode').value = v.mode;
-        document.getElementById('formTitle').innerText = "Update Transaction";
-        document.getElementById('mainSaveBtn').innerText = "🔄 UPDATE TRANSACTION";
-        toggleAdmin();
+        document.getElementById('formTitle').innerText = "Update Record";
+        document.getElementById('mainSaveBtn').innerText = "🔄 UPDATE NOW";
+        goToEntry();
     }
 
-    function deleteRow(key) { if(confirm("Delete pannalaama?")) db.ref('rajaguru_tracker/' + key).remove(); }
-    function toggleAdmin() { document.getElementById('entrySection').style.display = (document.getElementById('entrySection').style.display==='none'?'block':'none'); document.getElementById('adminView').style.display = (document.getElementById('adminView').style.display==='none'?'block':'none'); }
+    function deleteEntry(key) { if(confirm("Are you sure?")) db.ref('rajaguru_tracker/' + key).remove(); }
+    
+    function goToAdmin() { document.getElementById('entrySection').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
+    function goToEntry() { document.getElementById('entrySection').style.display = 'block'; document.getElementById('adminView').style.display = 'none'; }
+    
     function shareToGroup() {
         const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n🏦 *BOM ➔ Air:* ₹${document.getElementById('h2a').value}\n📱 *Air ➔ Pan:* ₹${document.getElementById('a2p').value}\n💵 *Ret:* ₹${document.getElementById('p2h').value} (${document.getElementById('mode').value})\n💰 *BOM Bal:* ${document.getElementById('sumB1').innerText}\n🚩 *Pan Bal:* ${document.getElementById('sumB3').innerText}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
