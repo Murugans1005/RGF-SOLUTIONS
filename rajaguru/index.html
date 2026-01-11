@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v17 - Reports</title>
+    <title>RAJAGURU CMS v18 - Final Calculation</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -11,25 +11,21 @@
         .container { max-width: 950px; margin: auto; display: none; }
         #loginPage { max-width: 350px; margin: 80px auto; background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #d32f2f; }
         .login-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 15px; position: relative; }
+        .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 15px; }
         .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .s-card { background: white; padding: 12px; border-radius: 10px; text-align: center; border-bottom: 3px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .s-card h4 { margin:0; font-size:11px; color:#777; }
         .s-card p { margin:5px 0 0; font-weight:bold; font-size:15px; }
-        .card { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-top: 10px; font-size: 12px; color: #555; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-top: 10px; font-size: 13px; color: #555; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; }
         .btn-save { background: #2e7d32; }
         .btn-admin { background: #1a237e; }
         #adminView { display: none; }
-        .filter-bar { background: #e8eaf6; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-        .filter-bar div { flex: 1; min-width: 120px; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; background: white; }
-        th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
         th { background: #1a237e; color: white; }
-        .total-row { background: #fff9c4; font-weight: bold; }
-        .month-header { background: #f5f5f5; font-weight: bold; text-align: left; padding: 8px; color: #d32f2f; border-left: 5px solid #d32f2f; }
+        .month-header { background: #f5f5f5; font-weight: bold; color: #d32f2f; }
     </style>
 </head>
 <body>
@@ -42,48 +38,40 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header">
-        <h2 style="margin:0;">RAJAGURU TRACKER v17</h2>
-    </div>
+    <div class="header"><h2>RAJAGURU CMS v18</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
         <div class="s-card"><h4>AIRTEL BAL</h4><p id="sumB2">₹0</p></div>
-        <div class="s-card"><h4>PANDI BAL</h4><p id="sumB3">₹0</p></div>
+        <div class="s-card"><h4>PANDI ID BAL</h4><p id="sumB3" style="color:#d32f2f;">₹0</p></div>
     </div>
 
     <div id="entrySection">
         <div class="card">
-            <h3 style="margin:0 0 10px 0; color:#d32f2f;">New Transaction</h3>
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1;"><label>Date</label><input type="date" id="date" value="2026-01-11"></div>
-                <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
-            </div>
-            <label>Airtel ➔ Pandi (Load)</label><input type="number" id="a2p" oninput="runLogic()">
-            <label>Pandi Return Amount</label><input type="number" id="p2h" oninput="runLogic()">
-            <div style="background:#eee; padding:10px; margin-top:10px; border-radius:8px; text-align:center;">
-                ID Balance Requirement: <strong style="color:#d32f2f;">₹<span id="pandiIdBal">0</span></strong>
-            </div>
-            <label>BOM ➔ Airtel (Transfer)</label><input type="number" id="h2a">
+            <h3 style="margin:0; color:#d32f2f;">New Transaction</h3>
+            <label>Date</label><input type="date" id="date" value="2026-01-11">
+            
+            <label>Airtel ➔ Pandi (Load)</label>
+            <input type="number" id="a2p" placeholder="Enter Load">
+            
+            <label>Pandi Return Amount (Cash/Gpay)</label>
+            <input type="number" id="p2h" placeholder="Enter Return">
+            
+            <label>BOM ➔ Airtel (Transfer)</label>
+            <input type="number" id="h2a" placeholder="Enter BOM Ref">
+            
             <button class="btn btn-save" onclick="save()">SAVE TRANSACTION</button>
-            <button class="btn btn-admin" onclick="showAdmin()">📊 VIEW REPORTS & FILTER ➔</button>
+            <button class="btn btn-admin" onclick="showAdmin()">📊 VIEW FILTERED REPORTS ➔</button>
         </div>
     </div>
 
     <div id="adminView">
-        <div class="filter-bar">
-            <div><label>From Date</label><input type="date" id="fDate"></div>
-            <div><label>To Date</label><input type="date" id="tDate"></div>
-            <div><button class="btn" style="background:#1a237e; margin:0;" onclick="loadReport()">Filter</button></div>
-        </div>
-
         <div class="card">
-            <h3 style="margin:0 0 10px 0; color:#1a237e;">Filtered Report</h3>
+            <h3 style="margin:0 0 10px 0;">Transaction History</h3>
             <div style="overflow-x:auto;">
-                <table id="reportTable">
-                    <thead><tr><th>Date</th><th>Airtel Load</th><th>Return</th><th>ID Bal</th><th>BOM Ref</th></tr></thead>
+                <table>
+                    <thead><tr><th>Date</th><th>Load</th><th>Return</th><th>Entry Bal</th><th>Run. ID Bal</th></tr></thead>
                     <tbody id="reportTbody"></tbody>
-                    <tfoot><tr id="totalRow" class="total-row"></tr></tfoot>
                 </table>
             </div>
             <button class="btn" style="background:#757575;" onclick="showEntry()">⬅ Back to Entry</button>
@@ -108,67 +96,45 @@
         if(document.getElementById('username').value === "SMurugan" && document.getElementById('password').value === "Manager") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            setDefaultDates();
             loadReport();
         } else { alert("Error!"); }
     }
 
-    function setDefaultDates() {
-        let today = new Date().toISOString().split('T')[0];
-        document.getElementById('fDate').value = today.substring(0, 8) + "01";
-        document.getElementById('tDate').value = today;
-    }
-
-    function runLogic() {
-        const load = parseFloat(document.getElementById('a2p').value) || 0;
-        const ret = parseFloat(document.getElementById('p2h').value) || 0;
-        document.getElementById('pandiIdBal').innerText = (load - ret).toFixed(2);
-    }
-
     function save() {
-        const load = parseFloat(document.getElementById('a2p').value) || 0;
-        const ret = parseFloat(document.getElementById('p2h').value) || 0;
+        const a2p = parseFloat(document.getElementById('a2p').value) || 0;
+        const p2h = parseFloat(document.getElementById('p2h').value) || 0;
         const data = {
             date: document.getElementById('date').value,
-            a2p: load, p2h: ret, idBal: (load-ret),
-            h2a: parseFloat(document.getElementById('h2a').value) || 0
+            a2p: a2p, p2h: p2h, h2a: parseFloat(document.getElementById('h2a').value) || 0,
+            diff: (a2p - p2h) // Indha specific entry-oda balance
         };
         db.ref('rajaguru_tracker').push(data).then(() => { alert("Saved!"); location.reload(); });
     }
 
     function loadReport() {
-        const f = document.getElementById('fDate').value;
-        const t = document.getElementById('tDate').value;
-
         db.ref('rajaguru_tracker').on('value', snap => {
             const tbody = document.getElementById('reportTbody');
             tbody.innerHTML = "";
-            let tL=0, tR=0, tI=0, tB=0; // Totals
-            let b1=0, b2=0, b3=0; // Balances
-            let currentMonth = "";
+            let b1=0, b2=0, b3=0; // Overall Balances
+            let runningIdBal = 0; // Cumulative Pandi ID Balance
 
             snap.forEach(c => {
                 const v = c.val();
-                b2 += (v.h2a - v.a2p); b3 += (v.a2p - v.p2h); b1 += (v.p2h - v.h2a);
+                // Kanakku Logic:
+                b1 += (v.p2h - v.h2a); // BOM Account balance
+                b2 += (v.h2a - v.a2p); // Airtel Account balance
+                b3 += (v.a2p - v.p2h); // Pandi ID balance (Running)
+                
+                runningIdBal += (v.a2p - v.p2h);
 
-                if (v.date >= f && v.date <= t) {
-                    let month = v.date.substring(0, 7); // Get YYYY-MM
-                    if (month !== currentMonth) {
-                        tbody.innerHTML += `<tr><td colspan="5" class="month-header">${month} Report</td></tr>`;
-                        currentMonth = month;
-                    }
-
-                    tL += v.a2p; tR += v.p2h; tI += v.idBal; tB += v.h2a;
-                    tbody.innerHTML += `<tr>
-                        <td>${v.date}</td><td>${v.a2p}</td><td>${v.p2h}</td><td>${v.idBal}</td><td>${v.h2a}</td>
-                    </tr>`;
-                }
+                tbody.innerHTML = `<tr>
+                    <td>${v.date}</td><td>${v.a2p}</td><td>${v.p2h}</td><td>${v.a2p - v.p2h}</td><td><b>${runningIdBal}</b></td>
+                </tr>` + tbody.innerHTML;
             });
 
-            document.getElementById('totalRow').innerHTML = `<td>TOTAL</td><td>${tL}</td><td>${tR}</td><td>${tI}</td><td>${tB}</td>`;
-            document.getElementById('sumB1').innerText = "₹"+b1.toLocaleString();
-            document.getElementById('sumB2').innerText = "₹"+b2.toLocaleString();
-            document.getElementById('sumB3').innerText = "₹"+b3.toLocaleString();
+            document.getElementById('sumB1').innerText = "₹" + b1.toLocaleString();
+            document.getElementById('sumB2').innerText = "₹" + b2.toLocaleString();
+            document.getElementById('sumB3').innerText = "₹" + b3.toLocaleString();
         });
     }
 
