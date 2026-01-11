@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAJAGURU Tracker - RGF SOLUTIONS</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; scroll-behavior: smooth; }
+        .container { max-width: 900px; margin: auto; }
+        .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 10px; margin-bottom: 10px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .s-card { background: white; padding: 12px; border-radius: 8px; text-align: center; border-top: 4px solid #d32f2f; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .s-card h4 { margin: 0; font-size: 11px; color: #666; }
+        .s-card p { margin: 5px 0 0; font-weight: bold; font-size: 16px; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border-left: 6px solid #d32f2f; }
+        label { display: block; font-weight: bold; margin-top: 10px; font-size: 13px; color: #444; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        .denom-box { background: #fff5f5; padding: 15px; border-radius: 10px; border: 1px dashed #d32f2f; margin-top: 15px; display: none; }
+        .denom-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .denom-row span { width: 45px; font-weight: bold; color: #d32f2f; }
+        .denom-row input { width: 75px; text-align: center; padding: 5px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-top: 12px; }
+        .btn-save { background: #2e7d32; }
+        .btn-wa { background: #25D366; }
+        .btn-admin { background: #1a237e; }
+        #adminView { display: none; margin-top: 20px; background: white; padding: 20px; border-radius: 12px; border: 1px solid #1a237e; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 20px; background: #e8eaf6; padding: 12px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #1a237e; color: white; }
+        .del-btn { color: #d32f2f; cursor: pointer; border: 1px solid #d32f2f; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header"><h2>RAJAGURU TRACKER v9</h2></div>
+
+    <div class="summary-grid">
+        <div class="s-card"><h4>BOM RHA</h4><p id="sumB1">₹0</p></div>
+        <div class="s-card"><h4>Airtel A/C</h4><p id="sumB2">₹0</p></div>
+        <div class="s-card"><h4>Pandi ID</h4><p id="sumB3">₹0</p></div>
+    </div>
+
+    <div class="card" id="entrySection">
+        <h3 style="margin:0; color:#d32f2f;">Daily Entry Form</h3>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;"><label>Date</label><input type="date" id="date" value="2026-01-11"></div>
+            <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
+        </div>
+
+        <label>1. BOM RHA ➔ Airtel A/C (Transfer)</label>
+        <input type="number" id="h2a" placeholder="₹ Amount">
+
+        <label>2. Airtel ➔ Rajapandi ID (Load)</label>
+        <input type="number" id="a2p" placeholder="₹ Amount">
+
+        <label>3. Rajapandi Return Amount & Mode</label>
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="p2h" readonly style="background:#f9f9f9; font-weight:bold; color:#d32f2f;" placeholder="Calculated Total">
+            <select id="mode" onchange="toggleDenom()">
+                <option value="Cash">Cash</option>
+                <option value="Gpay">Gpay</option>
+                <option value="Account">Account</option>
+            </select>
+        </div>
+
+        <div id="denomBox" class="denom-box">
+            <h4 style="margin:0 0 10px 0; color:#d32f2f;">Cash Denom Calculator</h4>
+            <div id="denomInputs"></div>
+            <div style="text-align:right; border-top:1px dashed #d32f2f; margin-top:10px; padding-top:10px;">
+                <strong>Grand Total: ₹<span id="grandT">0</span></strong>
+            </div>
+        </div>
+
+        <button class="btn btn-save" onclick="save()">💾 SAVE TRANSACTION</button>
+        <button class="btn btn-wa" onclick="shareToGroup()">🟢 SHARE TO WHATSAPP GROUP</button>
+        <button class="btn btn-admin" onclick="toggleAdmin()">📊 VIEW ADMIN REPORT ➔</button>
+    </div>
+
+    <div id="adminView">
+        <h3 style="margin-top:0; color:#1a237e;">📊 Admin Report & History</h3>
+        <div class="filter-row">
+            <div style="flex:1;"><label>From</label><input type="date" id="fD" value="2026-01-01"></div>
+            <div style="flex:1;"><label>To</label><input type="date" id="tD" value="2026-01-11"></div>
+            <button onclick="loadReport()" style="background:#1a237e; color:white; border:none; padding:12px; border-radius:5px; height:45px; cursor:pointer;">Filter</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>BOM➔Air</th>
+                        <th>Air➔Pan</th>
+                        <th>Return & Denom</th>
+                        <th>Pandi Bal</th>
+                        <th>Act</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTbody"></tbody>
+            </table>
+        </div>
+        <button class="btn" style="background:#757575;" onclick="toggleAdmin()">⬅ Back to Entry</button>
+    </div>
+</div>
+
+<script>
+    // --- INTEGRATED FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
+        authDomain: "rgf-solutions.firebaseapp.com",
+        databaseURL: "https://rgf-solutions-default-rtdb.firebaseio.com",
+        projectId: "rgf-solutions",
+        storageBucket: "rgf-solutions.firebasestorage.app",
+        messagingSenderId: "324475817892",
+        appId: "1:324475817892:web:103ecc2311e6b459f4fb31"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
+    const dDiv = document.getElementById('denomInputs');
+    notes.forEach(n => {
+        dDiv.innerHTML += `
+            <div class="denom-row">
+                <span>${n} x</span>
+                <input type="number" class="ni" id="n_${n}" data-v="${n}" oninput="calc()">
+                <div style="flex:1; text-align:right;" id="s_${n}">₹0</div>
+            </div>`;
+    });
+
+    document.getElementById('time').value = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+    function toggleDenom() {
+        const isC = document.getElementById('mode').value === 'Cash';
+        document.getElementById('denomBox').style.display = isC ? 'block' : 'none';
+        document.getElementById('p2h').readOnly = isC;
+    }
+
+    function calc() {
+        let total = 0;
+        notes.forEach(n => {
+            const count = parseInt(document.getElementById('n_'+n).value) || 0;
+            const sub = n * count;
+            total += sub;
+            document.getElementById('s_'+n).innerText = "₹" + sub;
+        });
+        document.getElementById('grandT').innerText = total;
+        document.getElementById('p2h').value = total;
+    }
+
+    function toggleAdmin() {
+        const ev = document.getElementById('entrySection'), av = document.getElementById('adminView');
+        if(av.style.display === 'none') { av.style.display = 'block'; ev.style.display = 'none'; loadReport(); }
+        else { av.style.display = 'none'; ev.style.display = 'block'; }
+    }
+
+    function save() {
+        let dStr = "";
+        if(document.getElementById('mode').value === 'Cash') {
+            notes.forEach(n => {
+                let cnt = document.getElementById('n_'+n).value;
+                if(cnt > 0) dStr += `${n}x${cnt}, `;
+            });
+        }
+        const data = {
+            date: document.getElementById('date').value,
+            time: document.getElementById('time').value,
+            h2a: parseFloat(document.getElementById('h2a').value) || 0,
+            a2p: parseFloat(document.getElementById('a2p').value) || 0,
+            p2h: parseFloat(document.getElementById('p2h').value) || 0,
+            mode: document.getElementById('mode').value,
+            denomInfo: dStr
+        };
+        // Using a separate node 'rajaguru_tracker' to avoid mixing with RGF transactions
+        db.ref('rajaguru_tracker').push(data).then(() => { alert("Saved Mapla!"); location.reload(); });
+    }
+
+    function shareToGroup() {
+        const date = document.getElementById('date').value;
+        const b2a = document.getElementById('h2a').value || 0;
+        const a2p = document.getElementById('a2p').value || 0;
+        const p2h = document.getElementById('p2h').value || 0;
+        const mode = document.getElementById('mode').value;
+        let dStr = "";
+        if(mode === 'Cash') { notes.forEach(n => { let cnt = document.getElementById('n_'+n).value; if(cnt > 0) dStr += `${n}x${cnt} `; }); }
+
+        const msg = `*📊 RAJAGURU DAILY REPORT*\n📅 *Date:* ${date}\n----------------------------------\n🏦 *BOM ➔ Airtel:* ₹${b2a}\n📱 *Airtel ➔ Pandi:* ₹${a2p}\n💵 *Pandi Return:* ₹${p2h} (${mode})\n${dStr ? `📝 *Denom:* ${dStr}\n` : ""}----------------------------------\n💰 *BOM Bal:* ${document.getElementById('sumB1').innerText}\n📶 *Airtel Bal:* ${document.getElementById('sumB2').innerText}\n🚩 *Pandi Bal:* ${document.getElementById('sumB3').innerText}\n----------------------------------`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function loadReport() {
+        const f = document.getElementById('fD').value, t = document.getElementById('tD').value;
+        db.ref('rajaguru_tracker').on('value', snap => {
+            const tbody = document.getElementById('reportTbody');
+            tbody.innerHTML = "";
+            let b1=0, b2=0, b3=0;
+            snap.forEach(c => {
+                const v = c.val();
+                b1 -= v.h2a; b1 += v.p2h; b2 += v.h2a; b2 -= v.a2p; b3 += v.a2p; b3 -= v.p2h;
+                if(v.date >= f && v.date <= t) {
+                    tbody.innerHTML = `<tr>
+                        <td>${v.date}<br><small>${v.time}</small></td>
+                        <td>₹${v.h2a}</td>
+                        <td>₹${v.a2p}</td>
+                        <td>₹${v.p2h}<br><small>(${v.mode})</small><br><i style="font-size:9px; color:red;">${v.denomInfo || ''}</i></td>
+                        <td style="color:${(v.a2p-v.p2h)>0?'red':'green'}">₹${v.a2p-v.p2h}</td>
+                        <td><span class="del-btn" onclick="if(confirm('Delete?')) db.ref('rajaguru_tracker/${c.key}').remove()">Del</span></td>
+                    </tr>` + tbody.innerHTML;
+                }
+            });
+            document.getElementById('sumB1').innerText = "₹"+b1.toLocaleString();
+            document.getElementById('sumB2').innerText = "₹"+b2.toLocaleString();
+            document.getElementById('sumB3').innerText = "₹"+b3.toLocaleString();
+        });
+    }
+    loadReport();
+</script>
+</body>
+</html>
