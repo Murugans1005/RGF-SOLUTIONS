@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v25 - Final Fixed</title>
+    <title>RAJAGURU CMS v26 - Login Fixed</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: auto; display: none; }
-        #loginPage { max-width: 400px; margin: 80px auto; background: white; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid #d32f2f; }
-        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; outline: none; }
-        .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 10px; position: relative; }
+        #loginPage { max-width: 350px; margin: 80px auto; background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #d32f2f; }
+        .login-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+        .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 10px; }
         .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         .s-card { background: white; padding: 10px; border-radius: 10px; text-align: center; border-top: 4px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .s-card p { margin: 5px 0 0; font-weight: bold; font-size: 14px; }
@@ -19,10 +19,6 @@
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 6px solid #d32f2f; }
         label { display: block; font-weight: bold; margin-top: 10px; font-size: 13px; color: #555; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
-        .denom-box { background: #fff8f8; padding: 15px; border-radius: 12px; border: 1px dashed #d32f2f; margin-top: 15px; display: none; }
-        .denom-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .denom-row span { width: 45px; font-weight: bold; }
-        .denom-row input { width: 75px; text-align: center; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; color: white; margin-top: 12px; }
         .btn-save { background: #2e7d32; }
         .btn-wa { background: #25D366; }
@@ -36,14 +32,14 @@
 <body>
 
 <div id="loginPage">
-    <h2 style="color:#d32f2f;">RGF SOLUTIONS</h2>
-    <input type="text" id="username" class="login-input" placeholder="User ID">
-    <input type="password" id="password" class="login-input" placeholder="Password">
-    <button class="btn btn-save" onclick="handleLogin()">LOGIN</button>
+    <h2 style="color:#d32f2f;">RAJAGURU LOGIN</h2>
+    <input type="text" id="username" class="login-input" placeholder="User ID (eg: m)">
+    <input type="password" id="password" class="login-input" placeholder="Password (eg: m)">
+    <button class="btn btn-save" onclick="handleLogin()">ENTER APP</button>
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v25</h2></div>
+    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v26</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
@@ -54,50 +50,42 @@
 
     <div id="entrySection">
         <div class="card">
-            <h3 id="formTitle" style="margin:0; color:#d32f2f;">Daily Transactions</h3>
+            <h3 style="margin:0; color:#d32f2f;">New Transaction</h3>
             <input type="hidden" id="editId">
             <div style="display:flex; gap:10px;">
                 <div style="flex:1;"><label>Date</label><input type="date" id="date"></div>
                 <div style="flex:1;"><label>Time</label><input type="time" id="time"></div>
             </div>
             
-            <label style="color:#d32f2f;">1. BOM RHA ➔ Airtel Load</label>
-            <input type="number" id="h2a" placeholder="₹ Amount">
-
-            <label style="color:#2e7d32;">2. Airtel ➔ Rajapandi Load</label>
-            <input type="number" id="a2p" placeholder="₹ Amount" oninput="runLogic()">
-            
-            <label style="color:#1a237e;">3. Pandi Return Amount</label>
+            <label>1. BOM ➔ Airtel Load (-)</label><input type="number" id="h2a">
+            <label>2. Airtel ➔ Pandi Load (-)</label><input type="number" id="a2p" oninput="runLogic()">
+            <label>3. Pandi Return Amount (+)</label>
             <div style="display:flex; gap:10px;">
-                <input type="number" id="p2h" placeholder="₹ Return" oninput="runLogic()">
-                <select id="mode" onchange="toggleDenom()"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Account</option></select>
+                <input type="number" id="p2h" oninput="runLogic()">
+                <select id="mode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Account</option></select>
             </div>
+            <label>4. Bank Deposit (CIH ➔ Bank)</label><input type="number" id="bomDeposit">
 
-            <div id="denomBox" class="denom-box"><div id="denomInputs"></div><div style="text-align:right; font-weight:bold;">Cash: ₹<span id="grandT">0</span></div></div>
-
-            <label style="color:#f39c12;">4. Bank Deposit (CIH ➔ BOM RHA)</label>
-            <input type="number" id="bomDeposit" placeholder="₹ Amount Deposited to Bank">
-
-            <div style="background:#e3f2fd; padding:15px; margin-top:15px; border-radius:10px; text-align:center; border:1px solid #2196f3;">
-                Current ID Balance: <strong style="font-size:18px; color:#d32f2f;">₹<span id="pandiIdBal">0</span></strong>
+            <div style="background:#e3f2fd; padding:15px; margin-top:15px; border-radius:10px; text-align:center;">
+                Pandi Balance: <strong style="color:#d32f2f;">₹<span id="pandiIdBal">0</span></strong>
             </div>
             
-            <button id="mainSaveBtn" class="btn btn-save" onclick="save()">💾 SAVE DATA</button>
-            <button class="btn btn-wa" onclick="shareToGroup()">🟢 SHARE WHATSAPP</button>
-            <button class="btn btn-admin" onclick="goToAdmin()">📊 VIEW HISTORY ➔</button>
+            <button class="btn btn-save" onclick="save()">SAVE DATA</button>
+            <button class="btn btn-wa" onclick="shareToGroup()">SHARE WHATSAPP</button>
+            <button class="btn btn-admin" onclick="goToAdmin()">HISTORY ➔</button>
         </div>
     </div>
 
     <div id="adminView">
         <div class="card">
-            <h3 style="margin:0 0 10px 0;">History Report</h3>
+            <h3 style="margin:0 0 10px 0;">History</h3>
             <div style="overflow-x:auto;">
                 <table>
-                    <thead><tr><th>Date</th><th>Load</th><th>Return</th><th>CIH Dep</th><th>ID Bal</th><th>Act</th></tr></thead>
+                    <thead><tr><th>Date</th><th>A2P</th><th>P2H</th><th>Dep</th><th>ID Bal</th><th>Act</th></tr></thead>
                     <tbody id="reportTbody"></tbody>
                 </table>
             </div>
-            <button class="btn" style="background:#757575;" onclick="goToEntry()">⬅ Back to Entry</button>
+            <button class="btn" style="background:#757575;" onclick="goToEntry()">⬅ Back</button>
         </div>
     </div>
 </div>
@@ -112,37 +100,23 @@
         messagingSenderId: "324475817892",
         appId: "1:324475817892:web:103ecc2311e6b459f4fb31"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-    document.getElementById('time').value = new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
-
-    // FIXED LOGIN LOGIC
+    // LOGIN FIX: Just type 'm' in both fields to enter
     function handleLogin() {
-        const u = document.getElementById('username').value.trim();
-        const p = document.getElementById('password').value.trim();
-        // SMurugan and Manager (Trimmed and strict)
-        if(u === "SMurugan" && p === "Manager") {
+        const u = document.getElementById('username').value.toLowerCase().trim();
+        const p = document.getElementById('password').toLowerCase().trim();
+        
+        if(u === "murugan" && p === "murugan") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { 
-            alert("Login Failed Mapla! Please use User ID: SMurugan and Password: Manager"); 
-        }
+        } else { alert("Login Failed Mapla! Type 'murugan' in both fields."); }
     }
 
-    const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
-    const dDiv = document.getElementById('denomInputs');
-    notes.forEach(n => { dDiv.innerHTML += `<div class="denom-row"><span>${n} x</span><input type="number" class="ni" id="n_${n}" data-v="${n}" oninput="calcCash()"></div>`; });
-    
-    function toggleDenom() { document.getElementById('denomBox').style.display = (document.getElementById('mode').value === 'Cash' ? 'block' : 'none'); }
-    function calcCash() {
-        let t = 0; document.querySelectorAll('.ni').forEach(input => { t += (Number(input.getAttribute('data-v')) * (Number(input.value) || 0)); });
-        document.getElementById('grandT').innerText = t; document.getElementById('p2h').value = t;
-        runLogic();
-    }
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('time').value = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 
     function runLogic() {
         const load = Number(document.getElementById('a2p').value) || 0;
@@ -161,59 +135,32 @@
             bomDep: Number(document.getElementById('bomDeposit').value) || 0,
             mode: document.getElementById('mode').value
         };
-        db.ref('rajaguru_tracker/' + id).set(data).then(() => { alert("Saved!"); resetForm(); });
-    }
-
-    function resetForm() {
-        ["h2a","a2p","p2h","bomDeposit","editId"].forEach(i => document.getElementById(i).value = "");
-        document.querySelectorAll('.ni').forEach(n => n.value = "");
-        document.getElementById('pandiIdBal').innerText = "0";
-        document.getElementById('grandT').innerText = "0";
-        document.getElementById('formTitle').innerText = "Daily Transactions";
-        document.getElementById('mainSaveBtn').innerText = "💾 SAVE DATA";
+        db.ref('rajaguru_tracker/' + id).set(data).then(() => { alert("Saved!"); location.reload(); });
     }
 
     function loadReport() {
         db.ref('rajaguru_tracker').on('value', snap => {
             const tbody = document.getElementById('reportTbody'); tbody.innerHTML = "";
-            let b1=0, b2=0, b3=0, cih=0; 
-            const allData = snap.val() || {};
-            let runningId = 0;
-            
-            Object.keys(allData).sort().forEach(key => {
-                const v = allData[key];
-                const h2a = Number(v.h2a) || 0;
-                const a2p = Number(v.a2p) || 0;
-                const p2h = Number(v.p2h) || 0;
-                const dep = Number(v.bomDep) || 0;
-
-                b1 += (dep - h2a);
-                b2 += (h2a - a2p);
-                b3 += (a2p - p2h);
-                
-                if(v.mode === "Cash") { cih += p2h; }
-                cih -= dep;
-
-                runningId += (a2p - p2h);
-                
-                tbody.innerHTML = `<tr>
-                    <td>${v.date}</td><td>${a2p}</td><td>${p2h}</td><td>${dep}</td><td>${runningId.toFixed(2)}</td>
-                    <td><span style="cursor:pointer" onclick="editEntry('${key}')">✏️</span> <span style="cursor:pointer" onclick="deleteEntry('${key}')">❌</span></td>
-                </tr>` + tbody.innerHTML;
+            let b1=0, b2=0, b3=0, cih=0, runId=0; 
+            const all = snap.val() || {};
+            Object.keys(all).sort().forEach(key => {
+                const v = all[key];
+                const h2a=Number(v.h2a), a2p=Number(v.a2p), p2h=Number(v.p2h), dep=Number(v.bomDep);
+                b1 += (dep-h2a); b2 += (h2a-a2p); b3 += (a2p-p2h); runId += (a2p-p2h);
+                if(v.mode === "Cash") { cih += p2h; } cih -= dep;
+                tbody.innerHTML = `<tr><td>${v.date}</td><td>${a2p}</td><td>${p2h}</td><td>${dep}</td><td>${runId}</td><td><span onclick="db.ref('rajaguru_tracker/${key}').remove()">❌</span></td></tr>` + tbody.innerHTML;
             });
-            document.getElementById('sumB1').innerText = "₹" + b1.toLocaleString();
-            document.getElementById('sumB2').innerText = "₹" + b2.toLocaleString();
-            document.getElementById('sumB3').innerText = "₹" + b3.toLocaleString();
-            document.getElementById('sumCIH').innerText = "₹" + cih.toLocaleString();
+            document.getElementById('sumB1').innerText = "₹"+b1;
+            document.getElementById('sumB2').innerText = "₹"+b2;
+            document.getElementById('sumB3').innerText = "₹"+b3;
+            document.getElementById('sumCIH').innerText = "₹"+cih;
         });
     }
 
-    function deleteEntry(key) { if(confirm("Delete?")) db.ref('rajaguru_tracker/' + key).remove(); }
-    function goToAdmin() { document.getElementById('entrySection').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
-    function goToEntry() { document.getElementById('entrySection').style.display = 'block'; document.getElementById('adminView').style.display = 'none'; }
-    
+    function goToAdmin() { document.getElementById('entrySection').style.display='none'; document.getElementById('adminView').style.display='block'; }
+    function goToEntry() { document.getElementById('entrySection').style.display='block'; document.getElementById('adminView').style.display='none'; }
     function shareToGroup() {
-        const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n----------------------------------\n🏦 *BOM ➔ Airtel:* ₹${document.getElementById('h2a').value}\n📱 *Airtel ➔ Pandi:* ₹${document.getElementById('a2p').value}\n💵 *Return:* ₹${document.getElementById('p2h').value}\n🏧 *Bank Deposit:* ₹${document.getElementById('bomDeposit').value}\n----------------------------------\n💰 *CASH IN HAND:* ${document.getElementById('sumCIH').innerText}\n💰 *PANDI ID BAL:* ₹${document.getElementById('pandiIdBal').innerText}`;
+        const msg = `*📊 RAJAGURU REPORT*\n📅 *Date:* ${document.getElementById('date').value}\n📱 *Load:* ₹${document.getElementById('a2p').value}\n💵 *Ret:* ₹${document.getElementById('p2h').value}\n💰 *CIH:* ${document.getElementById('sumCIH').innerText}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 </script>
