@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v22 - Full Features</title>
+    <title>RAJAGURU CMS v23 - Full Final</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: auto; display: none; }
         #loginPage { max-width: 400px; margin: 80px auto; background: white; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid #d32f2f; }
-        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; }
+        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; outline: none; }
         .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 10px; position: relative; }
         .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .s-card { background: white; padding: 12px; border-radius: 10px; text-align: center; border-top: 4px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -43,7 +43,7 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v22</h2></div>
+    <div class="header"><h2 style="margin:0;">RAJAGURU TRACKER v23</h2></div>
     
     <div class="summary-grid">
         <div class="s-card"><h4>BOM BAL</h4><p id="sumB1">₹0</p></div>
@@ -102,6 +102,7 @@
 </div>
 
 <script>
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyCTfzmnIMbryZuGCm4iq_3C1vrjQk4BWF4",
         authDomain: "rgf-solutions.firebaseapp.com",
@@ -115,17 +116,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Default Date & Time
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('time').value = new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
 
+    // --- LOGIN LOGIC ---
     function handleLogin() {
-        if(document.getElementById('username').value === "SMurugan" && document.getElementById('password').value === "Manager") {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        
+        // SMurugan & Manager
+        if(u.toLowerCase() === "smurugan" && p === "Manager") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadReport();
-        } else { alert("Login Failed!"); }
+        } else { 
+            alert("Login Failed Mapla! ID: SMurugan, Pass: Manager"); 
+        }
     }
 
+    // --- APP LOGIC ---
     const notes = [500, 200, 100, 50, 20, 10, 5, 2, 1];
     const dDiv = document.getElementById('denomInputs');
     notes.forEach(n => { dDiv.innerHTML += `<div class="denom-row"><span>${n} x</span><input type="number" class="ni" id="n_${n}" data-v="${n}" oninput="calcCash()"></div>`; });
@@ -160,7 +170,7 @@
             mode: document.getElementById('mode').value
         };
         db.ref('rajaguru_tracker/' + id).set(data).then(() => { 
-            alert("Saved!"); 
+            alert("Saved Mapla!"); 
             resetForm(); 
         });
     }
@@ -228,7 +238,7 @@
     }
 
     function deleteEntry(key) {
-        if(confirm("நிச்சயமாக இந்த பதிவை நீக்க வேண்டுமா?")) {
+        if(confirm("Delete this entry?")) {
             db.ref('rajaguru_tracker/' + key).remove().then(() => alert("Deleted!"));
         }
     }
