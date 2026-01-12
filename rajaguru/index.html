@@ -3,30 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v33 - Pro Reports</title>
+    <title>RAJAGURU CMS v35 - All-In-One</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { max-width: 900px; margin: auto; display: none; }
+        .container { max-width: 1000px; margin: auto; display: none; }
         #loginPage { max-width: 400px; margin: 80px auto; background: white; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid #d32f2f; }
-        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; outline: none; }
         .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 10px; position: relative; }
         .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         .s-card { background: white; padding: 10px; border-radius: 10px; text-align: center; border-top: 4px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .s-card p { margin: 5px 0 0; font-weight: bold; font-size: 14px; color: #1a237e; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 6px solid #d32f2f; }
         .tab-btn-group { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-        .tab-btn { flex: 1; min-width: 80px; padding: 10px; border: none; border-radius: 8px; background: #ddd; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .tab-btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 8px; background: #ddd; font-weight: bold; cursor: pointer; }
         .tab-active { background: #d32f2f; color: white; }
         label { display: block; font-weight: bold; margin-top: 10px; font-size: 13px; color: #555; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-top: 12px; }
         .btn-save { background: #2e7d32; }
         #adminView { display: none; }
-        .filter-box { background: #e3f2fd; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; background: white; }
         th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
         th { background: #1a237e; color: white; }
     </style>
@@ -35,15 +33,15 @@
 
 <div id="loginPage">
     <h2 style="color:#d32f2f;">RGF SOLUTIONS</h2>
-    <input type="text" id="username" class="login-input" placeholder="User ID">
-    <input type="password" id="password" class="login-input" placeholder="Password">
+    <input type="text" id="username" class="login-input" placeholder="User ID" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+    <input type="password" id="password" class="login-input" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
     <button class="btn btn-save" onclick="handleLogin()">LOGIN</button>
 </div>
 
 <div class="container" id="mainApp">
     <div class="header">
-        <button style="position:absolute; right:10px; top:15px; background:none; border:1px solid white; color:white; border-radius:5px; padding:2px 8px;" onclick="location.reload()">Exit</button>
-        <h2 style="margin:0;">RAJAGURU TRACKER v33</h2>
+        <h2 style="margin:0;">RAJAGURU TRACKER v35</h2>
+        <button style="position:absolute; right:10px; top:15px; color:white; background:none; border:1px solid white; border-radius:5px;" onclick="location.reload()">Exit</button>
     </div>
     
     <div class="summary-grid">
@@ -53,65 +51,59 @@
         <div class="s-card" style="background:#fff9c4;"><h4>CASH IN HAND</h4><p id="sumCIH" style="color:#d32f2f;">₹0</p></div>
     </div>
 
-    <div class="tab-btn-group" id="tabBar">
-        <button class="tab-btn tab-active" onclick="showTab('entrySection', this)">ENTRY</button>
-        <button class="tab-btn" onclick="showTab('expenseSection', this)">EXPENSE</button>
-        <button class="tab-btn" onclick="showTab('accountSection', this)">ACC LOG</button>
+    <div class="tab-btn-group">
+        <button class="tab-btn tab-active" onclick="showTab('entryTab', this)">MAIN ENTRY</button>
+        <button class="tab-btn" onclick="showTab('wuTab', this)">WU & NELSON</button>
+        <button class="tab-btn" onclick="showTab('viewTab', this)">REPORTS</button>
     </div>
 
-    <div id="entrySection" class="tab-content">
+    <div id="entryTab" class="tab-content">
         <div class="card">
-            <input type="date" id="date">
-            <label>BOM ➔ Airtel Load</label><input type="number" id="h2a">
-            <label>Airtel ➔ Rajapandi Load</label><input type="number" id="a2p">
-            <label>Pandi Return Amount</label>
-            <div style="display:flex; gap:10px;"><input type="number" id="p2h"><select id="mode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option></select></div>
-            <label>Bank Deposit (CIH ➔ Bank)</label><input type="number" id="bomDeposit">
-            <button class="btn btn-save" onclick="saveData('transactions')">💾 SAVE ENTRY</button>
-            <button class="btn btn-wa" style="background:#1a237e;" onclick="goToAdmin()">📊 HISTORY & REPORTS</button>
+            <h3 style="margin:0; color:#2e7d32;">Airtel & Pandi Entry</h3>
+            <label>Date</label><input type="date" id="date">
+            <label>BOM RHA ➔ Airtel Load (-)</label><input type="number" id="h2a" placeholder="BOM to Airtel">
+            <label>Airtel ➔ Rajapandi ID Load (-)</label><input type="number" id="a2p" placeholder="Airtel to Pandi" oninput="runLogic()">
+            <label>Pandi Return Amount (+)</label>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="p2h" placeholder="Return Amount" oninput="runLogic()">
+                <select id="mode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Bank</option></select>
+            </div>
+            <label>Bank Deposit (CIH ➔ Bank)</label><input type="number" id="bomDeposit" placeholder="Cash pottathu">
+            <div style="background:#e3f2fd; padding:15px; margin-top:15px; border-radius:10px; text-align:center;">
+                Pandi Balance: <strong style="color:#d32f2f;">₹<span id="pandiIdBal">0</span></strong>
+            </div>
+            <button class="btn btn-save" onclick="saveData('main')">💾 SAVE DATA</button>
         </div>
     </div>
 
-    <div id="expenseSection" class="tab-content" style="display:none;">
-        <div class="card" style="border-left-color:#f44336; background:#fff5f5;">
-            <label>Expense Detail</label><input type="text" id="expDetail">
-            <label>Amount</label><input type="number" id="expAmount">
-            <label>From</label><select id="expMode"><option value="Cash">Cash</option><option value="Gpay">Bank</option></select>
-            <button class="btn" style="background:#f44336;" onclick="saveData('expenses')">💸 SAVE EXPENSE</button>
-        </div>
-    </div>
-
-    <div id="accountSection" class="tab-content" style="display:none;">
+    <div id="wuTab" class="tab-content" style="display:none;">
         <div class="card" style="border-left-color:#2196f3; background:#f0f7ff;">
-            <label>Select Category</label>
-            <select id="accCategory">
-                <option value="General">General Bank Log</option>
-                <option value="WesternUnion">Western Union</option>
-                <option value="Nelson">Mr. Nelson</option>
-            </select>
-            <label>Detail / Reason</label><input type="text" id="accDetail">
-            <label>Amount</label><input type="number" id="accAmount">
-            <label>Type</label>
-            <select id="accType"><option value="IN">Cash IN (+)</option><option value="OUT">Cash OUT (-)</option></select>
-            <button class="btn" style="background:#2196f3;" onclick="saveData('account_log')">🏦 SAVE LOG</button>
+            <h3 style="margin:0; color:#1a237e;">WU, Nelson & Expense</h3>
+            <label>Category</label>
+            <select id="wuCategory"><option value="WesternUnion">Western Union</option><option value="Nelson">Mr. Nelson</option><option value="Expense">Expense</option></select>
+            <label>In / Out</label>
+            <select id="wuType"><option value="IN">Cash IN (+)</option><option value="OUT">Cash OUT (-)</option></select>
+            <label>Method</label>
+            <select id="wuMethod"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Account">Bank</option></select>
+            <label>Amount</label><input type="number" id="wuAmount">
+            <label>Detail</label><input type="text" id="wuDetail" placeholder="Reason/Reference">
+            <button class="btn btn-save" style="background:#1a237e;" onclick="saveData('others')">💾 SAVE LOG</button>
         </div>
     </div>
 
-    <div id="adminView">
-        <div class="filter-box">
-            <label>Filter:</label>
-            <select id="filterSelect" onchange="loadFullReport()">
-                <option value="All">All Transactions</option>
-                <option value="Entry">Entry Only</option>
-                <option value="Expense">Expense Only</option>
-                <option value="WesternUnion">Western Union Only</option>
-                <option value="Nelson">Mr. Nelson Only</option>
-            </select>
-            <button onclick="downloadExcel()" style="padding:10px; background:#00703c; color:white; border:none; border-radius:5px;">Excel</button>
-        </div>
+    <div id="viewTab" class="tab-content" style="display:none;">
         <div class="card">
-            <div style="overflow-x:auto;"><table id="historyTable"><thead><tr><th>Date</th><th>Category</th><th>Detail</th><th>Amount</th><th>Type</th><th>Act</th></tr></thead><tbody id="reportTbody"></tbody></table></div>
-            <button class="btn" style="background:#757575;" onclick="closeAdmin()">⬅ Back</button>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <select id="filter" onchange="loadReport()" style="flex:1;"><option value="All">All Transactions</option><option value="Entry">Pandi Entry Only</option><option value="WesternUnion">Western Union Only</option><option value="Nelson">Nelson Only</option><option value="Expense">Expenses Only</option></select>
+                <button onclick="downloadExcel()" style="background:#00703c; color:white; padding:10px; border:none; border-radius:8px;">Excel</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="reportTable">
+                    <thead><tr><th>Date</th><th>Category</th><th>Details</th><th>IN/Load</th><th>OUT/Return</th><th>Act</th></tr></thead>
+                    <tbody id="reportBody"></tbody>
+                </table>
+            </div>
+            <button class="btn" style="background:#757575;" onclick="showTab('entryTab', document.querySelector('.tab-btn'))">⬅ Back</button>
         </div>
     </div>
 </div>
@@ -133,55 +125,61 @@
         if(document.getElementById('username').value.trim()==="Manager" && document.getElementById('password').value.trim()==="Murugan") {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            loadFullReport();
-        } else { alert("Wrong Login!"); }
+            loadReport();
+        } else { alert("Login Failed!"); }
     }
 
-    function showTab(tabId, btn) {
+    function showTab(id, btn) {
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-        document.getElementById(tabId).style.display = 'block';
+        document.getElementById(id).style.display = 'block';
         btn.classList.add('tab-active');
     }
 
-    function saveData(path) {
-        const id = Date.now().toString();
-        let data = { date: document.getElementById('date').value, id: id };
-        if(path === 'transactions') {
-            data.h2a = Number(document.getElementById('h2a').value); data.a2p = Number(document.getElementById('a2p').value);
-            data.p2h = Number(document.getElementById('p2h').value); data.dep = Number(document.getElementById('bomDeposit').value);
-            data.mode = document.getElementById('mode').value; data.category = "Entry";
-        } else if(path === 'expenses') {
-            data.detail = document.getElementById('expDetail').value; data.amount = Number(document.getElementById('expAmount').value);
-            data.mode = document.getElementById('expMode').value; data.category = "Expense";
-        } else if(path === 'account_log') {
-            data.category = document.getElementById('accCategory').value; data.detail = document.getElementById('accDetail').value;
-            data.amount = Number(document.getElementById('accAmount').value); data.mode = document.getElementById('accType').value;
-        }
-        db.ref('rajaguru_v33/' + id).set(data).then(() => { alert("Saved!"); location.reload(); });
+    function runLogic() {
+        const load = Number(document.getElementById('a2p').value) || 0;
+        const ret = Number(document.getElementById('p2h').value) || 0;
+        document.getElementById('pandiIdBal').innerText = (load - ret).toFixed(2);
     }
 
-    function loadFullReport() {
-        const filter = document.getElementById('filterSelect').value;
-        db.ref('rajaguru_v33').on('value', snap => {
-            const tbody = document.getElementById('reportTbody'); tbody.innerHTML = "";
+    function saveData(type) {
+        const id = Date.now().toString();
+        let data = { date: document.getElementById('date').value };
+        if(type === 'main') {
+            data.category = "Entry";
+            data.h2a = Number(document.getElementById('h2a').value); data.a2p = Number(document.getElementById('a2p').value);
+            data.p2h = Number(document.getElementById('p2h').value); data.dep = Number(document.getElementById('bomDeposit').value);
+            data.mode = document.getElementById('mode').value;
+        } else {
+            data.category = document.getElementById('wuCategory').value;
+            data.amount = Number(document.getElementById('wuAmount').value);
+            data.type = document.getElementById('wuType').value;
+            data.mode = document.getElementById('wuMethod').value;
+            data.detail = document.getElementById('wuDetail').value;
+        }
+        db.ref('rgf_v35/' + id).set(data).then(() => { alert("Saved!"); location.reload(); });
+    }
+
+    function loadReport() {
+        const filter = document.getElementById('filter').value;
+        db.ref('rgf_v35').on('value', snap => {
+            const tbody = document.getElementById('reportBody'); tbody.innerHTML = "";
             let bom=0, airtel=0, pandi=0, cih=0;
             const all = snap.val() || {};
             Object.keys(all).sort().forEach(k => {
                 const v = all[k];
-                // Summary Calculation (Always calculate all)
                 if(v.category === "Entry") {
                     bom += (v.dep - v.h2a); airtel += (v.h2a - v.a2p); pandi += (v.a2p - v.p2h);
                     if(v.mode === "Cash") cih += v.p2h; cih -= v.dep;
                 } else if(v.category === "Expense") {
                     if(v.mode === "Cash") cih -= v.amount; else bom -= v.amount;
-                } else { // WU or Nelson or General
-                    if(v.mode === "IN") cih += v.amount; else cih -= v.amount;
+                } else { // WU or Nelson
+                    if(v.mode === "Cash") { if(v.type === "IN") cih += v.amount; else cih -= v.amount; }
+                    else { if(v.type === "IN") bom += v.amount; else bom -= v.amount; }
                 }
 
-                // Filtering for Display
                 if(filter === "All" || v.category === filter) {
-                    tbody.innerHTML = `<tr><td>${v.date}</td><td>${v.category}</td><td>${v.detail || '-'}</td><td>${v.amount || v.a2p}</td><td>${v.mode}</td><td><span onclick="db.ref('rajaguru_v33/${k}').remove()">❌</span></td></tr>` + tbody.innerHTML;
+                    tbody.innerHTML = `<tr><td>${v.date}</td><td>${v.category}</td><td>${v.detail || v.mode}</td><td>${v.amount || v.a2p}</td><td>${v.p2h || v.type}</td><td><span onclick="db.ref('rgf_v35/${k}').remove()">❌</span></td></tr>` + tbody.innerHTML;
                 }
             });
             document.getElementById('sumB1').innerText = "₹"+bom; document.getElementById('sumB2').innerText = "₹"+airtel;
@@ -190,13 +188,10 @@
     }
 
     function downloadExcel() {
-        const table = document.getElementById("historyTable");
-        const wb = XLSX.utils.table_to_book(table);
-        XLSX.writeFile(wb, "Rajaguru_v33_Filtered.xlsx");
+        const wb = XLSX.utils.table_to_book(document.getElementById("reportTable"));
+        XLSX.writeFile(wb, "Rajaguru_v35_Report.xlsx");
     }
 
-    function goToAdmin() { document.getElementById('tabBar').style.display='none'; document.getElementById('entrySection').style.display='none'; document.getElementById('adminView').style.display='block'; }
-    function closeAdmin() { document.getElementById('adminView').style.display='none'; document.getElementById('tabBar').style.display='flex'; document.getElementById('entrySection').style.display='block'; }
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
