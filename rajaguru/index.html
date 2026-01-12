@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAJAGURU CMS v37 - Pro Summary</title>
+    <title>RAJAGURU CMS v38 - Opening Balance</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
@@ -12,14 +12,11 @@
         .container { max-width: 1000px; margin: auto; display: none; }
         #loginPage { max-width: 400px; margin: 80px auto; background: white; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid #d32f2f; }
         .header { background: #d32f2f; color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 10px; position: relative; }
-        
-        /* New 3-Column Summary Grid */
         .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .s-card { background: white; padding: 8px; border-radius: 10px; text-align: center; border-top: 3px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .s-card h4 { margin: 0; font-size: 10px; color: #555; text-transform: uppercase; }
         .s-card p { margin: 4px 0 0; font-weight: bold; font-size: 13px; color: #1a237e; }
         .special-card { background: #fff9c4; border-top-color: #fbc02d; }
-        
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 6px solid #d32f2f; }
         .tab-btn-group { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
         .tab-btn { flex: 1; min-width: 80px; padding: 10px; border: none; border-radius: 8px; background: #ddd; font-weight: bold; cursor: pointer; font-size: 11px; }
@@ -37,14 +34,14 @@
 
 <div id="loginPage">
     <h2 style="color:#d32f2f;">RGF SOLUTIONS</h2>
-    <input type="text" id="username" class="login-input" placeholder="User ID" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
-    <input type="password" id="password" class="login-input" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+    <input type="text" id="username" placeholder="User ID" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+    <input type="password" id="password" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
     <button class="btn btn-save" onclick="handleLogin()">LOGIN</button>
 </div>
 
 <div class="container" id="mainApp">
     <div class="header">
-        <h2 style="margin:0;">RAJAGURU TRACKER v37</h2>
+        <h2 style="margin:0;">RAJAGURU TRACKER v38</h2>
         <button style="position:absolute; right:10px; top:15px; color:white; background:none; border:1px solid white; border-radius:5px;" onclick="location.reload()">Logout</button>
     </div>
     
@@ -54,14 +51,14 @@
         <div class="s-card"><h4>Pandi ID</h4><p id="sumB3">₹0</p></div>
         <div class="s-card special-card"><h4>WU Bal</h4><p id="sumWU">₹0</p></div>
         <div class="s-card special-card"><h4>Nelson Bal</h4><p id="sumNelson">₹0</p></div>
-        <div class="s-card special-card"><h4>CIH</h4><p id="sumCIH">₹0</p></div>
-        <div class="s-card" style="border-top-color:#9c27b0; grid-column: span 3;"><h4>Total Expense (Month)</h4><p id="sumExp" style="color:#f44336;">₹0</p></div>
+        <div class="s-card special-card"><h4>Cash In Hand</h4><p id="sumCIH">₹0</p></div>
     </div>
 
     <div class="tab-btn-group">
         <button class="tab-btn tab-active" onclick="showTab('entryTab', this)">MAIN</button>
         <button class="tab-btn" onclick="showTab('othersTab', this)">WU/NELSON</button>
         <button class="tab-btn" onclick="showTab('expenseTab', this)">EXPENSE</button>
+        <button class="tab-btn" onclick="showTab('openingTab', this)">OPENING</button>
         <button class="tab-btn" onclick="showTab('viewTab', this)">REPORTS</button>
     </div>
 
@@ -75,26 +72,25 @@
         <button class="btn btn-save" onclick="saveData('main')">💾 SAVE ENTRY</button>
     </div></div>
 
-    <div id="othersTab" class="tab-content" style="display:none;"><div class="card">
-        <label>Service</label><select id="otherCat"><option value="WesternUnion">Western Union</option><option value="Nelson">Mr. Nelson</option></select>
-        <label>Type</label><select id="otherType"><option value="IN">Cash IN (+)</option><option value="OUT">Cash OUT (-)</option></select>
-        <label>Method</label><select id="otherMode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option></select>
-        <label>Amount</label><input type="number" id="otherAmount">
-        <label>Detail</label><input type="text" id="otherDetail">
-        <button class="btn" style="background:#1a237e;" onclick="saveData('others')">💾 SAVE LOG</button>
+    <div id="openingTab" class="tab-content" style="display:none;"><div class="card" style="border-left-color: #ff9800;">
+        <h3 style="margin:0; color:#e65100;">Set Opening Balance</h3>
+        <p style="font-size:11px; color:#666;">Account-ai start pannum podhu irukkum starting balance.</p>
+        <label>Select Account</label>
+        <select id="openCat">
+            <option value="Cash">Cash in Hand</option>
+            <option value="Bank">BOM Bank</option>
+            <option value="WesternUnion">Western Union</option>
+            <option value="Nelson">Mr. Nelson</option>
+            <option value="Airtel">Airtel Balance</option>
+            <option value="PandiID">Pandi ID Balance</option>
+        </select>
+        <label>Opening Amount</label><input type="number" id="openAmount">
+        <button class="btn" style="background:#ff9800;" onclick="saveData('opening')">🔑 SET OPENING</button>
     </div></div>
 
-    <div id="expenseTab" class="tab-content" style="display:none;"><div class="card">
-        <label>Expense Detail</label><input type="text" id="expDetail">
-        <label>Amount</label><input type="number" id="expAmount">
-        <label>From</label><select id="expMode"><option value="Cash">Cash</option><option value="Gpay">Bank</option></select>
-        <button class="btn" style="background:#f44336;" onclick="saveData('expense')">💸 SAVE EXPENSE</button>
-    </div></div>
-
-    <div id="viewTab" class="tab-content" style="display:none;"><div class="card">
-        <div style="display:flex; gap:10px; margin-bottom:10px;"><select id="filter" onchange="loadReport()" style="flex:1;"><option value="All">All</option><option value="Entry">Pandi</option><option value="WesternUnion">WU</option><option value="Nelson">Nelson</option><option value="Expense">Expense</option></select><button onclick="downloadExcel()" style="background:#00703c; color:white; padding:10px; border:none; border-radius:8px;">Excel</button></div>
-        <div style="overflow-x:auto;"><table id="reportTable"><thead><tr><th>Date</th><th>Category</th><th>Details</th><th>IN</th><th>OUT</th><th>Act</th></tr></thead><tbody id="reportBody"></tbody></table></div>
-    </div></div>
+    <div id="othersTab" class="tab-content" style="display:none;"><div class="card"><label>Service</label><select id="otherCat"><option value="WesternUnion">Western Union</option><option value="Nelson">Mr. Nelson</option></select><label>Type</label><select id="otherType"><option value="IN">IN (+)</option><option value="OUT">OUT (-)</option></select><label>Method</label><select id="otherMode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option></select><label>Amount</label><input type="number" id="otherAmount"><label>Detail</label><input type="text" id="otherDetail"><button class="btn" style="background:#1a237e;" onclick="saveData('others')">💾 SAVE LOG</button></div></div>
+    <div id="expenseTab" class="tab-content" style="display:none;"><div class="card"><label>Expense Detail</label><input type="text" id="expDetail"><label>Amount</label><input type="number" id="expAmount"><label>From</label><select id="expMode"><option value="Cash">Cash</option><option value="Gpay">Bank</option></select><button class="btn" style="background:#f44336;" onclick="saveData('expense')">💸 SAVE EXPENSE</button></div></div>
+    <div id="viewTab" class="tab-content" style="display:none;"><div class="card"><div style="display:flex; gap:10px; margin-bottom:10px;"><select id="filter" onchange="loadReport()" style="flex:1;"><option value="All">All</option><option value="Entry">Pandi</option><option value="WesternUnion">WU</option><option value="Nelson">Nelson</option><option value="Expense">Expense</option><option value="Opening">Opening</option></select><button onclick="downloadExcel()" style="background:#00703c; color:white; padding:10px; border:none; border-radius:8px;">Excel</button></div><div style="overflow-x:auto;"><table id="reportTable"><thead><tr><th>Date</th><th>Category</th><th>Details</th><th>IN</th><th>OUT</th><th>Act</th></tr></thead><tbody id="reportBody"></tbody></table></div></div></div>
 </div>
 
 <script>
@@ -135,32 +131,39 @@
             data.mode = document.getElementById('mode').value;
         } else if(type === 'others') {
             data.category = document.getElementById('otherCat').value;
-            data.type = document.getElementById('otherType').value;
-            data.mode = document.getElementById('otherMode').value;
-            data.amount = Number(document.getElementById('otherAmount').value);
-            data.detail = document.getElementById('otherDetail').value;
+            data.type = document.getElementById('otherType').value; data.mode = document.getElementById('otherMode').value;
+            data.amount = Number(document.getElementById('otherAmount').value); data.detail = document.getElementById('otherDetail').value;
         } else if(type === 'expense') {
-            data.category = "Expense";
-            data.detail = document.getElementById('expDetail').value;
-            data.amount = Number(document.getElementById('expAmount').value);
-            data.mode = document.getElementById('expMode').value;
+            data.category = "Expense"; data.detail = document.getElementById('expDetail').value;
+            data.amount = Number(document.getElementById('expAmount').value); data.mode = document.getElementById('expMode').value;
+        } else if(type === 'opening') {
+            data.category = "Opening"; data.detail = document.getElementById('openCat').value;
+            data.amount = Number(document.getElementById('openAmount').value);
         }
-        db.ref('rgf_v37/' + id).set(data).then(() => { alert("Saved!"); location.reload(); });
+        db.ref('rgf_v38/' + id).set(data).then(() => { alert("Saved Mapla!"); location.reload(); });
     }
 
     function loadReport() {
         const filter = document.getElementById('filter').value;
-        db.ref('rgf_v37').on('value', snap => {
+        db.ref('rgf_v38').on('value', snap => {
             const tbody = document.getElementById('reportBody'); tbody.innerHTML = "";
-            let bom=0, airtel=0, pandi=0, cih=0, wu=0, nelson=0, expTotal=0;
+            let bom=0, airtel=0, pandi=0, cih=0, wu=0, nelson=0;
             const all = snap.val() || {};
             Object.keys(all).sort().forEach(k => {
                 const v = all[k];
-                if(v.category === "Entry") {
+                // OPENING BAL LOGIC
+                if(v.category === "Opening") {
+                    if(v.detail === "Cash") cih += v.amount;
+                    if(v.detail === "Bank") bom += v.amount;
+                    if(v.detail === "WesternUnion") wu += v.amount;
+                    if(v.detail === "Nelson") nelson += v.amount;
+                    if(v.detail === "Airtel") airtel += v.amount;
+                    if(v.detail === "PandiID") pandi += v.amount;
+                }
+                else if(v.category === "Entry") {
                     bom += (v.dep - v.h2a); airtel += (v.h2a - v.a2p); pandi += (v.a2p - v.p2h);
                     if(v.mode === "Cash") cih += v.p2h; cih -= v.dep;
                 } else if(v.category === "Expense") {
-                    expTotal += v.amount;
                     if(v.mode === "Cash") cih -= v.amount; else bom -= v.amount;
                 } else if(v.category === "WesternUnion") {
                     if(v.type === "IN") { wu += v.amount; cih += v.amount; } else { wu -= v.amount; cih -= v.amount; }
@@ -169,20 +172,16 @@
                 }
 
                 if(filter === "All" || v.category === filter) {
-                    tbody.innerHTML = `<tr><td>${v.date}</td><td>${v.category}</td><td>${v.detail || v.mode}</td><td>${v.amount || v.a2p}</td><td>${v.p2h || v.type}</td><td><span onclick="db.ref('rgf_v37/${k}').remove()">❌</span></td></tr>` + tbody.innerHTML;
+                    tbody.innerHTML = `<tr><td>${v.date}</td><td>${v.category}</td><td>${v.detail || v.mode}</td><td>${v.amount || v.a2p}</td><td>${v.p2h || v.type || '-'}</td><td><span onclick="db.ref('rgf_v38/${k}').remove()">❌</span></td></tr>` + tbody.innerHTML;
                 }
             });
             document.getElementById('sumB1').innerText = "₹"+bom; document.getElementById('sumB2').innerText = "₹"+airtel;
             document.getElementById('sumB3').innerText = "₹"+pandi; document.getElementById('sumCIH').innerText = "₹"+cih;
             document.getElementById('sumWU').innerText = "₹"+wu; document.getElementById('sumNelson').innerText = "₹"+nelson;
-            document.getElementById('sumExp').innerText = "₹"+expTotal;
         });
     }
 
-    function downloadExcel() {
-        const wb = XLSX.utils.table_to_book(document.getElementById("reportTable"));
-        XLSX.writeFile(wb, "Rajaguru_v37_Report.xlsx");
-    }
+    function downloadExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("reportTable")), "Rajaguru_v38.xlsx"); }
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
